@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Crown, RotateCcw, User } from "lucide-react";
+import { Check, Crown, RotateCcw } from "lucide-react";
 import { getLevelForXp } from "@/data/levels";
 import { useProgress } from "@/lib/useProgress";
+import { MAX_SHIELDS } from "@/lib/chests";
+import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
+import { AvatarCustomizer } from "@/components/avatar/AvatarCustomizer";
 import { BRAND } from "@/lib/brand";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
@@ -20,7 +23,7 @@ const goalLabels: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-  const { progress, ready, reset } = useProgress();
+  const { progress, ready, reset, setAvatar } = useProgress();
   const [confirmReset, setConfirmReset] = useState(false);
   const level = getLevelForXp(progress.xp);
 
@@ -31,21 +34,80 @@ export default function SettingsPage() {
         <p className="text-sm text-ink-soft">Ton compte et tes préférences.</p>
       </div>
 
-      {/* Profil */}
+      {/* Profil + personnage */}
       <Card animate className="flex items-center gap-4 p-5">
-        <span className="grid size-14 shrink-0 place-items-center rounded-3xl gradient-primary text-white">
-          <User className="size-6" />
-        </span>
-        <div className="flex-1">
+        <AvatarCharacter config={progress.avatar} size={64} />
+        <div className="min-w-0 flex-1">
           <p className="text-lg font-bold text-ink">
             {progress.onboarding?.profileName ?? "Explorer"}
           </p>
           <p className="text-sm text-ink-soft">
-            {level.name} · Équivalent {level.cefr}
+            {level.name} · {level.cefr} · série de {progress.streak}
           </p>
         </div>
         <Chip tone="primary">{progress.xp} FP</Chip>
       </Card>
+
+      {/* Streak shields */}
+      <Card animate delay={0.04} className="flex items-center gap-3.5 p-4">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-600">
+          🛡️
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-ink">
+            Streak Shields · {progress.streakShields ?? 0}/{MAX_SHIELDS}
+          </p>
+          <p className="text-xs text-ink-soft">
+            Protège un jour manqué. Se gagne dans les coffres.
+          </p>
+        </div>
+        <div className="flex gap-1.5">
+          {Array.from({ length: MAX_SHIELDS }, (_, i) => (
+            <span
+              key={i}
+              className={
+                i < (progress.streakShields ?? 0)
+                  ? "text-lg"
+                  : "text-lg opacity-25 grayscale"
+              }
+            >
+              🛡️
+            </span>
+          ))}
+        </div>
+      </Card>
+
+      {/* Personnalisation du personnage */}
+      <div>
+        <h2 className="mb-2.5 text-lg font-bold tracking-tight text-ink">
+          Ton personnage
+        </h2>
+        <AvatarCustomizer
+          config={progress.avatar}
+          unlockedItems={progress.unlockedItems ?? []}
+          onChange={setAvatar}
+        />
+      </div>
+
+      {/* Historique des récompenses */}
+      {(progress.rewardHistory ?? []).length > 0 && (
+        <Card animate delay={0.08} className="p-4">
+          <p className="text-sm font-bold text-ink">🎁 Derniers coffres</p>
+          <div className="mt-2.5 space-y-2">
+            {[...(progress.rewardHistory ?? [])].reverse().slice(0, 5).map((entry, i) => (
+              <div key={`${entry.at}-${i}`} className="flex items-center gap-2.5">
+                <span className="size-1.5 shrink-0 rounded-full bg-gold-400" />
+                <p className="min-w-0 flex-1 truncate text-sm text-ink-soft">
+                  {entry.label}
+                </p>
+                <Chip tone={entry.rarity === "common" ? "neutral" : entry.rarity === "rare" ? "primary" : "gold"}>
+                  {entry.rarity}
+                </Chip>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Préférences */}
       <Card animate delay={0.08} className="divide-y divide-ink/5 p-0">

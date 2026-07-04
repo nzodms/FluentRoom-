@@ -1,32 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import {
-  BookOpen,
-  Check,
-  ChevronRight,
-  Flame,
-  Lock,
-  Moon,
-  Play,
-} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Check, ChevronRight, Lock } from "lucide-react";
 import { getTodayRoom, rooms } from "@/data/rooms";
 import { getTodayLesson, lessons } from "@/data/lessons";
 import { allPhrases } from "@/data/phrases";
 import { getLevelForXp, getNextLevel } from "@/data/levels";
 import { useProgress } from "@/lib/useProgress";
-import { getDailySteps, canClaimChest } from "@/lib/progress";
+import { getDailySteps } from "@/lib/progress";
 import { computeQuests } from "@/lib/quests";
 import { cn, todayKey } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { StreakPulse } from "@/components/reward/StreakPulse";
+import { EnergyPill } from "@/components/energy/EnergyPill";
+import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
+import { ChestFullScreen } from "@/components/chest/ChestFullScreen";
 import { DailyPath } from "@/components/today/DailyPath";
-import { NextBestAction } from "@/components/today/NextBestAction";
+import { NextActionHero } from "@/components/today/NextActionHero";
 import { QuestList } from "@/components/today/QuestList";
 
 const DAY_INITIALS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -44,10 +39,10 @@ function lastSevenDays(): string[] {
 export default function TodayPage() {
   const { progress, ready, stats, doDailyStep, openChest, takeQuestReward } =
     useProgress();
+  const [chestOpen, setChestOpen] = useState(false);
 
   const completedIds = Object.keys(progress.completedRooms);
   const todayRoom = getTodayRoom(completedIds);
-  const tomorrowRoom = getTodayRoom([...completedIds, todayRoom.id], 1);
   const masteredLessons = Object.entries(progress.lessons ?? {})
     .filter(([, s]) => s.status === "mastered")
     .map(([id]) => id);
@@ -81,23 +76,34 @@ export default function TodayPage() {
 
   return (
     <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
-      {/* Salutation + streak vivant */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">
-            {allDone
-              ? "Journée bouclée 🙌"
-              : completedIds.length > 0
-                ? "Content de te revoir 👋"
-                : "Bienvenue 👋"}
-          </h1>
-          <p className="text-sm text-ink-soft">
-            {progress.onboarding
-              ? `${progress.onboarding.profileName} · ${level.name}`
-              : "Ta session du jour t'attend."}
-          </p>
-        </div>
+      {/* Salutation + avatar + streak vivant */}
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/app/settings" className="flex min-w-0 items-center gap-3">
+          <AvatarCharacter config={progress.avatar} size={52} />
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold tracking-tight text-ink">
+              {allDone
+                ? "Journée bouclée 🙌"
+                : completedIds.length > 0
+                  ? "Content de te revoir 👋"
+                  : "Bienvenue 👋"}
+            </h1>
+            <p className="truncate text-xs text-ink-soft">
+              {progress.onboarding
+                ? `${progress.onboarding.profileName} · ${level.name}`
+                : "Ta session du jour t'attend."}
+            </p>
+          </div>
+        </Link>
         <StreakPulse streak={progress.streak} activeToday={activeToday} />
+      </div>
+
+      {/* Focus Energy */}
+      <div className="flex items-center justify-between">
+        <EnergyPill progress={progress} />
+        <p className="text-xs font-medium text-ink-faint">
+          Chaque session utilise de l&apos;énergie. Elle revient demain.
+        </p>
       </div>
 
       {/* Daily Energy Ring + semaine */}
@@ -181,113 +187,8 @@ export default function TodayPage() {
         </div>
       </Card>
 
-      {/* Next best action */}
-      {!allDone && <NextBestAction progress={progress} />}
-
-      {/* Come back tomorrow OU Room du jour */}
-      {allDone ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="overflow-hidden rounded-[1.75rem] shadow-lift"
-        >
-          <div className="relative gradient-primary p-6 text-white">
-            <span className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
-            <span className="pointer-events-none absolute -bottom-14 -left-8 size-36 rounded-full bg-white/5" />
-            <div className="flex items-center gap-2">
-              <Moon className="size-4 opacity-90" />
-              <p className="text-xs font-bold uppercase tracking-widest opacity-80">
-                À demain
-              </p>
-            </div>
-            <h2 className="mt-3 text-2xl font-bold tracking-tight">
-              Tout est fait pour aujourd&apos;hui.
-            </h2>
-            <p className="mt-1.5 text-[15px] opacity-90">
-              Ton cerveau consolide pendant la nuit — c&apos;est là que ça
-              s&apos;ancre. Demain :{" "}
-              <span className="font-bold">
-                {tomorrowRoom.emoji} {tomorrowRoom.title}
-              </span>{" "}
-              — {tomorrowRoom.subtitle.toLowerCase()}.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Chip className="bg-white/15 text-white">
-                <Flame className="size-3" /> Série de {progress.streak} sécurisée
-              </Chip>
-              <Chip className="bg-white/15 text-white">
-                +{progress.activity[todayKey()] ?? 0} FP aujourd&apos;hui
-              </Chip>
-            </div>
-            <Link href="/app/phrases" className="mt-5 block">
-              <Button
-                fullWidth
-                className="bg-white !text-primary-700 shadow-none"
-                style={{ background: "white" }}
-              >
-                Réviser encore quelques phrases
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08 }}
-          className="overflow-hidden rounded-[1.75rem] shadow-lift"
-        >
-          <div className="relative gradient-primary p-6 text-white">
-            {/* Décor de profondeur */}
-            <span className="pointer-events-none absolute -right-12 -top-12 size-44 rounded-full bg-white/10" />
-            <span className="pointer-events-none absolute -bottom-16 -left-10 size-40 rounded-full bg-white/5" />
-            <span className="pointer-events-none absolute right-6 bottom-16 size-3 rounded-full bg-white/30" />
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-widest opacity-80">
-                  Today&apos;s Room
-                </p>
-                <Chip className="bg-white/15 text-white">
-                  {todayRoom.levelLabel} · {todayRoom.accent}
-                </Chip>
-              </div>
-              <div className="mt-4 flex items-center gap-4">
-                <motion.span
-                  initial={{ scale: 0, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 280, damping: 16, delay: 0.2 }}
-                  className="grid size-16 shrink-0 place-items-center rounded-3xl bg-white/15 text-4xl backdrop-blur-sm"
-                >
-                  {todayRoom.emoji}
-                </motion.span>
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-bold tracking-tight">
-                    {todayRoom.title}
-                  </h2>
-                  <p className="mt-0.5 text-sm opacity-90">
-                    {todayRoom.subtitle}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-4 text-sm opacity-85">
-                {todayRoom.goal} · {todayRoom.duration} min · +
-                {todayRoom.phrases.length} phrases réelles
-              </p>
-              <Link href={`/app/room/${todayRoom.id}`} className="mt-5 block">
-                <Button
-                  size="lg"
-                  fullWidth
-                  className="bg-white !text-primary-700 shadow-[0_10px_30px_-6px_rgba(255,255,255,0.4)]"
-                  style={{ background: "white" }}
-                >
-                  <Play className="size-4 fill-current" /> Start Room
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* LA prochaine action — une mission, un bouton */}
+      <NextActionHero progress={progress} onChestClaim={() => setChestOpen(true)} />
 
       {/* Fluency Path */}
       <motion.div
@@ -301,9 +202,10 @@ export default function TodayPage() {
           warmupPhrases={warmupPhrases}
           doneSteps={doneSteps}
           reviewAvailable={unlockedPhrases.length > 0}
-          chestClaimed={!canClaimChest(progress)}
+          chestProgress={progress.chestProgress ?? 0}
+          availableChests={progress.availableChests ?? 0}
           onWarmupDone={() => doDailyStep("warmup")}
-          onChestClaim={openChest}
+          onOpenChest={() => setChestOpen(true)}
         />
       </motion.div>
 
@@ -471,6 +373,15 @@ export default function TodayPage() {
           })}
         </div>
       </div>
+      {/* Ouverture de coffre plein écran */}
+      <AnimatePresence>
+        {chestOpen && (
+          <ChestFullScreen
+            onOpen={openChest}
+            onClose={() => setChestOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

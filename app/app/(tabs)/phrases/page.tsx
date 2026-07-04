@@ -9,6 +9,7 @@ import type { Phrase, PhraseStatus } from "@/types/learning";
 import { allPhrases, getDailyPhrase, phraseCategories } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
 import { PhraseCard } from "@/components/phrase/PhraseCard";
+import { PhrasePackCard } from "@/components/phrase/PhrasePackCard";
 import { ReviewSession } from "@/components/phrase/ReviewSession";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -262,34 +263,23 @@ export default function PhrasesPage() {
         ))}
       </div>
 
-      {/* Catégories avec progression */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar">
-        {phraseCategories.map((cat) => {
+      {/* Packs de la collection */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {phraseCategories.map((cat, i) => {
           const total = allPhrases.filter((p) => p.category === cat.id).length;
           const have = allPhrases.filter(
             (p) => p.category === cat.id && unlockedIds.has(p.id),
           ).length;
           return (
-            <button
+            <PhrasePackCard
               key={cat.id}
+              category={cat.id}
+              unlocked={have}
+              total={total}
+              selected={category === cat.id}
               onClick={() => setCategory(category === cat.id ? null : cat.id)}
-              className={cn(
-                "shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
-                category === cat.id
-                  ? "bg-ink text-white"
-                  : "bg-white text-ink-soft border border-ink/8",
-              )}
-            >
-              {cat.emoji} {cat.label}
-              <span
-                className={cn(
-                  "ml-1.5",
-                  category === cat.id ? "text-white/70" : "text-ink-faint",
-                )}
-              >
-                {have}/{total}
-              </span>
-            </button>
+              delay={i * 0.04}
+            />
           );
         })}
       </div>

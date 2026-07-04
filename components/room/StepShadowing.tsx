@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Repeat2, Volume2 } from "lucide-react";
+import { Check, Volume2 } from "lucide-react";
 import type { Room } from "@/types/learning";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { LearningScreen } from "@/components/session/LearningScreen";
+import { LearningGlyph } from "@/components/icons/learning-icons";
 import { speakText } from "@/lib/speech";
 import { useRecognition } from "@/lib/useRecognition";
 import { matchScore, scoreFeedback } from "@/lib/scoring";
@@ -29,6 +30,7 @@ export function StepShadowing({
   const [index, setIndex] = useState(0);
   const [scores, setScores] = useState<number[]>([]);
   const [lastScore, setLastScore] = useState<number | null>(null);
+
   const line = lines[index];
   const isLast = index === lines.length - 1;
 
@@ -58,27 +60,38 @@ export function StepShadowing({
   };
 
   return (
-    <div className="flex flex-1 flex-col">
-      <Chip tone="primary" className="self-start">
-        <Repeat2 className="size-3" /> Étape 5 · Shadowing
-      </Chip>
-      <div className="mt-3 flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight text-ink">
-          Répète avec le rythme
-        </h2>
-        <span className="text-sm font-semibold text-ink-faint">
-          {index + 1} / {lines.length}
-        </span>
-      </div>
-      <p className="mt-1.5 text-ink-soft">
-        Cet exercice t&apos;apprend à copier le rythme naturel des phrases —
-        c&apos;est ce qui te permet de parler plus vite et moins mot à mot.{" "}
-        <span className="font-semibold text-ink">
-          Répète le rythme, pas seulement la phrase.
-        </span>
-      </p>
-      <ProgressBar value={(index / lines.length) * 100} className="mt-3" />
-
+    <LearningScreen
+      label={
+        <Chip tone="mint">
+          <LearningGlyph name="shadowing" className="size-3" /> Shadowing ·{" "}
+          {index + 1}/{lines.length}
+        </Chip>
+      }
+      title="Copie le rythme"
+      subtitle="C'est ce qui te fait parler plus vite et moins mot à mot."
+      action={
+        lastScore !== null ? (
+          <>
+            <Button size="lg" fullWidth onClick={() => acceptAndContinue(lastScore)}>
+              {isLast ? "Terminer le shadowing" : "Phrase suivante"}
+              <Check className="size-4" strokeWidth={3} />
+            </Button>
+            <Button variant="ghost" fullWidth onClick={retry}>
+              Réessayer
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant={recognition.supported ? "secondary" : "primary"}
+            size="lg"
+            fullWidth
+            onClick={() => acceptAndContinue(MANUAL_PRACTICE_SCORE)}
+          >
+            Je l&apos;ai dite à voix haute
+          </Button>
+        )
+      }
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={line.id}
@@ -86,25 +99,24 @@ export function StepShadowing({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -30 }}
           transition={{ duration: 0.25 }}
-          className="flex flex-1 flex-col"
         >
-          <div className="card-soft mt-6 p-6 text-center">
-            <p className="text-xs font-bold uppercase tracking-wide text-primary-600">
+          <div className="card-tint-mint p-5 text-center">
+            <p className="text-xs font-bold uppercase tracking-wide text-mint-600">
               {line.speaker}
             </p>
-            <p className="mt-2 text-xl font-bold text-ink">
+            <p className="mt-1.5 text-xl font-bold text-ink">
               &ldquo;{line.text}&rdquo;
             </p>
-            <p className="mt-1.5 text-sm text-ink-faint">{line.translation}</p>
+            <p className="mt-1 text-sm text-ink-faint">{line.translation}</p>
             <button
               onClick={() => speakText(line.text, { rate: 0.9 })}
-              className="mx-auto mt-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-100"
+              className="mx-auto mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-mint-600 shadow-soft transition-colors hover:bg-mint-50"
             >
               <Volume2 className="size-4" /> Réécouter
             </button>
           </div>
 
-          <div className="mt-6 flex flex-col items-center">
+          <div className="mt-5 flex flex-col items-center">
             {recognition.supported ? (
               <>
                 <MicRecorder
@@ -113,22 +125,20 @@ export function StepShadowing({
                   onStart={recognition.start}
                   onStop={recognition.stop}
                 />
-                <p className="mt-3 text-sm font-medium text-ink-faint">
+                <p className="mt-2.5 text-sm font-medium text-ink-faint">
                   {recognition.listening
                     ? "Je t'écoute… parle normalement"
                     : "Appuie et répète la phrase"}
                 </p>
                 {recognition.transcript && (
-                  <p className="mt-2 rounded-xl bg-ink/5 px-3 py-1.5 text-sm italic text-ink-soft">
+                  <p className="mt-1.5 rounded-xl bg-ink/5 px-3 py-1.5 text-sm italic text-ink-soft">
                     “{recognition.transcript}”
                   </p>
                 )}
               </>
             ) : (
-              <div className="rounded-2xl bg-primary-50 p-4 text-center text-sm text-primary-700">
-                🎙️ La reconnaissance vocale n&apos;est pas disponible sur ce
-                navigateur. Répète la phrase à voix haute, puis marque-la comme
-                pratiquée.
+              <div className="rounded-2xl bg-mint-50 p-3.5 text-center text-sm text-mint-600">
+                🎙️ Micro non supporté ici — répète à voix haute, puis valide.
               </div>
             )}
           </div>
@@ -139,7 +149,7 @@ export function StepShadowing({
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                  "mt-5 rounded-2xl p-4 text-center",
+                  "mt-4 rounded-2xl p-3.5 text-center",
                   lastScore >= 65 ? "bg-mint-50" : "bg-gold-50",
                 )}
               >
@@ -155,35 +165,8 @@ export function StepShadowing({
               </motion.div>
             )}
           </AnimatePresence>
-
-          <div className="mt-auto space-y-2.5 pt-6">
-            {lastScore !== null ? (
-              <>
-                <Button
-                  size="lg"
-                  fullWidth
-                  onClick={() => acceptAndContinue(lastScore)}
-                >
-                  {isLast ? "Terminer le shadowing" : "Phrase suivante"}
-                  <Check className="size-4" strokeWidth={3} />
-                </Button>
-                <Button variant="ghost" fullWidth onClick={retry}>
-                  Réessayer
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant={recognition.supported ? "secondary" : "primary"}
-                size="lg"
-                fullWidth
-                onClick={() => acceptAndContinue(MANUAL_PRACTICE_SCORE)}
-              >
-                Mark as practiced
-              </Button>
-            )}
-          </div>
         </motion.div>
       </AnimatePresence>
-    </div>
+    </LearningScreen>
   );
 }

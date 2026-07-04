@@ -15,6 +15,17 @@ import { CountUp } from "@/components/ui/CountUp";
 import { NextBestAction } from "@/components/today/NextBestAction";
 import { QuestList } from "@/components/today/QuestList";
 import { cn, formatDuration, isWithinHours, todayKey } from "@/lib/utils";
+import {
+  LearningIcon,
+  type LearningIconName,
+} from "@/components/icons/learning-icons";
+
+const SKILL_ICONS: Record<string, LearningIconName> = {
+  listening: "listen",
+  speaking: "speak",
+  phrases: "phrase",
+  reflexes: "reflex",
+};
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 
@@ -161,7 +172,7 @@ export default function ProgressPage() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-widest text-primary-600">
-            Your English today
+            Ton score d&apos;automatisme
           </p>
           <p className="mt-1 text-sm font-semibold leading-snug text-ink">
             {englishToday(stats.fluency, stats.roomsCompleted)}
@@ -197,10 +208,15 @@ export default function ProgressPage() {
               }
             />
             <div className="min-w-0">
-              <p className="text-sm font-bold text-ink">
-                {skill.emoji} {skill.label}
+              <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <LearningIcon
+                  name={SKILL_ICONS[skill.id]}
+                  size="sm"
+                  className="!size-6 !rounded-lg"
+                />
+                {skill.label}
               </p>
-              <p className="text-[11px] leading-tight text-ink-faint">
+              <p className="mt-0.5 text-[11px] leading-tight text-ink-faint">
                 {skill.hint}
               </p>
             </div>

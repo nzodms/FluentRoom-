@@ -63,7 +63,7 @@ export function StepCompleted({
   );
 
   return (
-    <div className="relative flex flex-1 flex-col">
+    <div className="relative flex min-h-full flex-col pb-[max(env(safe-area-inset-bottom),1rem)] pt-4">
       <Confetti />
 
       <div className="flex flex-1 flex-col items-center justify-center pt-2 text-center">
@@ -265,12 +265,12 @@ export function StepCompleted({
       >
         <Link href="/app/today" className="block">
           <Button size="lg" fullWidth>
-            Continue
+            Continuer le path
           </Button>
         </Link>
         <Link href="/app/phrases?review=1" className="block">
           <Button variant="secondary" size="lg" fullWidth>
-            Review phrases
+            Réviser mes phrases
           </Button>
         </Link>
       </motion.div>

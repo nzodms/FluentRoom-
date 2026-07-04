@@ -10,6 +10,9 @@ import type {
 import { computeEarnedBadges } from "@/data/badges";
 import { rooms } from "@/data/rooms";
 import { getLessonById } from "@/data/lessons";
+import { DEFAULT_AVATAR, DEFAULT_UNLOCKED, avatarItems } from "@/data/avatar-items";
+import { applyEnergyReset, currentEnergy, spendEnergy } from "./energy";
+import { CHEST_FILL, addChestProgress } from "./chests";
 import { clamp, daysBetween, todayKey } from "./utils";
 import { loadJSON, saveJSON } from "./storage";
 
@@ -41,6 +44,15 @@ export function defaultProgress(): UserProgress {
     reviewSessions: 0,
     comebackCount: 0,
     claimedQuests: [],
+    avatar: { ...DEFAULT_AVATAR },
+    unlockedItems: [...DEFAULT_UNLOCKED],
+    energy: 5,
+    energyResetOn: null,
+    chestProgress: 0,
+    availableChests: 0,
+    openedChests: 0,
+    rewardHistory: [],
+    streakShields: 0,
   };
 }
 
@@ -62,20 +74,30 @@ export function touchToday(progress: UserProgress): UserProgress {
 
   let streak = 1;
   let comebackCount = progress.comebackCount ?? 0;
+  let streakShields = progress.streakShields ?? 0;
   if (progress.lastActiveDate) {
     const gap = daysBetween(progress.lastActiveDate, today);
-    streak = gap === 1 ? progress.streak + 1 : 1;
+    if (gap === 1) {
+      streak = progress.streak + 1;
+    } else if (gap === 2 && streakShields > 0) {
+      // Un Streak Shield absorbe le jour manqué.
+      streakShields -= 1;
+      streak = progress.streak + 1;
+    } else {
+      streak = 1;
+    }
     // Revenu après avoir raté au moins 2 jours : badge Comeback.
     if (gap >= 3) comebackCount += 1;
   }
 
-  return {
+  return applyEnergyReset({
     ...progress,
     streak,
     comebackCount,
+    streakShields,
     bestStreak: Math.max(progress.bestStreak, streak),
     lastActiveDate: today,
-  };
+  });
 }
 
 export function addXp(progress: UserProgress, amount: number): UserProgress {
@@ -90,7 +112,27 @@ export function addXp(progress: UserProgress, amount: number): UserProgress {
   };
 }
 
-/** Recalcule les badges et horodate les nouveaux. */
+/** Débloque les items d'avatar dont le jalon est atteint. */
+function syncMilestoneItems(progress: UserProgress): UserProgress {
+  const unlocked = new Set(progress.unlockedItems ?? []);
+  const roomsDone = Object.keys(progress.completedRooms).length;
+  const phrasesDone = Object.keys(progress.phrases).length;
+  const streakMax = Math.max(progress.streak, progress.bestStreak);
+  for (const item of avatarItems) {
+    if (unlocked.has(item.id)) continue;
+    const { kind, value = 0 } = item.unlock;
+    const ok =
+      (kind === "rooms" && roomsDone >= value) ||
+      (kind === "streak" && streakMax >= value) ||
+      (kind === "speak" && progress.speakingAttempts >= value) ||
+      (kind === "phrases" && phrasesDone >= value) ||
+      (kind === "xp" && progress.xp >= value);
+    if (ok) unlocked.add(item.id);
+  }
+  return { ...progress, unlockedItems: Array.from(unlocked) };
+}
+
+/** Recalcule badges + items à jalons, horodate les nouveaux badges. */
 function refreshBadges(progress: UserProgress): UserProgress {
   const earned = computeEarnedBadges(progress);
   const badgeDates = { ...(progress.badgeDates ?? {}) };
@@ -98,7 +140,7 @@ function refreshBadges(progress: UserProgress): UserProgress {
   for (const id of earned) {
     if (!badgeDates[id]) badgeDates[id] = now;
   }
-  return { ...progress, earnedBadges: earned, badgeDates };
+  return syncMilestoneItems({ ...progress, earnedBadges: earned, badgeDates });
 }
 
 const STATUS_BY_REVIEWS: PhraseStatus[] = ["new", "seen", "review", "mastered"];
@@ -189,7 +231,11 @@ export function completeRoom(
   const base = alreadyDone ? 20 : 50;
   const bonus = Math.round((input.comprehension / 100) * 30);
   const noSubBonus = input.noSubtitles ? 10 : 0;
-  const xpEarned = base + bonus + noSubBonus;
+  // Sans Focus Energy : mode practice, FP réduits de moitié.
+  const practiceMode = currentEnergy(progress) === 0;
+  const xpEarned = Math.round(
+    (base + bonus + noSubBonus) * (practiceMode ? 0.5 : 1),
+  );
 
   const result: RoomResult = {
     roomId: input.roomId,
@@ -221,8 +267,11 @@ export function completeRoom(
       (next.speakBackAnswers ?? 0) + (input.answeredSpeakBack ? 1 : 0),
   };
 
-  // La room complète l'étape "room" du Daily Path.
+  // La room complète l'étape "room" du Daily Path, consomme 1 énergie
+  // et remplit le coffre.
   next = markDailyStep(next, "room");
+  next = spendEnergy(next, 1);
+  next = addChestProgress(next, practiceMode ? CHEST_FILL.room / 2 : CHEST_FILL.room);
 
   const before = new Set(progress.earnedBadges);
   next = refreshBadges(next);
@@ -300,21 +349,6 @@ export function getDailySteps(progress: UserProgress): DailyStepId[] {
   return progress.dailyPath?.[todayKey()] ?? [];
 }
 
-/* ---------- Daily Chest ---------- */
-
-export const CHEST_XP = 15;
-
-export function canClaimChest(progress: UserProgress): boolean {
-  return progress.chestClaimedOn !== todayKey();
-}
-
-export function claimChest(progress: UserProgress): UserProgress {
-  if (!canClaimChest(progress)) return progress;
-  let next = touchToday({ ...progress, chestClaimedOn: todayKey() });
-  next = addXp(next, CHEST_XP);
-  return refreshBadges(next);
-}
-
 /* ---------- Leçons ---------- */
 
 export function startLesson(
@@ -350,7 +384,8 @@ export function completeLesson(
 ): CompleteLessonOutcome {
   const lesson = getLessonById(lessonId);
   const already = progress.lessons?.[lessonId]?.status === "mastered";
-  const xpEarned = already ? 10 : LESSON_XP;
+  const practiceMode = currentEnergy(progress) === 0;
+  const xpEarned = Math.round((already ? 10 : LESSON_XP) * (practiceMode ? 0.5 : 1));
 
   let next = touchToday(progress);
   next = {
@@ -368,6 +403,8 @@ export function completeLesson(
   next = addXp(next, xpEarned);
   if (lesson) next = unlockPhrases(next, [lesson.phrase.id]);
   next = markDailyStep(next, "lesson");
+  next = spendEnergy(next, 1);
+  next = addChestProgress(next, practiceMode ? CHEST_FILL.lesson / 2 : CHEST_FILL.lesson);
 
   const before = new Set(progress.earnedBadges);
   next = refreshBadges(next);
@@ -389,6 +426,8 @@ export function completeDrillSession(
     drillsCompleted: (next.drillsCompleted ?? 0) + 1,
     listeningScore: blend(next.listeningScore, scorePercent),
   };
+  next = spendEnergy(next, 1);
+  next = addChestProgress(next, CHEST_FILL.drill);
   return refreshBadges(next);
 }
 
@@ -416,7 +455,11 @@ export function completeReviewSession(
   // Première session du jour : complète l'étape Review du Daily Path (+XP).
   const stepDone = getDailySteps(next).includes("review");
   next = markDailyStep(next, "review");
-  if (!stepDone) next = addXp(next, DAILY_STEP_XP.review);
+  if (!stepDone) {
+    next = addXp(next, DAILY_STEP_XP.review);
+    next = spendEnergy(next, 1);
+  }
+  next = addChestProgress(next, CHEST_FILL.review);
   return refreshBadges(next);
 }
 
@@ -434,6 +477,7 @@ export function claimQuest(
     claimedQuests: [...(progress.claimedQuests ?? []), questKey],
   });
   next = addXp(next, xp);
+  next = addChestProgress(next, CHEST_FILL.quest);
   return refreshBadges(next);
 }
 

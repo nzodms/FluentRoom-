@@ -6,7 +6,22 @@ import { Check, Gift } from "lucide-react";
 import type { Quest } from "@/lib/quests";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { XPBubble } from "@/components/reward/XPBubble";
+import {
+  LearningIcon,
+  type LearningIconName,
+} from "@/components/icons/learning-icons";
 import { cn } from "@/lib/utils";
+
+/** Icône stable par quête (remplace les emojis). */
+const QUEST_ICONS: Record<string, LearningIconName> = {
+  room: "listen",
+  "phrases-3": "phrase",
+  "speak-1": "speak",
+  "review-5": "review",
+  "rooms-3": "listen",
+  "practice-10": "speak",
+  "days-5": "streak",
+};
 
 interface QuestListProps {
   quests: Quest[];
@@ -56,7 +71,11 @@ export function QuestList({ quests, onClaim, scope, title }: QuestListProps) {
           >
             <XPBubble amount={bubbleFor === quest.key ? quest.xp : null} />
             <div className="flex items-start justify-between">
-              <span className="text-lg">{quest.emoji}</span>
+              <LearningIcon
+                name={QUEST_ICONS[quest.id] ?? "quest"}
+                variant={quest.claimed ? "completed" : quest.done ? "reward" : "default"}
+                size="sm"
+              />
               {quest.claimed ? (
                 <span className="grid size-6 place-items-center rounded-full bg-mint-500 text-white">
                   <Check className="size-3.5" strokeWidth={3.5} />

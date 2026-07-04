@@ -12,13 +12,11 @@ import {
   Lock,
   RotateCcw,
   Volume2,
-  Zap,
 } from "lucide-react";
 import type { DailyStepId, Lesson, Phrase, Room } from "@/types/learning";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { XPBubble } from "@/components/reward/XPBubble";
-import { CHEST_XP } from "@/lib/progress";
 import { speakText } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 
@@ -30,19 +28,22 @@ interface DailyPathProps {
   warmupPhrases: Phrase[];
   doneSteps: DailyStepId[];
   reviewAvailable: boolean;
-  chestClaimed: boolean;
+  /** Progression du prochain coffre (0-100). */
+  chestProgress: number;
+  /** Coffres prêts à ouvrir. */
+  availableChests: number;
   onWarmupDone: () => void;
-  onChestClaim: () => void;
+  onOpenChest: () => void;
 }
 
 /** Microcopy contextuel qui pousse à finir la session. */
-function pathHint(doneSteps: DailyStepId[], chestClaimed: boolean): string {
+function pathHint(doneSteps: DailyStepId[], availableChests: number): string {
+  if (availableChests > 0) return "Un coffre est prêt — ouvre-le. 🎁";
   const n = doneSteps.length;
   if (n === 0) return "Ton oreille t'attend. Première étape : 1 minute.";
   if (n === 1) return "Ton oreille chauffe. Continue.";
   if (n === 2) return "Plus que 2 étapes pour sécuriser ta série.";
-  if (n === 3) return "Tu es à une étape d'ouvrir ton coffre.";
-  if (!chestClaimed) return "Path terminé — ton coffre t'attend. 🎁";
+  if (n === 3) return "Encore une étape et ton coffre se remplit.";
   return "Journée complète. Ton anglais devient automatique.";
 }
 
@@ -56,18 +57,18 @@ export function DailyPath({
   warmupPhrases,
   doneSteps,
   reviewAvailable,
-  chestClaimed,
+  chestProgress,
+  availableChests,
   onWarmupDone,
-  onChestClaim,
+  onOpenChest,
 }: DailyPathProps) {
   const [warmupOpen, setWarmupOpen] = useState(false);
   const [heard, setHeard] = useState<Set<string>>(new Set());
   const [warmupBubble, setWarmupBubble] = useState<number | null>(null);
-  const [chestBubble, setChestBubble] = useState<number | null>(null);
 
   const stepOrder: DailyStepId[] = ["warmup", "room", "lesson", "review"];
   const firstPending = stepOrder.find((s) => !doneSteps.includes(s));
-  const chestUnlocked = doneSteps.includes("room");
+  const chestReady = availableChests > 0;
 
   const nodeState = (id: DailyStepId): NodeState => {
     if (doneSteps.includes(id)) return "completed";
@@ -124,22 +125,18 @@ export function DailyPath({
     setTimeout(() => setWarmupBubble(null), 1100);
   };
 
-  const claimChest = () => {
-    onChestClaim();
-    setChestBubble(CHEST_XP);
-    setTimeout(() => setChestBubble(null), 1100);
-  };
+
 
   return (
     <div className="card-soft relative overflow-hidden p-0">
       <div className="flex items-center justify-between px-5 pt-4">
         <p className="font-bold text-ink">Today&apos;s Fluency Path</p>
         <span className="text-xs font-semibold text-ink-faint">
-          {doneSteps.length + (chestClaimed ? 1 : 0)} / 5
+          {doneSteps.length} / 4
         </span>
       </div>
       <p className="px-5 pt-1 text-xs font-medium text-ink-soft">
-        {pathHint(doneSteps, chestClaimed)}
+        {pathHint(doneSteps, availableChests)}
       </p>
 
       <div className="p-3">
@@ -306,41 +303,34 @@ export function DailyPath({
           return <div key={step.id}>{node}</div>;
         })}
 
-        {/* Node final : le coffre */}
+        {/* Node final : le coffre (progression + ouverture) */}
         <motion.button
-          whileTap={chestUnlocked && !chestClaimed ? { scale: 0.98 } : undefined}
-          onClick={chestUnlocked && !chestClaimed ? claimChest : undefined}
-          disabled={!chestUnlocked || chestClaimed}
+          whileTap={chestReady ? { scale: 0.98 } : undefined}
+          onClick={chestReady ? onOpenChest : undefined}
+          disabled={!chestReady}
           className={cn(
             "relative flex w-full items-center gap-3.5 rounded-2xl p-3 text-left transition-all",
-            chestClaimed
-              ? "bg-mint-50/70"
-              : chestUnlocked
-                ? "card-tint-gold cursor-pointer ring-1 ring-gold-400/40"
-                : "opacity-45",
+            chestReady
+              ? "card-tint-gold cursor-pointer ring-1 ring-gold-400/40 shimmer"
+              : "opacity-80",
           )}
         >
-          <XPBubble amount={chestBubble} />
           <div className="relative flex flex-col items-center">
             <motion.span
               animate={
-                chestUnlocked && !chestClaimed
+                chestReady
                   ? { rotate: [0, -7, 7, -4, 0], scale: [1, 1.08, 1] }
                   : {}
               }
               transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1.2 }}
               className={cn(
                 "z-10 grid size-10 shrink-0 place-items-center rounded-full",
-                chestClaimed
-                  ? "gradient-mint text-white"
-                  : chestUnlocked
-                    ? "gradient-gold text-white glow-gold"
-                    : "bg-ink/5 text-ink-faint",
+                chestReady
+                  ? "gradient-gold text-white glow-gold"
+                  : "bg-gold-50 text-gold-500",
               )}
             >
-              {chestClaimed ? (
-                <Zap className="size-4" fill="currentColor" />
-              ) : chestUnlocked ? (
+              {chestReady ? (
                 <Gift className="size-4.5" strokeWidth={2.2} />
               ) : (
                 <Lock className="size-4" strokeWidth={2.2} />
@@ -348,25 +338,34 @@ export function DailyPath({
             </motion.span>
           </div>
           <div className="min-w-0 flex-1">
-            <p
-              className={cn(
-                "text-[15px] font-bold",
-                chestClaimed ? "text-mint-600" : "text-ink",
-              )}
-            >
-              {chestClaimed
-                ? `Coffre ouvert · +${CHEST_XP} FP`
-                : "Coffre du jour"}
+            <p className="text-[15px] font-bold text-ink">
+              {chestReady
+                ? availableChests > 1
+                  ? `${availableChests} coffres prêts !`
+                  : "Coffre prêt !"
+                : "Prochain coffre"}
             </p>
-            <p className="truncate text-xs text-ink-faint">
-              {chestClaimed
-                ? "Reviens demain pour le suivant."
-                : chestUnlocked
-                  ? `Touche pour récupérer +${CHEST_XP} Fluency Points`
-                  : "Termine ta room pour le déverrouiller"}
-            </p>
+            {chestReady ? (
+              <p className="truncate text-xs text-ink-faint">
+                FP, énergie, items avatar ou bouclier de série
+              </p>
+            ) : (
+              <div className="mt-1 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/8">
+                  <motion.div
+                    className="h-full rounded-full gradient-gold"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(chestProgress, 100)}%` }}
+                    transition={{ duration: 0.6 }}
+                  />
+                </div>
+                <span className="shrink-0 text-[10px] font-bold text-gold-500">
+                  {Math.round(Math.min(chestProgress, 100))}%
+                </span>
+              </div>
+            )}
           </div>
-          {chestUnlocked && !chestClaimed && (
+          {chestReady && (
             <Chip tone="gold" className="shrink-0">
               Ouvrir
             </Chip>

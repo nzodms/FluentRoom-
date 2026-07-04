@@ -6,6 +6,7 @@ import { ChevronDown, SearchCheck, Volume2 } from "lucide-react";
 import type { Room } from "@/types/learning";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
+import { LearningScreen } from "@/components/session/LearningScreen";
 import { speakText } from "@/lib/speech";
 import { cn } from "@/lib/utils";
 
@@ -25,18 +26,22 @@ export function StepDecode({
   };
 
   return (
-    <div className="flex flex-1 flex-col">
-      <Chip tone="primary" className="self-start">
-        <SearchCheck className="size-3" /> Étape 4 · Decode
-      </Chip>
-      <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-        Décode les phrases clés
-      </h2>
-      <p className="mt-1.5 text-ink-soft">
-        Touche chaque phrase pour l&apos;ouvrir. Retiens le bloc, pas la règle.
-      </p>
-
-      <div className="mt-5 space-y-3">
+    <LearningScreen
+      label={
+        <Chip tone="primary">
+          <SearchCheck className="size-3" /> Decode ·{" "}
+          {visited.size}/{room.decodeNotes.length}
+        </Chip>
+      }
+      title="Décode les phrases clés"
+      subtitle="Touche chaque phrase. Retiens le bloc, pas la règle."
+      action={
+        <Button size="lg" fullWidth onClick={onNext}>
+          À toi de répéter
+        </Button>
+      }
+    >
+      <div className="space-y-2.5">
         {room.decodeNotes.map((note, i) => {
           const isOpen = openIndex === i;
           return (
@@ -44,7 +49,7 @@ export function StepDecode({
               key={note.line}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.06 + i * 0.06 }}
+              transition={{ delay: 0.05 + i * 0.05 }}
               className={cn(
                 "overflow-hidden transition-all",
                 isOpen ? "card-tint-primary shadow-lift" : "card-soft",
@@ -53,7 +58,7 @@ export function StepDecode({
             >
               <button
                 onClick={() => open(i)}
-                className="flex w-full cursor-pointer items-center gap-3 p-4 text-left"
+                className="flex w-full cursor-pointer items-center gap-3 p-3.5 text-left"
               >
                 <span
                   onClick={(e) => {
@@ -62,11 +67,11 @@ export function StepDecode({
                   }}
                   role="button"
                   aria-label={`Écouter : ${note.line}`}
-                  className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-50 text-primary-600 transition-colors hover:bg-primary-100"
+                  className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-50 text-primary-600 transition-colors hover:bg-primary-100"
                 >
-                  <Volume2 className="size-4" strokeWidth={2.2} />
+                  <Volume2 className="size-3.5" strokeWidth={2.2} />
                 </span>
-                <p className="min-w-0 flex-1 font-bold text-ink">
+                <p className="min-w-0 flex-1 text-[15px] font-bold text-ink">
                   &ldquo;{note.line}&rdquo;
                 </p>
                 <ChevronDown
@@ -86,28 +91,18 @@ export function StepDecode({
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
-                    <div className="space-y-2.5 px-4 pb-4">
-                      <motion.p
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="text-[15px] font-semibold text-ink"
-                      >
+                    <div className="space-y-2 px-3.5 pb-3.5">
+                      <p className="text-sm font-semibold text-ink">
                         {note.translation}
-                      </motion.p>
-                      <motion.p
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.12 }}
-                        className="text-sm text-ink-soft"
-                      >
+                      </p>
+                      <p className="text-sm text-ink-soft">
                         {note.explanation}
-                      </motion.p>
+                      </p>
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{
-                          delay: 0.2,
+                          delay: 0.15,
                           type: "spring",
                           stiffness: 350,
                           damping: 20,
@@ -115,9 +110,6 @@ export function StepDecode({
                       >
                         <span className="inline-flex items-center gap-1.5 rounded-xl gradient-primary px-3 py-1.5 text-sm font-bold text-white shadow-glow">
                           🧩 {note.chunk}
-                        </span>
-                        <span className="ml-2 text-xs font-semibold text-primary-600">
-                          ← ton bloc à retenir
                         </span>
                       </motion.div>
                     </div>
@@ -128,16 +120,6 @@ export function StepDecode({
           );
         })}
       </div>
-
-      <p className="mt-3 text-center text-xs font-medium text-ink-faint">
-        {visited.size} / {room.decodeNotes.length} phrases décodées
-      </p>
-
-      <div className="mt-auto pt-5">
-        <Button size="lg" fullWidth onClick={onNext}>
-          À toi de répéter
-        </Button>
-      </div>
-    </div>
+    </LearningScreen>
   );
 }

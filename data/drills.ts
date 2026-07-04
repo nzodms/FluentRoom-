@@ -1,4 +1,9 @@
-export type DrillType = "meaning" | "missing" | "order" | "contraction";
+export type DrillType =
+  | "meaning"
+  | "missing"
+  | "order"
+  | "contraction"
+  | "natural";
 
 export interface Drill {
   id: string;
@@ -180,6 +185,50 @@ export const drills: Drill[] = [
     options: ["kind of", "can do", "keen to"],
     correctIndex: 0,
     explanation: "« Kinda » = « kind of » = un peu, plutôt. Adoucit l'adjectif.",
+  },
+  {
+    id: "d-natural-1",
+    type: "natural",
+    audio: "I'm running late.",
+    prompt: "Real or School English : laquelle dirait un natif ?",
+    options: ["I am in retard.", "I'm running late.", "I have lateness."],
+    correctIndex: 1,
+    explanation:
+      "« I'm running late » — « retard » n'existe pas en anglais (enfin si, mais c'est un mot très insultant).",
+  },
+  {
+    id: "d-natural-2",
+    type: "natural",
+    audio: "I'm good, thanks.",
+    prompt: "On te propose un dessert. La réponse naturelle :",
+    options: ["No, it will not be necessary.", "I'm good, thanks.", "I deny."],
+    correctIndex: 1,
+    explanation:
+      "« I'm good, thanks » : le refus poli des natifs. Les autres sonnent robotiques.",
+  },
+  {
+    id: "d-natural-3",
+    type: "natural",
+    audio: "What do you do?",
+    prompt: "Demander le métier de quelqu'un, version naturelle :",
+    options: [
+      "What is your profession?",
+      "What do you do?",
+      "Which is your work?",
+    ],
+    correctIndex: 1,
+    explanation:
+      "« What do you do? » suffit. « What is your profession? » = formulaire administratif.",
+  },
+  {
+    id: "d-natural-4",
+    type: "natural",
+    audio: "Sounds good!",
+    prompt: "Valider un plan comme un natif :",
+    options: ["It is a good idea for me.", "Sounds good!", "I am agree."],
+    correctIndex: 1,
+    explanation:
+      "« Sounds good! » — et au passage : « I am agree » n'existe pas, c'est « I agree ».",
   },
   {
     id: "d-meaning-5",

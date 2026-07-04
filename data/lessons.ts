@@ -66,6 +66,15 @@ export const lessons: Lesson[] = [
       answer: "I'm trying to find the station",
     },
     shadowLine: "I'm trying to improve my English.",
+    use: {
+      situation: "Tu ne comprends pas une explication. Tu dis :",
+      options: [
+        "I'm trying to understand.",
+        "I try understand.",
+        "I want understand.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-im-trying-to"),
   },
   {
@@ -118,6 +127,15 @@ export const lessons: Lesson[] = [
       answer: "I used to live in Paris",
     },
     shadowLine: "I used to be shy, but not anymore.",
+    use: {
+      situation: "On te demande si tu connais ce quartier. Tu y vivais avant :",
+      options: [
+        "I used to live here.",
+        "I use to live here.",
+        "I lived here since before.",
+      ],
+      correctIndex: 0,
+    },
     phrase: {
       id: "p-i-used-to",
       english: "I used to…",
@@ -178,6 +196,15 @@ export const lessons: Lesson[] = [
       answer: "I'm about to leave",
     },
     shadowLine: "Hurry up, the movie is about to start!",
+    use: {
+      situation: "Ton ami t'appelle pile au moment où tu partais :",
+      options: [
+        "I'm about to leave.",
+        "I'm about leaving.",
+        "I leave right now.",
+      ],
+      correctIndex: 0,
+    },
     phrase: {
       id: "p-im-about-to",
       english: "I'm about to…",
@@ -238,6 +265,15 @@ export const lessons: Lesson[] = [
       answer: "I feel like I'm improving",
     },
     shadowLine: "I feel like we should wait a bit.",
+    use: {
+      situation: "On te propose de sortir, mais tu n'as pas envie :",
+      options: [
+        "I don't feel like going out.",
+        "I don't feel to go out.",
+        "I have no envy to go out.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-i-feel-like"),
   },
   {
@@ -286,6 +322,15 @@ export const lessons: Lesson[] = [
       answer: "It depends on the price",
     },
     shadowLine: "Honestly, it depends on the price.",
+    use: {
+      situation: "« Tu viens samedi ? » Tu n'es pas encore sûr :",
+      options: [
+        "It depends on my work.",
+        "It depends of my work.",
+        "I depend my work.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-it-depends"),
   },
   {
@@ -338,6 +383,15 @@ export const lessons: Lesson[] = [
       answer: "I didn't mean to be rude",
     },
     shadowLine: "Sorry, I didn't mean to interrupt.",
+    use: {
+      situation: "Tu bouscules quelqu'un dans le métro :",
+      options: [
+        "Sorry, I didn't mean to push you.",
+        "Sorry, it was not exprès.",
+        "Sorry, I didn't want push you.",
+      ],
+      correctIndex: 0,
+    },
     phrase: {
       id: "p-didnt-mean-to",
       english: "I didn't mean to…",
@@ -398,6 +452,15 @@ export const lessons: Lesson[] = [
       answer: "We ended up staying home",
     },
     shadowLine: "We ended up staying until midnight.",
+    use: {
+      situation: "Ton plan a changé : finalement, tu es resté chez toi :",
+      options: [
+        "I ended up staying home.",
+        "I finished by staying home.",
+        "I ended to stay home.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-i-ended-up"),
   },
   {
@@ -446,6 +509,15 @@ export const lessons: Lesson[] = [
       answer: "Do you mind if I sit here?",
     },
     shadowLine: "Do you mind if I ask you something?",
+    use: {
+      situation: "Tu veux t'asseoir à côté de quelqu'un dans un café :",
+      options: [
+        "Do you mind if I sit here?",
+        "Do you mind I sit here?",
+        "You accept I sit here?",
+      ],
+      correctIndex: 0,
+    },
     phrase: {
       id: "p-do-you-mind-if",
       english: "Do you mind if…?",
@@ -502,6 +574,15 @@ export const lessons: Lesson[] = [
       answer: "I'm not sure what to do",
     },
     shadowLine: "I'm not sure if it's a good idea.",
+    use: {
+      situation: "On te demande ton avis, tu hésites encore :",
+      options: [
+        "I'm not sure what to do.",
+        "I'm not sure to do.",
+        "I not sure what doing.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-im-not-sure"),
   },
   {
@@ -550,6 +631,15 @@ export const lessons: Lesson[] = [
       answer: "It makes sense now",
     },
     shadowLine: "Yeah, that makes sense, actually.",
+    use: {
+      situation: "Ton collègue explique son choix. Tu valides :",
+      options: [
+        "That makes sense.",
+        "It's logic.",
+        "You have reason.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-that-makes-sense"),
   },
   {
@@ -598,6 +688,15 @@ export const lessons: Lesson[] = [
       answer: "I guess we can try",
     },
     shadowLine: "I guess you're right.",
+    use: {
+      situation: "« Il viendra ? » Tu penses que oui, sans certitude :",
+      options: [
+        "I guess so.",
+        "I think yes.",
+        "I guess it yes.",
+      ],
+      correctIndex: 0,
+    },
     phrase: {
       id: "p-i-guess",
       english: "I guess…",
@@ -658,6 +757,15 @@ export const lessons: Lesson[] = [
       answer: "Let me know what you think",
     },
     shadowLine: "Let me know when you're ready.",
+    use: {
+      situation: "Tu termines un message en proposant ton aide :",
+      options: [
+        "Let me know if you need help.",
+        "Say me if you need help.",
+        "Know me if you need help.",
+      ],
+      correctIndex: 0,
+    },
     phrase: fromRoom("p-let-me-know"),
   },
 ];

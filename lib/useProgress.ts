@@ -6,13 +6,13 @@ import type {
   PracticeResult,
   UserProgress,
 } from "@/types/learning";
-import type { DailyStepId } from "@/types/learning";
+import type { AvatarConfig, DailyStepId, Reward } from "@/types/learning";
+import { openRewardChest } from "./chests";
 import {
   CompleteLessonOutcome,
   CompleteRoomInput,
   CompleteRoomOutcome,
   ReviewSessionResult,
-  claimChest,
   claimQuest,
   completeDailyStep,
   completeDrillSession,
@@ -105,8 +105,15 @@ export function useProgress() {
     setState(completeDailyStep(getSnapshot(), step));
   }, []);
 
-  const openChest = useCallback(() => {
-    setState(claimChest(getSnapshot()));
+  /** Ouvre un coffre disponible et retourne la récompense tirée. */
+  const openChest = useCallback((): Reward | null => {
+    const outcome = openRewardChest(getSnapshot());
+    if (outcome.reward) setState(outcome.progress);
+    return outcome.reward;
+  }, []);
+
+  const setAvatar = useCallback((config: AvatarConfig) => {
+    setState({ ...getSnapshot(), avatar: config });
   }, []);
 
   const beginLesson = useCallback((lessonId: string) => {
@@ -145,6 +152,7 @@ export function useProgress() {
     reset,
     doDailyStep,
     openChest,
+    setAvatar,
     beginLesson,
     finishLesson,
     finishDrillSession,

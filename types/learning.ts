@@ -219,6 +219,12 @@ export interface Lesson {
   };
   /** Phrase à répéter en shadowing. */
   shadowLine: string;
+  /** Situation réelle : choisir la réponse naturelle qui utilise le bloc. */
+  use: {
+    situation: string;
+    options: string[];
+    correctIndex: number;
+  };
   /** La structure rejoint la Phrase Bank une fois la leçon apprise. */
   phrase: Phrase;
 }
@@ -232,6 +238,65 @@ export interface LessonState {
 /* ---------- Daily Path ---------- */
 
 export type DailyStepId = "warmup" | "room" | "lesson" | "review";
+
+/* ---------- Avatar & récompenses ---------- */
+
+export type AvatarItemType =
+  | "skin"
+  | "hair"
+  | "outfit"
+  | "accessory"
+  | "aura"
+  | "background";
+
+export type RewardRarity = "common" | "rare" | "epic" | "special";
+
+export interface AvatarItem {
+  id: string;
+  type: AvatarItemType;
+  name: string;
+  rarity: RewardRarity;
+  /** Couleur principale de l'item (hex) quand pertinent. */
+  color?: string;
+  unlock: {
+    kind:
+      | "default"
+      | "chest"
+      | "rooms"
+      | "streak"
+      | "speak"
+      | "phrases"
+      | "xp";
+    value?: number;
+    label: string;
+  };
+}
+
+/** Configuration du personnage : un item id par emplacement. */
+export interface AvatarConfig {
+  skin: string;
+  hair: string;
+  outfit: string;
+  accessory: string;
+  aura: string;
+  background: string;
+}
+
+export type RewardType = "fp" | "energy" | "shield" | "item";
+
+export interface Reward {
+  type: RewardType;
+  rarity: RewardRarity;
+  label: string;
+  amount?: number;
+  itemId?: string;
+}
+
+export interface RewardHistoryEntry {
+  at: string;
+  label: string;
+  rarity: RewardRarity;
+}
 
 export interface PhraseState {
   status: PhraseStatus;
@@ -276,4 +341,21 @@ export interface UserProgress {
   comebackCount: number;
   /** Quêtes réclamées (clé = "d:date:id" ou "w:semaine:id"). */
   claimedQuests: string[];
+  /* --- Couche attachement & récompenses --- */
+  /** Personnage du profil. */
+  avatar: AvatarConfig;
+  /** Items cosmétiques débloqués. */
+  unlockedItems: string[];
+  /** Focus Energy restante aujourd'hui (0–5). */
+  energy: number;
+  /** Dernier jour où l'énergie a été réinitialisée. */
+  energyResetOn: string | null;
+  /** Progression du prochain coffre (0–100). */
+  chestProgress: number;
+  /** Coffres prêts à ouvrir (max 3). */
+  availableChests: number;
+  openedChests: number;
+  rewardHistory: RewardHistoryEntry[];
+  /** Boucliers de série (max 2) : protègent un jour manqué. */
+  streakShields: number;
 }
