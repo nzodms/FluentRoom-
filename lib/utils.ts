@@ -24,6 +24,11 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/** true si la date ISO est dans les N dernières heures. */
+export function isWithinHours(iso: string, hours: number): boolean {
+  return Date.now() - new Date(iso).getTime() < hours * 3_600_000;
+}
+
 /** "8 min", "1 h 05" — durée courte lisible. */
 export function formatDuration(seconds: number): string {
   const min = Math.round(seconds / 60);

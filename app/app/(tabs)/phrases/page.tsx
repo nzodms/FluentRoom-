@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookMarked, Lock, Play, Search, Sparkles } from "lucide-react";
+import { BookMarked, Lock, Play, Search, Sparkles, Volume2 } from "lucide-react";
+import { speakText } from "@/lib/speech";
 import type { Phrase, PhraseStatus } from "@/types/learning";
-import { allPhrases, phraseCategories } from "@/data/phrases";
+import { allPhrases, getDailyPhrase, phraseCategories } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
 import { PhraseCard } from "@/components/phrase/PhraseCard";
 import { ReviewSession } from "@/components/phrase/ReviewSession";
@@ -70,6 +71,18 @@ export default function PhrasesPage() {
 
   const lockedCount = allPhrases.length - unlockedIds.size;
 
+  // Phrase du jour : rotation quotidienne parmi les phrases débloquées.
+  const todaysPhrase = useMemo(
+    () => getDailyPhrase(unlockedIds),
+    [unlockedIds],
+  );
+
+  // Aperçu de phrases encore verrouillées (donne envie).
+  const lockedPreview = useMemo(
+    () => allPhrases.filter((p) => !unlockedIds.has(p.id)).slice(0, 2),
+    [unlockedIds],
+  );
+
   // Compteurs du "trésor".
   const counts = useMemo(() => {
     const states = Object.entries(progress.phrases);
@@ -106,12 +119,67 @@ export default function PhrasesPage() {
     <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Phrase Bank
+          Ta collection
         </h1>
         <p className="text-sm text-ink-soft">
-          {`${unlockedIds.size} phrase${unlockedIds.size > 1 ? "s" : ""} sur ${allPhrases.length} — ton capital d'anglais réel`}
+          L&apos;anglais réel que tu possèdes vraiment.
         </p>
       </div>
+
+      {/* Complétion de la collection */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card-tint-primary p-4"
+      >
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-bold text-ink">
+            💎 Collection : {unlockedIds.size} / {allPhrases.length}
+          </p>
+          <span className="text-xs font-bold text-primary-600">
+            {Math.round((unlockedIds.size / allPhrases.length) * 100)} %
+          </span>
+        </div>
+        <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-ink/8">
+          <motion.div
+            className="h-full rounded-full gradient-primary"
+            initial={{ width: 0 }}
+            animate={{
+              width: `${(unlockedIds.size / allPhrases.length) * 100}%`,
+            }}
+            transition={{ duration: 1, ease: [0.21, 0.6, 0.35, 1] }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Phrase du jour */}
+      {todaysPhrase && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="card-tint-gold flex items-center gap-3.5 p-4"
+        >
+          <button
+            onClick={() => speakText(todaysPhrase.english)}
+            aria-label="Écouter"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-2xl gradient-gold text-white glow-gold"
+          >
+            <Volume2 className="size-4.5" strokeWidth={2.2} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gold-500">
+              ✨ Phrase du jour
+            </p>
+            <p className="truncate font-bold text-ink">
+              {todaysPhrase.english}
+            </p>
+            <p className="truncate text-xs text-ink-soft">
+              {todaysPhrase.french}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Trésor : compteurs */}
       {unlockedIds.size > 0 && (
@@ -152,10 +220,10 @@ export default function PhrasesPage() {
               <Play className="size-5 fill-current" />
             </span>
             <div className="flex-1">
-              <p className="font-bold">Review session · 1 min</p>
+              <p className="font-bold">Révision express · 1 min</p>
               <p className="text-sm opacity-85">
-                {Math.min(reviewPhrases.length, 5)} phrases à ancrer. « Je la
-                connais » ou « à revoir » — c&apos;est tout.
+                {Math.min(reviewPhrases.length, 5)} phrases à swiper. « Je
+                l&apos;ai » ou « encore fragile » — c&apos;est tout.
               </p>
             </div>
             <Chip className="bg-white/15 text-white">
@@ -280,24 +348,46 @@ export default function PhrasesPage() {
         </div>
       )}
 
-      {/* Teaser phrases restantes */}
+      {/* Prochaines pièces de la collection */}
       {lockedCount > 0 && unlockedIds.size > 0 && (
-        <Link href="/app/today" className="block">
-          <div className="card-soft flex items-center gap-3 p-4 opacity-80 transition-opacity hover:opacity-100">
-            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-ink/5 text-ink-faint">
-              <Lock className="size-4" />
-            </span>
-            <div className="flex-1">
-              <p className="font-bold text-ink">
-                {lockedCount} phrases encore verrouillées
-              </p>
-              <p className="text-sm text-ink-soft">
-                Termine des rooms et des leçons pour les débloquer.
-              </p>
-            </div>
-            <Chip tone="primary">Go</Chip>
+        <div>
+          <p className="mb-2.5 text-sm font-bold text-ink">
+            🔒 Prochaines pièces de ta collection
+          </p>
+          <div className="space-y-2.5">
+            {lockedPreview.map((phrase) => (
+              <div
+                key={phrase.id}
+                className="card-soft flex items-center gap-3 p-4 opacity-75"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-ink/5 text-ink-faint">
+                  <Lock className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="select-none font-bold text-ink blur-[5px]">
+                    {phrase.english}
+                  </p>
+                  <p className="text-xs text-ink-faint">
+                    Se débloque dans une room ou une leçon
+                  </p>
+                </div>
+              </div>
+            ))}
+            <Link href="/app/today" className="block">
+              <div className="card-tint-primary flex items-center gap-3 p-4 transition-all hover:shadow-lift">
+                <div className="flex-1">
+                  <p className="font-bold text-ink">
+                    {lockedCount} phrases encore verrouillées
+                  </p>
+                  <p className="text-sm text-ink-soft">
+                    Chaque room et chaque leçon en débloque de nouvelles.
+                  </p>
+                </div>
+                <Chip tone="primary">Go</Chip>
+              </div>
+            </Link>
           </div>
-        </Link>
+        </div>
       )}
 
       {/* Review session overlay */}

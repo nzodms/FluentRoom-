@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, RotateCcw, Volume2, X } from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import { Check, RotateCcw, Volume2, X, Zap } from "lucide-react";
 import type { Phrase } from "@/types/learning";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { AnimatedCheck } from "@/components/reward/AnimatedCheck";
 import { speakText } from "@/lib/speech";
 import { DAILY_STEP_XP } from "@/lib/progress";
 
@@ -16,9 +22,11 @@ interface ReviewSessionProps {
   onClose: () => void;
 }
 
+const SWIPE_THRESHOLD = 90;
+
 /**
- * Session de révision : cartes rapides, "Je la connais / À revoir".
- * 5 phrases, une minute, XP à la clé.
+ * Révision express : cartes à swiper — droite « Je l'ai »,
+ * gauche « Encore fragile ». 5 phrases, 1 minute, XP à la clé.
  */
 export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps) {
   const [index, setIndex] = useState(0);
@@ -26,24 +34,30 @@ export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps
   const [known, setKnown] = useState<string[]>([]);
   const [toReview, setToReview] = useState<string[]>([]);
   const [done, setDone] = useState(false);
+  const [exitDirection, setExitDirection] = useState(0);
+
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-160, 160], [-8, 8]);
+  const knowOpacity = useTransform(x, [30, SWIPE_THRESHOLD], [0, 1]);
+  const againOpacity = useTransform(x, [-SWIPE_THRESHOLD, -30], [1, 0]);
 
   const phrase = phrases[index];
   const isLast = index === phrases.length - 1;
 
   const answer = (isKnown: boolean) => {
+    setExitDirection(isKnown ? 1 : -1);
     const nextKnown = isKnown ? [...known, phrase.id] : known;
     const nextReview = isKnown ? toReview : [...toReview, phrase.id];
+    setKnown(nextKnown);
+    setToReview(nextReview);
     if (isLast) {
-      setKnown(nextKnown);
-      setToReview(nextReview);
       setDone(true);
       onFinish({ known: nextKnown, toReview: nextReview });
       return;
     }
-    setKnown(nextKnown);
-    setToReview(nextReview);
     setIndex(index + 1);
     setRevealed(false);
+    x.set(0);
   };
 
   return (
@@ -65,7 +79,7 @@ export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps
         {!done ? (
           <>
             <div className="flex items-center justify-between">
-              <p className="font-bold text-ink">Review session</p>
+              <p className="font-bold text-ink">⚡️ Révision express</p>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink-faint">
                   {index + 1} / {phrases.length}
@@ -83,29 +97,60 @@ export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps
               value={(index / phrases.length) * 100}
               className="mt-3"
             />
+            <p className="mt-2 text-center text-xs font-medium text-ink-faint">
+              Swipe → « Je l&apos;ai » · Swipe ← « Encore fragile »
+            </p>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={phrase.id}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -40 }}
-                transition={{ duration: 0.22 }}
-              >
-                <button
-                  onClick={() => {
-                    speakText(phrase.english);
-                    setRevealed(true);
+            <div className="relative mt-4" style={{ minHeight: 190 }}>
+              <AnimatePresence mode="popLayout" custom={exitDirection}>
+                <motion.div
+                  key={phrase.id}
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.8}
+                  style={{ x, rotate }}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x > SWIPE_THRESHOLD) answer(true);
+                    else if (info.offset.x < -SWIPE_THRESHOLD) answer(false);
                   }}
-                  className="card-soft mt-5 flex min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 p-6 text-center"
+                  initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{
+                    opacity: 0,
+                    x: exitDirection * 260,
+                    rotate: exitDirection * 10,
+                    transition: { duration: 0.25 },
+                  }}
+                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  className="relative cursor-grab active:cursor-grabbing"
                 >
-                  <span className="grid size-9 place-items-center rounded-full bg-primary-50 text-primary-600">
-                    <Volume2 className="size-4" />
-                  </span>
-                  <p className="text-xl font-bold text-ink">
-                    {phrase.english}
-                  </p>
-                  <AnimatePresence>
+                  {/* Indicateurs de swipe */}
+                  <motion.span
+                    style={{ opacity: knowOpacity }}
+                    className="pointer-events-none absolute left-3 top-3 z-10 rounded-full gradient-mint px-3 py-1 text-xs font-bold text-white"
+                  >
+                    Je l&apos;ai ✓
+                  </motion.span>
+                  <motion.span
+                    style={{ opacity: againOpacity }}
+                    className="pointer-events-none absolute right-3 top-3 z-10 rounded-full bg-coral-500 px-3 py-1 text-xs font-bold text-white"
+                  >
+                    Encore fragile
+                  </motion.span>
+
+                  <button
+                    onClick={() => {
+                      speakText(phrase.english);
+                      setRevealed(true);
+                    }}
+                    className="card-tint-primary flex min-h-[190px] w-full cursor-pointer flex-col items-center justify-center gap-2 p-6 text-center"
+                  >
+                    <span className="grid size-9 place-items-center rounded-full gradient-primary text-white shadow-glow">
+                      <Volume2 className="size-4" />
+                    </span>
+                    <p className="text-xl font-bold text-ink">
+                      {phrase.english}
+                    </p>
                     {revealed ? (
                       <motion.div
                         initial={{ opacity: 0, y: 6 }}
@@ -123,21 +168,21 @@ export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps
                         Touche pour révéler le sens
                       </p>
                     )}
-                  </AnimatePresence>
-                </button>
-              </motion.div>
-            </AnimatePresence>
+                  </button>
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <Button
                 variant="secondary"
                 size="lg"
                 onClick={() => answer(false)}
               >
-                <RotateCcw className="size-4" /> À revoir
+                <RotateCcw className="size-4" /> Encore fragile
               </Button>
               <Button variant="mint" size="lg" onClick={() => answer(true)}>
-                <Check className="size-4" strokeWidth={3} /> Je la connais
+                <Check className="size-4" strokeWidth={3} /> Je l&apos;ai
               </Button>
             </div>
           </>
@@ -151,22 +196,23 @@ export function ReviewSession({ phrases, onFinish, onClose }: ReviewSessionProps
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 280, damping: 15 }}
-              className="grid size-16 place-items-center rounded-3xl gradient-mint text-white shadow-[0_12px_32px_-8px_rgba(44,183,131,0.5)]"
+              className="grid size-16 place-items-center rounded-3xl gradient-mint text-white glow-mint"
             >
-              <Check className="size-8" strokeWidth={3} />
+              <AnimatedCheck size={34} delay={0.25} />
             </motion.span>
             <h3 className="mt-4 text-xl font-bold text-ink">
-              Session terminée
+              Révision terminée
             </h3>
             <p className="mt-1 text-sm text-ink-soft">
-              {known.length} / {phrases.length} phrases connues.{" "}
+              {known.length} / {phrases.length} phrases solides.{" "}
               {known.length === phrases.length
                 ? "Impeccable — elles s'ancrent pour de bon."
-                : "Les autres reviendront — c'est comme ça qu'on retient."}
+                : "Les fragiles reviendront — c'est comme ça qu'on retient."}
             </p>
             <div className="mt-4 flex gap-2">
               <Chip tone="primary">
-                +{6 + known.length * 2 + DAILY_STEP_XP.review} FP
+                <Zap className="size-3" /> +
+                {6 + known.length * 2 + DAILY_STEP_XP.review} FP
               </Chip>
               <Chip tone="mint">Review du jour ✓</Chip>
             </div>

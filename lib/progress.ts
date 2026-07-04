@@ -40,6 +40,7 @@ export function defaultProgress(): UserProgress {
     drillsCompleted: 0,
     reviewSessions: 0,
     comebackCount: 0,
+    claimedQuests: [],
   };
 }
 
@@ -416,6 +417,23 @@ export function completeReviewSession(
   const stepDone = getDailySteps(next).includes("review");
   next = markDailyStep(next, "review");
   if (!stepDone) next = addXp(next, DAILY_STEP_XP.review);
+  return refreshBadges(next);
+}
+
+/* ---------- Quêtes ---------- */
+
+/** Réclame une quête accomplie : +XP, une seule fois par clé. */
+export function claimQuest(
+  progress: UserProgress,
+  questKey: string,
+  xp: number,
+): UserProgress {
+  if ((progress.claimedQuests ?? []).includes(questKey)) return progress;
+  let next = touchToday({
+    ...progress,
+    claimedQuests: [...(progress.claimedQuests ?? []), questKey],
+  });
+  next = addXp(next, xp);
   return refreshBadges(next);
 }
 

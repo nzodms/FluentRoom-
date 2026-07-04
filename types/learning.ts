@@ -274,4 +274,6 @@ export interface UserProgress {
   reviewSessions: number;
   /** Retours après une pause de 2 jours ou plus. */
   comebackCount: number;
+  /** Quêtes réclamées (clé = "d:date:id" ou "w:semaine:id"). */
+  claimedQuests: string[];
 }

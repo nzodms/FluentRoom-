@@ -10,6 +10,8 @@ import {
   BookMarked,
   TrendingUp,
 } from "lucide-react";
+import { useProgress } from "@/lib/useProgress";
+import { getDailySteps } from "@/lib/progress";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -20,12 +22,25 @@ const tabs = [
   { href: "/app/progress", label: "Progress", icon: TrendingUp },
 ];
 
+/** Badge discret : action encore disponible sur cet onglet aujourd'hui. */
+function useTabBadges(): Record<string, boolean> {
+  const { progress, ready } = useProgress();
+  if (!ready) return {};
+  const steps = getDailySteps(progress);
+  const hasPhrases = Object.keys(progress.phrases).length > 0;
+  return {
+    "/app/today": steps.length < 4,
+    "/app/phrases": hasPhrases && !steps.includes("review"),
+  };
+}
+
 export function BottomNav() {
   const pathname = usePathname();
+  const badges = useTabBadges();
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 md:hidden">
-      <div className="glass border-t border-ink/5 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
+      <div className="glass border-t border-ink/5 px-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-1.5">
         <div className="mx-auto flex max-w-md items-center justify-around">
           {tabs.map((tab) => {
             const active = pathname.startsWith(tab.href);
@@ -36,23 +51,33 @@ export function BottomNav() {
                 href={tab.href}
                 className="relative flex flex-col items-center gap-0.5 px-3 py-1"
               >
+                {/* Capsule qui glisse sous l'onglet actif */}
                 {active && (
                   <motion.span
-                    layoutId="bottomnav-pill"
-                    className="absolute -top-1 h-1 w-8 rounded-full gradient-primary"
-                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                    layoutId="bottomnav-capsule"
+                    className="absolute -top-0.5 -inset-x-1 bottom-0 rounded-2xl bg-primary-100/70"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
                   />
                 )}
-                <Icon
-                  className={cn(
-                    "size-[22px] transition-colors",
-                    active ? "text-primary-600" : "text-ink-faint",
+                <motion.span whileTap={{ scale: 0.82 }} className="relative">
+                  <Icon
+                    className={cn(
+                      "size-[22px] transition-colors",
+                      active ? "text-primary-600" : "text-ink-faint",
+                    )}
+                    strokeWidth={active ? 2.4 : 2}
+                  />
+                  {badges[tab.href] && !active && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -right-1 -top-0.5 size-2 rounded-full bg-coral-500 ring-2 ring-white"
+                    />
                   )}
-                  strokeWidth={active ? 2.4 : 2}
-                />
+                </motion.span>
                 <span
                   className={cn(
-                    "text-[10px] font-semibold tracking-tight transition-colors",
+                    "relative text-[10px] font-semibold tracking-tight transition-colors",
                     active ? "text-primary-600" : "text-ink-faint",
                   )}
                 >

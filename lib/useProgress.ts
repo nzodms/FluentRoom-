@@ -13,6 +13,7 @@ import {
   CompleteRoomOutcome,
   ReviewSessionResult,
   claimChest,
+  claimQuest,
   completeDailyStep,
   completeDrillSession,
   completeLesson,
@@ -129,6 +130,10 @@ export function useProgress() {
     setState(completeReviewSession(getSnapshot(), result));
   }, []);
 
+  const takeQuestReward = useCallback((questKey: string, xp: number) => {
+    setState(claimQuest(getSnapshot(), questKey, xp));
+  }, []);
+
   return {
     progress,
     ready,
@@ -144,5 +149,6 @@ export function useProgress() {
     finishLesson,
     finishDrillSession,
     finishReviewSession,
+    takeQuestReward,
   };
 }

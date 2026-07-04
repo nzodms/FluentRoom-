@@ -1,16 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Flame, Lightbulb, Trophy, Zap } from "lucide-react";
+import { ChevronRight, Flame, Target, Trophy, Zap } from "lucide-react";
 import { badges } from "@/data/badges";
 import { getLevelForXp, getNextLevel, levels } from "@/data/levels";
 import { getRoomById } from "@/data/rooms";
 import { useProgress } from "@/lib/useProgress";
+import { computeQuests } from "@/lib/quests";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { CountUp } from "@/components/ui/CountUp";
-import { cn, formatDuration, todayKey } from "@/lib/utils";
+import { NextBestAction } from "@/components/today/NextBestAction";
+import { QuestList } from "@/components/today/QuestList";
+import { cn, formatDuration, isWithinHours, todayKey } from "@/lib/utils";
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"];
 
@@ -24,8 +28,21 @@ function lastSevenDays(): string[] {
   return days;
 }
 
+/** État lisible du niveau d'anglais aujourd'hui. */
+function englishToday(fluency: number, roomsCompleted: number): string {
+  if (roomsCompleted === 0)
+    return "Ton profil démarre. Première room = premières fondations.";
+  if (fluency < 25)
+    return "Tes fondations se posent. Chaque session rend ton anglais plus automatique.";
+  if (fluency < 50)
+    return "Ton oreille commence à attraper l'anglais réel sans effort.";
+  if (fluency < 75)
+    return "Tes réflexes se construisent — tu réponds de plus en plus vite.";
+  return "Ton anglais devient automatique. Continue de nourrir la machine.";
+}
+
 export default function ProgressPage() {
-  const { progress, ready, stats } = useProgress();
+  const { progress, ready, stats, takeQuestReward } = useProgress();
 
   const level = getLevelForXp(progress.xp);
   const nextLevel = getNextLevel(progress.xp);
@@ -37,22 +54,55 @@ export default function ProgressPage() {
   const weekValues = week.map((day) => progress.activity[day] ?? 0);
   const maxWeek = Math.max(...weekValues, 40);
   const activeDays = weekValues.filter((v) => v > 0).length;
+  const quests = computeQuests(progress);
 
-  // Force / faiblesse + recommandation personnalisée.
+  // Compétences (0–100)
+  const reflexes = Math.min(
+    100,
+    (progress.drillsCompleted ?? 0) * 12 + (progress.reviewSessions ?? 0) * 10,
+  );
+  const phrasesSkill = Math.min(
+    100,
+    Math.round((stats.phrasesUnlocked / 40) * 100),
+  );
   const skills = [
-    { id: "listening", label: "Écoute", value: progress.listeningScore },
-    { id: "speaking", label: "Oral", value: progress.speakingScore },
+    {
+      id: "listening",
+      emoji: "🎧",
+      label: "Listening",
+      value: progress.listeningScore,
+      color: "var(--color-primary-500)",
+      hint: "Ton oreille à vitesse réelle",
+    },
+    {
+      id: "speaking",
+      emoji: "🎙️",
+      label: "Speaking",
+      value: progress.speakingScore,
+      color: "var(--color-mint-500)",
+      hint: "Ta confiance à l'oral",
+    },
+    {
+      id: "phrases",
+      emoji: "💎",
+      label: "Real phrases",
+      value: phrasesSkill,
+      color: "var(--color-gold-400)",
+      hint: `${stats.phrasesUnlocked} phrases · ${stats.phrasesMastered} maîtrisées`,
+    },
+    {
+      id: "reflexes",
+      emoji: "⚡️",
+      label: "Reflexes",
+      value: reflexes,
+      color: "var(--color-coral-500)",
+      hint: "Révisions et ear training",
+    },
   ];
   const strongest = skills.reduce((a, b) => (b.value > a.value ? b : a));
   const weakest = skills.reduce((a, b) => (b.value < a.value ? b : a));
-  const recommendation =
-    stats.roomsCompleted === 0
-      ? "Commence par ta première room : 8 minutes, une vraie scène, 5 phrases réelles."
-      : weakest.id === "speaking"
-        ? "Ton oreille progresse vite. Prochain objectif : répondre plus vite sans traduire — passe par Speak aujourd'hui."
-        : "Ta voix se libère. Prochain objectif : muscler ton oreille à vitesse réelle — lance le challenge d'écoute du jour.";
 
-  // Timeline : dernières activités (rooms terminées + révisions).
+  // Timeline : dernières victoires.
   const timeline = [
     ...Object.values(progress.completedRooms).map((r) => ({
       at: r.completedAt,
@@ -65,83 +115,141 @@ export default function ProgressPage() {
       .map(([id, s]) => ({
         at: s.completedAt as string,
         emoji: "🧱",
-        text: `Structure apprise : ${id.replace(/-/g, " ")}`,
+        text: `Bloc appris : ${id.replace(/-/g, " ")}`,
         xp: 30,
       })),
   ]
     .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 6);
+    .slice(0, 5);
 
-  const avgResponse =
-    progress.responseSpeed ?? (progress.speakingAttempts > 0 ? 4.2 : null);
 
   return (
     <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Ta progression
+          Fluency Profile
         </h1>
         <p className="text-sm text-ink-soft">
-          Chaque session laisse une trace. La voici.
+          Chaque session rend ton anglais plus automatique.
         </p>
       </div>
 
-      {/* Fluency Score */}
-      <Card animate className="flex items-center gap-5 p-5">
-        <ProgressRing
-          value={stats.fluency}
-          size={104}
-          strokeWidth={9}
-          label={
-            <span className="text-center">
-              <span className="block text-2xl font-bold text-ink">
-                <CountUp value={stats.fluency} />
+      {/* Fluency Aura */}
+      <Card animate className="card-tint-primary flex items-center gap-5 p-5">
+        <div className="relative">
+          <motion.span
+            aria-hidden
+            className="absolute inset-0 rounded-full bg-primary-400/30 blur-xl"
+            animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }}
+            transition={{ duration: 3.2, repeat: Infinity }}
+          />
+          <ProgressRing
+            value={stats.fluency}
+            size={110}
+            strokeWidth={10}
+            label={
+              <span className="text-center">
+                <span className="block text-3xl font-bold text-ink">
+                  <CountUp value={stats.fluency} />
+                </span>
+                <span className="block text-[9px] font-bold uppercase tracking-wide text-ink-faint">
+                  Fluency
+                </span>
               </span>
-              <span className="block text-[9px] font-bold uppercase tracking-wide text-ink-faint">
-                Fluency
-              </span>
-            </span>
-          }
-        />
-        <div className="flex-1">
-          <p className="font-bold text-ink">Fluency Score</p>
-          <p className="mt-1 text-sm text-ink-soft">
-            Ton score global : oreille, oral, phrases maîtrisées et
-            régularité.
+            }
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-widest text-primary-600">
+            Your English today
+          </p>
+          <p className="mt-1 text-sm font-semibold leading-snug text-ink">
+            {englishToday(stats.fluency, stats.roomsCompleted)}
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            <Chip tone="primary">💪 Point fort : {strongest.label}</Chip>
+            <Chip tone="mint">💪 {strongest.label}</Chip>
             {strongest.id !== weakest.id && (
-              <Chip tone="coral">🎯 À muscler : {weakest.label}</Chip>
+              <Chip tone="coral">🎯 {weakest.label}</Chip>
             )}
           </div>
         </div>
       </Card>
 
-      {/* Recommandation */}
-      <Card animate delay={0.05} className="flex items-start gap-3 p-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-gold-50 text-gold-500">
-          <Lightbulb className="size-5" />
-        </span>
-        <div>
-          <p className="text-sm font-bold text-ink">Recommandation</p>
-          <p className="mt-0.5 text-sm text-ink-soft">{recommendation}</p>
-        </div>
-      </Card>
+      {/* Skill cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {skills.map((skill, i) => (
+          <motion.div
+            key={skill.id}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 + i * 0.06 }}
+            className="card-soft flex items-center gap-3 p-3.5"
+          >
+            <ProgressRing
+              value={skill.value}
+              size={54}
+              strokeWidth={5}
+              color={skill.color}
+              label={
+                <span className="text-xs font-bold text-ink">
+                  {skill.value}
+                </span>
+              }
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-ink">
+                {skill.emoji} {skill.label}
+              </p>
+              <p className="text-[11px] leading-tight text-ink-faint">
+                {skill.hint}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
-      {/* Niveau */}
-      <Card animate delay={0.1} className="overflow-hidden p-0">
-        <div className="gradient-primary p-5 text-white">
+      {/* Weak spot CTA */}
+      <Link
+        href={weakest.id === "speaking" ? "/app/speak" : "/app/listen"}
+        className="block"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card-soft flex items-center gap-3.5 p-4 ring-1 ring-coral-100 transition-all hover:shadow-lift"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl gradient-coral text-white">
+            <Target className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-ink">
+              Ton maillon faible : {weakest.label}
+            </p>
+            <p className="truncate text-sm text-ink-soft">
+              {weakest.id === "speaking"
+                ? "3 minutes sur Speak et ta confiance monte."
+                : "Un ear training et ton score décolle."}
+            </p>
+          </div>
+          <ChevronRight className="size-4 shrink-0 text-ink-faint" />
+        </motion.div>
+      </Link>
+
+      {/* Next evolution */}
+      <Card animate delay={0.22} className="overflow-hidden p-0">
+        <div className="relative gradient-primary p-5 text-white">
+          <span className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-white/10" />
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest opacity-80">
-                Niveau actuel
+                Next evolution
               </p>
               <p className="mt-1 text-2xl font-bold tracking-tight">
                 {level.name}
               </p>
               <p className="text-sm opacity-85">
-                Équivalent {level.cefr} · {level.tagline}
+                {level.cefr} · {level.tagline}
               </p>
             </div>
             <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-3xl">
@@ -152,13 +260,13 @@ export default function ProgressPage() {
             <div className="mt-4">
               <div className="mb-1.5 flex justify-between text-xs font-medium opacity-85">
                 <span>
-                  Prochain palier : {nextLevel.name} ({nextLevel.cefr})
+                  → {nextLevel.name} ({nextLevel.cefr})
                 </span>
                 <span>
                   {progress.xp} / {nextLevel.minXp} FP
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/20">
                 <motion.div
                   className="h-full rounded-full bg-white"
                   initial={{ width: 0 }}
@@ -174,7 +282,7 @@ export default function ProgressPage() {
             <div
               key={l.id}
               className={cn(
-                "flex-1 py-3 text-center",
+                "flex-1 py-2.5 text-center",
                 l.id === level.id ? "bg-primary-50" : "",
               )}
             >
@@ -191,103 +299,30 @@ export default function ProgressPage() {
         </div>
       </Card>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          delay={0.15}
-          emoji="🔥"
-          value={String(progress.streak)}
-          label={`jour${progress.streak > 1 ? "s" : ""} de suite`}
-          sub={`Record : ${progress.bestStreak}`}
+      {/* Quêtes hebdo */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.26 }}
+      >
+        <QuestList
+          quests={quests}
+          scope="weekly"
+          title="🏹 Quêtes de la semaine"
+          onClaim={(quest) => takeQuestReward(quest.key, quest.xp)}
         />
-        <StatCard
-          delay={0.18}
-          emoji="🚪"
-          value={`${stats.roomsCompleted}/${stats.totalRooms}`}
-          label="rooms terminées"
-          sub={stats.roomsCompleted === 0 ? "Lance-toi !" : "Continue !"}
-        />
-        <StatCard
-          delay={0.21}
-          emoji="💎"
-          value={String(stats.phrasesUnlocked)}
-          label="phrases réelles"
-          sub={`${stats.phrasesMastered} maîtrisées`}
-        />
-        <StatCard
-          delay={0.24}
-          emoji="🧱"
-          value={String(stats.lessonsMastered)}
-          label="structures apprises"
-          sub="Leçons terminées"
-        />
-        <StatCard
-          delay={0.27}
-          emoji="🎧"
-          value={
-            stats.listeningTimeSec > 0
-              ? formatDuration(stats.listeningTimeSec)
-              : "—"
-          }
-          label="temps d'entraînement"
-          sub="Rooms cumulées"
-        />
-        <StatCard
-          delay={0.3}
-          emoji="⚡️"
-          value={avgResponse ? `${avgResponse}s` : "—"}
-          label="vitesse de réponse"
-          sub={avgResponse ? "En progression" : "Bientôt mesurée"}
-        />
-      </div>
-
-      {/* Scores */}
-      <Card animate delay={0.32} className="p-5">
-        <p className="font-bold text-ink">Tes scores</p>
-        <div className="mt-4 flex items-center justify-around">
-          <div className="flex flex-col items-center gap-2">
-            <ProgressRing
-              value={progress.listeningScore}
-              size={88}
-              strokeWidth={8}
-              color="var(--color-primary-500)"
-              label={
-                <span className="text-xl font-bold text-ink">
-                  {progress.listeningScore}
-                </span>
-              }
-            />
-            <p className="text-sm font-semibold text-ink-soft">🎧 Écoute</p>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <ProgressRing
-              value={progress.speakingScore}
-              size={88}
-              strokeWidth={8}
-              color="var(--color-mint-500)"
-              label={
-                <span className="text-xl font-bold text-ink">
-                  {progress.speakingScore}
-                </span>
-              }
-            />
-            <p className="text-sm font-semibold text-ink-soft">
-              🎙️ Confiance orale
-            </p>
-          </div>
-        </div>
-      </Card>
+      </motion.div>
 
       {/* Activité hebdo */}
-      <Card animate delay={0.35} className="p-5">
+      <Card animate delay={0.3} className="p-5">
         <div className="flex items-center justify-between">
-          <p className="font-bold text-ink">Activité de la semaine</p>
+          <p className="font-bold text-ink">Ta semaine</p>
           <Chip tone="primary">
             <Zap className="size-3" />
             {weekValues.reduce((a, b) => a + b, 0)} FP
           </Chip>
         </div>
-        <div className="mt-5 flex h-32 items-end justify-between gap-2">
+        <div className="mt-5 flex h-28 items-end justify-between gap-2">
           {week.map((day, i) => {
             const value = weekValues[i];
             const isToday = day === todayKey();
@@ -305,7 +340,7 @@ export default function ProgressPage() {
                   )}
                   initial={{ height: 0 }}
                   animate={{ height: `${height}%` }}
-                  transition={{ delay: 0.4 + i * 0.06, duration: 0.5 }}
+                  transition={{ delay: 0.35 + i * 0.06, duration: 0.5 }}
                 />
                 <span
                   className={cn(
@@ -320,9 +355,12 @@ export default function ProgressPage() {
           })}
         </div>
         <div className="mt-4 flex items-center gap-3 rounded-2xl bg-coral-50 p-3">
-          <Flame className="size-5 shrink-0 text-coral-500" fill="currentColor" />
+          <Flame
+            className="size-5 shrink-0 text-coral-500"
+            fill="currentColor"
+          />
           <p className="flex-1 text-sm font-semibold text-ink">
-            Régularité : {activeDays} / 7 jours actifs
+            {activeDays} / 7 jours actifs · série de {progress.streak}
           </p>
           <span className="text-sm font-bold text-coral-600">
             {activeDays >= 5 ? "Excellent" : activeDays >= 3 ? "Solide" : "À toi"}
@@ -330,10 +368,48 @@ export default function ProgressPage() {
         </div>
       </Card>
 
-      {/* Timeline */}
+      {/* Stats rapides */}
+      <div className="grid grid-cols-3 gap-2.5">
+        {[
+          {
+            emoji: "🚪",
+            value: `${stats.roomsCompleted}`,
+            label: "rooms",
+          },
+          {
+            emoji: "🧱",
+            value: `${stats.lessonsMastered}`,
+            label: "blocs appris",
+          },
+          {
+            emoji: "🎧",
+            value:
+              stats.listeningTimeSec > 0
+                ? formatDuration(stats.listeningTimeSec)
+                : "—",
+            label: "d'entraînement",
+          },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 + i * 0.05 }}
+            className="card-soft p-3 text-center"
+          >
+            <span className="text-lg">{stat.emoji}</span>
+            <p className="text-lg font-bold text-ink">{stat.value}</p>
+            <p className="text-[10px] font-semibold text-ink-faint">
+              {stat.label}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Recent wins */}
       {timeline.length > 0 && (
         <Card animate delay={0.4} className="p-5">
-          <p className="font-bold text-ink">Dernières victoires</p>
+          <p className="font-bold text-ink">🏅 Dernières victoires</p>
           <div className="mt-3 space-y-3">
             {timeline.map((item, i) => (
               <motion.div
@@ -358,6 +434,9 @@ export default function ProgressPage() {
         </Card>
       )}
 
+      {/* Next best action */}
+      <NextBestAction progress={progress} />
+
       {/* Badges */}
       <div>
         <div className="mb-3 flex items-center justify-between">
@@ -365,7 +444,11 @@ export default function ProgressPage() {
             <Trophy className="size-5 text-gold-500" /> Badges
           </h2>
           <span className="text-sm font-medium text-ink-faint">
-            {progress.earnedBadges.filter((id) => badges.some((b) => b.id === id)).length}{" "}
+            {
+              progress.earnedBadges.filter((id) =>
+                badges.some((b) => b.id === id),
+              ).length
+            }{" "}
             / {badges.length}
           </span>
         </div>
@@ -373,6 +456,7 @@ export default function ProgressPage() {
           {badges.map((badge, i) => {
             const earned = progress.earnedBadges.includes(badge.id);
             const date = progress.badgeDates?.[badge.id];
+            const isRecent = earned && date && isWithinHours(date, 48);
             return (
               <motion.div
                 key={badge.id}
@@ -380,13 +464,13 @@ export default function ProgressPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 + i * 0.04 }}
                 className={cn(
-                  "card-soft p-4 text-center",
+                  "p-4 text-center",
                   earned
-                    ? "ring-1 ring-gold-400/30"
-                    : "opacity-55 grayscale",
+                    ? cn("card-tint-gold ring-1 ring-gold-400/30", isRecent && "shimmer")
+                    : "card-soft opacity-50 grayscale",
                 )}
               >
-                <span className="text-3xl">{badge.emoji}</span>
+                <span className="text-3xl">{earned ? badge.emoji : "🔒"}</span>
                 <p className="mt-2 text-sm font-bold text-ink">{badge.name}</p>
                 <p className="mt-0.5 text-xs text-ink-faint">
                   {earned ? badge.description : badge.requirement}
@@ -406,30 +490,5 @@ export default function ProgressPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  emoji,
-  value,
-  label,
-  sub,
-  delay,
-}: {
-  emoji: string;
-  value: string;
-  label: string;
-  sub: string;
-  delay: number;
-}) {
-  return (
-    <Card animate delay={delay} className="p-4">
-      <span className="text-xl">{emoji}</span>
-      <p className="mt-1.5 text-2xl font-bold tracking-tight text-ink">
-        {value}
-      </p>
-      <p className="text-sm font-medium text-ink-soft">{label}</p>
-      <p className="mt-0.5 text-xs text-ink-faint">{sub}</p>
-    </Card>
   );
 }

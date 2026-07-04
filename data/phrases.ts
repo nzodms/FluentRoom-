@@ -12,6 +12,14 @@ export function getPhraseById(id: string): Phrase | undefined {
   return allPhrases.find((phrase) => phrase.id === id);
 }
 
+/** Phrase du jour : rotation quotidienne parmi les phrases débloquées. */
+export function getDailyPhrase(unlockedIds: Set<string>): Phrase | null {
+  const pool = allPhrases.filter((p) => unlockedIds.has(p.id));
+  if (pool.length === 0) return null;
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return pool[dayIndex % pool.length];
+}
+
 export const phraseCategories: Array<{
   id: PhraseCategory;
   label: string;

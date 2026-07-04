@@ -13,13 +13,14 @@ import { useRecognition } from "@/lib/useRecognition";
 import { matchScore, scoreFeedback } from "@/lib/scoring";
 import { cn } from "@/lib/utils";
 
+/** Rareté d'une phrase dans la collection. */
 const statusConfig: Record<
   PhraseStatus,
   { label: string; tone: "coral" | "primary" | "gold" | "mint" }
 > = {
   new: { label: "New", tone: "coral" },
-  seen: { label: "Seen", tone: "primary" },
-  review: { label: "To review", tone: "gold" },
+  seen: { label: "Useful", tone: "primary" },
+  review: { label: "Natural", tone: "gold" },
   mastered: { label: "Mastered", tone: "mint" },
 };
 

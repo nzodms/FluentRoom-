@@ -1,11 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { SearchCheck, Volume2 } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, SearchCheck, Volume2 } from "lucide-react";
 import type { Room } from "@/types/learning";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { speakText } from "@/lib/speech";
+import { cn } from "@/lib/utils";
 
 export function StepDecode({
   room,
@@ -14,54 +16,124 @@ export function StepDecode({
   room: Room;
   onNext: () => void;
 }) {
+  const [openIndex, setOpenIndex] = useState<number>(0);
+  const [visited, setVisited] = useState<Set<number>>(new Set([0]));
+
+  const open = (i: number) => {
+    setOpenIndex(i === openIndex ? -1 : i);
+    setVisited((prev) => new Set(prev).add(i));
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <Chip tone="primary" className="self-start">
         <SearchCheck className="size-3" /> Étape 4 · Decode
       </Chip>
       <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-        Décodons phrase par phrase
+        Décode les phrases clés
       </h2>
       <p className="mt-1.5 text-ink-soft">
-        Les blocs surlignés sont ceux que les natifs utilisent tout le temps.
-        Retiens le bloc, pas la règle.
+        Touche chaque phrase pour l&apos;ouvrir. Retiens le bloc, pas la règle.
       </p>
 
-      <div className="mt-6 space-y-4">
-        {room.decodeNotes.map((note, i) => (
-          <motion.div
-            key={note.line}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 + i * 0.08 }}
-            className="card-soft p-5"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-lg font-bold text-ink">
-                &ldquo;{note.line}&rdquo;
-              </p>
+      <div className="mt-5 space-y-3">
+        {room.decodeNotes.map((note, i) => {
+          const isOpen = openIndex === i;
+          return (
+            <motion.div
+              key={note.line}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 + i * 0.06 }}
+              className={cn(
+                "overflow-hidden transition-all",
+                isOpen ? "card-tint-primary shadow-lift" : "card-soft",
+                visited.has(i) && !isOpen && "opacity-80",
+              )}
+            >
               <button
-                onClick={() => speakText(note.line)}
-                aria-label={`Écouter : ${note.line}`}
-                className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full bg-primary-50 text-primary-600 transition-colors hover:bg-primary-100"
+                onClick={() => open(i)}
+                className="flex w-full cursor-pointer items-center gap-3 p-4 text-left"
               >
-                <Volume2 className="size-4" strokeWidth={2.2} />
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    speakText(note.line);
+                  }}
+                  role="button"
+                  aria-label={`Écouter : ${note.line}`}
+                  className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-50 text-primary-600 transition-colors hover:bg-primary-100"
+                >
+                  <Volume2 className="size-4" strokeWidth={2.2} />
+                </span>
+                <p className="min-w-0 flex-1 font-bold text-ink">
+                  &ldquo;{note.line}&rdquo;
+                </p>
+                <ChevronDown
+                  className={cn(
+                    "size-4 shrink-0 text-ink-faint transition-transform",
+                    isOpen && "rotate-180",
+                  )}
+                />
               </button>
-            </div>
-            <p className="mt-1.5 text-[15px] text-ink-soft">
-              {note.translation}
-            </p>
-            <p className="mt-3 text-sm text-ink-soft">{note.explanation}</p>
-            <div className="mt-3">
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100 px-3 py-1.5 text-sm font-bold text-primary-700 ring-1 ring-primary-200">
-                🧩 {note.chunk}
-              </span>
-            </div>
-          </motion.div>
-        ))}
+
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2.5 px-4 pb-4">
+                      <motion.p
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="text-[15px] font-semibold text-ink"
+                      >
+                        {note.translation}
+                      </motion.p>
+                      <motion.p
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.12 }}
+                        className="text-sm text-ink-soft"
+                      >
+                        {note.explanation}
+                      </motion.p>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{
+                          delay: 0.2,
+                          type: "spring",
+                          stiffness: 350,
+                          damping: 20,
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1.5 rounded-xl gradient-primary px-3 py-1.5 text-sm font-bold text-white shadow-glow">
+                          🧩 {note.chunk}
+                        </span>
+                        <span className="ml-2 text-xs font-semibold text-primary-600">
+                          ← ton bloc à retenir
+                        </span>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
       </div>
 
-      <div className="mt-auto pt-6">
+      <p className="mt-3 text-center text-xs font-medium text-ink-faint">
+        {visited.size} / {room.decodeNotes.length} phrases décodées
+      </p>
+
+      <div className="mt-auto pt-5">
         <Button size="lg" fullWidth onClick={onNext}>
           À toi de répéter
         </Button>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import {
   ArrowLeft,
   ArrowRight,
@@ -169,7 +170,9 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="gradient-hero flex min-h-dvh flex-col">
+    <MotionConfig reducedMotion="user">
+    <div className="flex min-h-dvh flex-col">
+      <AmbientBackground />
       <header className="mx-auto flex w-full max-w-lg items-center justify-between px-4 pt-5">
         <Logo />
         <span className="text-sm font-semibold text-ink-faint">
@@ -285,12 +288,15 @@ export default function OnboardingPage() {
                   >
                     <Sparkles className="size-9" />
                   </motion.span>
-                  <div className="text-center">
+                  <div className="max-w-xs text-center">
                     <p className="text-lg font-bold text-ink">
                       Création de ton plan…
                     </p>
-                    <p className="mt-1 text-sm text-ink-soft">
-                      Oreille · réflexes · phrases réelles
+                    <p className="mt-2 text-sm text-ink-soft">
+                      Tu n&apos;as pas besoin de connaître plus de mots.{" "}
+                      <span className="font-semibold text-ink">
+                        Tu as besoin de meilleurs réflexes.
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -410,7 +416,8 @@ export default function OnboardingPage() {
                       Start my first room <ArrowRight className="size-4" />
                     </Button>
                     <p className="mt-3 text-center text-xs text-ink-faint">
-                      8 minutes. Une vraie scène. De vraies phrases.
+                      8 minutes. Une vraie scène. De vraies phrases. Ton plan
+                      entraîne ton oreille avant ta mémoire.
                     </p>
                   </motion.div>
                 </motion.div>
@@ -433,6 +440,7 @@ export default function OnboardingPage() {
         )}
       </main>
     </div>
+    </MotionConfig>
   );
 }
 

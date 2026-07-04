@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Flame, Sparkles } from "lucide-react";
+import { ArrowRight, Flame, Sparkles } from "lucide-react";
+import { AnimatedCheck } from "@/components/reward/AnimatedCheck";
 import type { Room } from "@/types/learning";
 import { getBadgeById } from "@/data/badges";
 import { getLevelForXp, getNextLevel } from "@/data/levels";
@@ -66,15 +67,24 @@ export function StepCompleted({
       <Confetti />
 
       <div className="flex flex-1 flex-col items-center justify-center pt-2 text-center">
-        <motion.div
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.1 }}
-          className="grid size-22 place-items-center rounded-[2rem] gradient-mint text-white shadow-[0_16px_40px_-10px_rgba(44,183,131,0.5)]"
-          style={{ width: 88, height: 88 }}
-        >
-          <Check className="size-11" strokeWidth={3} />
-        </motion.div>
+        <div className="relative">
+          <motion.span
+            aria-hidden
+            className="absolute inset-0 rounded-[2rem] bg-mint-400/40 blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.8, 0.4] }}
+            transition={{ duration: 1.2, delay: 0.3 }}
+          />
+          <motion.div
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.1 }}
+            className="relative grid place-items-center rounded-[2rem] gradient-mint text-white shadow-[0_16px_40px_-10px_rgba(44,183,131,0.5)]"
+            style={{ width: 88, height: 88 }}
+          >
+            <AnimatedCheck size={46} delay={0.35} />
+          </motion.div>
+        </div>
 
         <motion.h2
           initial={{ opacity: 0, y: 16 }}

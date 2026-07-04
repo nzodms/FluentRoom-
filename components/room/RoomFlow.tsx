@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import type { Room } from "@/types/learning";
 import { useProgress } from "@/lib/useProgress";
 import { clamp, cn } from "@/lib/utils";
@@ -94,7 +95,9 @@ export function RoomFlow({ room }: { room: Room }) {
   const isCompleted = step >= TOTAL_INTERACTIVE_STEPS;
 
   return (
-    <div className="gradient-hero flex min-h-dvh flex-col">
+    <MotionConfig reducedMotion="user">
+    <div className="flex min-h-dvh flex-col">
+      <AmbientBackground />
       {/* Header room */}
       <header className="sticky top-0 z-40 glass border-b border-ink/5">
         <div className="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
@@ -188,5 +191,6 @@ export function RoomFlow({ room }: { room: Room }) {
         </AnimatePresence>
       </main>
     </div>
+    </MotionConfig>
   );
 }
