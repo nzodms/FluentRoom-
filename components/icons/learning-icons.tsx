@@ -149,10 +149,12 @@ export function LearningIcon({
 export function LearningGlyph({
   name,
   className,
+  style,
 }: {
   name: LearningIconName;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const Icon = ICONS[name];
-  return <Icon className={className} strokeWidth={2.2} />;
+  return <Icon className={className} style={style} strokeWidth={2.2} />;
 }

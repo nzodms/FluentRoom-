@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ChevronRight, Flame, Target, Trophy, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronRight, Flame, Target, Trophy, X, Zap } from "lucide-react";
+import type { Badge } from "@/types/learning";
 import { badges } from "@/data/badges";
+import { BadgeMedallion } from "@/components/reward/BadgeMedallion";
 import { getLevelForXp, getNextLevel, levels } from "@/data/levels";
 import { getRoomById } from "@/data/rooms";
 import { useProgress } from "@/lib/useProgress";
@@ -54,6 +57,7 @@ function englishToday(fluency: number, roomsCompleted: number): string {
 
 export default function ProgressPage() {
   const { progress, ready, stats, takeQuestReward } = useProgress();
+  const [openBadge, setOpenBadge] = useState<Badge | null>(null);
 
   const level = getLevelForXp(progress.xp);
   const nextLevel = getNextLevel(progress.xp);
@@ -468,43 +472,104 @@ export default function ProgressPage() {
             / {badges.length}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3">
           {badges.map((badge, i) => {
             const earned = progress.earnedBadges.includes(badge.id);
             const date = progress.badgeDates?.[badge.id];
             const isRecent = earned && date && isWithinHours(date, 48);
             return (
-              <motion.div
+              <motion.button
                 key={badge.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 + i * 0.04 }}
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setOpenBadge(badge)}
                 className={cn(
-                  "p-4 text-center",
+                  "cursor-pointer p-3 pb-2.5 text-center",
                   earned
                     ? cn("card-tint-gold ring-1 ring-gold-400/30", isRecent && "shimmer")
-                    : "card-soft opacity-50 grayscale",
+                    : "card-soft opacity-60",
                 )}
               >
-                <span className="text-3xl">{earned ? badge.emoji : "🔒"}</span>
-                <p className="mt-2 text-sm font-bold text-ink">{badge.name}</p>
-                <p className="mt-0.5 text-xs text-ink-faint">
-                  {earned ? badge.description : badge.requirement}
+                <BadgeMedallion badge={badge} earned={earned} size={56} />
+                <p className="mt-1 truncate text-xs font-bold text-ink">
+                  {badge.name}
                 </p>
-                {earned && date && (
-                  <p className="mt-1.5 text-[10px] font-bold text-gold-500">
-                    Débloqué le{" "}
-                    {new Date(date).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </p>
-                )}
-              </motion.div>
+              </motion.button>
             );
           })}
         </div>
       </div>
+
+      {/* Détail badge : bottom sheet */}
+      <AnimatePresence>
+        {openBadge && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpenBadge(null)}
+              className="fixed inset-0 z-[70] bg-ink/45 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[2rem] bg-white p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)] shadow-lift"
+            >
+              <button
+                onClick={() => setOpenBadge(null)}
+                aria-label="Fermer"
+                className="absolute right-4 top-4 grid size-8 cursor-pointer place-items-center rounded-full bg-ink/5 text-ink-soft"
+              >
+                <X className="size-4" />
+              </button>
+              {(() => {
+                const earned = progress.earnedBadges.includes(openBadge.id);
+                const date = progress.badgeDates?.[openBadge.id];
+                return (
+                  <div className="text-center">
+                    <motion.div
+                      initial={{ scale: 0.6, rotate: -8 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.1 }}
+                      className="inline-block"
+                    >
+                      <BadgeMedallion badge={openBadge} earned={earned} size={104} />
+                    </motion.div>
+                    <p className="mt-2 text-xl font-bold tracking-tight text-ink">
+                      {openBadge.name}
+                    </p>
+                    <p className="mt-1.5 text-sm text-ink-soft">
+                      {openBadge.description}
+                    </p>
+                    <div className="mt-4 rounded-2xl bg-cream p-3.5 text-sm">
+                      {earned ? (
+                        <p className="font-semibold text-gold-500">
+                          🏆 Débloqué
+                          {date
+                            ? ` le ${new Date(date).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "long",
+                              })}`
+                            : ""}
+                        </p>
+                      ) : (
+                        <p className="font-semibold text-ink-soft">
+                          🔒 À débloquer : {openBadge.requirement}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

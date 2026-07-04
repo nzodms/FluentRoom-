@@ -5,6 +5,9 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ListChecks, Mic, Volume2 } from "lucide-react";
 import type { Lesson, LessonExample } from "@/types/learning";
+import { CHEST_FILL } from "@/lib/chests";
+import { nextAffordableHint } from "@/lib/shop";
+import { useProgress } from "@/lib/useProgress";
 import { speakText } from "@/lib/speech";
 import { useRecognition } from "@/lib/useRecognition";
 import { matchScore, scoreFeedback } from "@/lib/scoring";
@@ -537,6 +540,8 @@ export function StepUnlock({
   /** Ligne bonus propre au template (ex: score réflexe). */
   extra?: React.ReactNode;
 }) {
+  const { progress } = useProgress();
+  const shopHint = nextAffordableHint(progress);
   return (
     <div className="relative flex min-h-full flex-col pb-[max(env(safe-area-inset-bottom),1rem)] pt-4">
       <Confetti count={18} />
@@ -596,13 +601,30 @@ export function StepUnlock({
           transition={{ delay: 0.7, type: "spring", stiffness: 300, damping: 20 }}
           className="mt-4 flex flex-col items-center gap-2"
         >
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <Chip tone="primary">+{outcome.xpEarned} FP</Chip>
+            <Chip tone="gold">🧰 Coffre +{CHEST_FILL.lesson}%</Chip>
             {outcome.newBadges.includes("first-lesson") && (
               <Chip tone="gold">🧱 Badge First Lesson</Chip>
             )}
           </div>
           {extra}
+          {shopHint && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1 }}
+            >
+              <Link
+                href="/app/shop"
+                className="text-xs font-bold text-primary-600 hover:text-primary-700"
+              >
+                {shopHint.missing === 0
+                  ? `💡 Tu peux t'offrir « ${shopHint.name} » en boutique →`
+                  : `💡 Plus que ${shopHint.missing} FP pour « ${shopHint.name} » →`}
+              </Link>
+            </motion.div>
+          )}
         </motion.div>
       </div>
       <motion.div
