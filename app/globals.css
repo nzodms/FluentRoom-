@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* — FluentRoom design tokens — */
+  --color-cream: #f7f6f1;
+  --color-cream-deep: #efede6;
+  --color-surface: #ffffff;
+
+  --color-ink: #171a26;
+  --color-ink-soft: #575c6e;
+  --color-ink-faint: #9095a5;
+
+  --color-primary-50: #eeeefd;
+  --color-primary-100: #dfdffb;
+  --color-primary-200: #c3c4f6;
+  --color-primary-300: #9d9ff0;
+  --color-primary-400: #7679e9;
+  --color-primary-500: #585ce2;
+  --color-primary-600: #4649cb;
+  --color-primary-700: #393ca8;
+  --color-primary-800: #2e3184;
+
+  --color-coral-50: #fff1ec;
+  --color-coral-100: #ffe0d5;
+  --color-coral-400: #ff8a63;
+  --color-coral-500: #f9714a;
+  --color-coral-600: #e2572f;
+
+  --color-mint-50: #e9f8f1;
+  --color-mint-100: #d2f1e3;
+  --color-mint-400: #43cb95;
+  --color-mint-500: #2cb783;
+  --color-mint-600: #1f9c6d;
+
+  --color-gold-50: #fdf6e7;
+  --color-gold-400: #eec153;
+  --color-gold-500: #dfa92e;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  --shadow-soft: 0 6px 24px -6px rgba(23, 26, 38, 0.08),
+    0 2px 8px -2px rgba(23, 26, 38, 0.04);
+  --shadow-lift: 0 16px 40px -12px rgba(23, 26, 38, 0.14),
+    0 4px 12px -4px rgba(23, 26, 38, 0.06);
+  --shadow-glow: 0 8px 32px -8px rgba(88, 92, 226, 0.45);
+
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+  --radius-4xl: 2.25rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(23, 26, 38, 0.15) transparent;
+}
+
+/* Utilitaires maison */
+@utility glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+@utility card-soft {
+  background: var(--color-surface);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(23, 26, 38, 0.05);
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility gradient-hero {
+  background: radial-gradient(
+      1200px 500px at 85% -10%,
+      rgba(88, 92, 226, 0.14),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 420px at 0% 10%,
+      rgba(249, 113, 74, 0.08),
+      transparent 55%
+    ),
+    var(--color-cream);
+}
+
+@utility gradient-primary {
+  background: linear-gradient(135deg, #6a6ef0 0%, #585ce2 55%, #4649cb 100%);
+}
+
+@utility gradient-mint {
+  background: linear-gradient(135deg, #43cb95 0%, #2cb783 60%, #1f9c6d 100%);
+}
