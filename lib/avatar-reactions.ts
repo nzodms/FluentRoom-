@@ -12,17 +12,27 @@ export type CharacterReaction =
   | "streakSafe"
   | "lessonCompleted"
   | "wrongAnswer"
-  | "comeback";
+  | "comeback"
+  | "itemEquipped"
+  | "itemPurchased"
+  | "notEnoughFP"
+  | "reflexRound"
+  | "reviewDone";
 
 export const REACTION_EXPRESSION: Record<CharacterReaction, CharacterExpression> = {
   chestReady: "excited",
   chestOpening: "surprised",
   rewardRare: "celebrating",
   energyLow: "tired",
-  streakSafe: "proud",
+  streakSafe: "relaxed",
   lessonCompleted: "proud",
   wrongAnswer: "encouraging",
   comeback: "happy",
+  itemEquipped: "happy",
+  itemPurchased: "celebrating",
+  notEnoughFP: "worried",
+  reflexRound: "determined",
+  reviewDone: "relaxed",
 };
 
 /** Expression du personnage sur Today, selon l'état du jour. */

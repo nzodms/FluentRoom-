@@ -45,6 +45,7 @@ export function StepRecap({
       choices={list}
       correctIndex={correct}
       explanation={`L'essentiel : ${room.expectedIdeas[0]}`}
+      theme="nuance"
       continueLabel="Débloquer mes phrases"
       onContinue={onNext}
     />

@@ -372,6 +372,7 @@ export function StepQuiz({ lesson, onNext }: StepProps) {
       choices={question.options}
       correctIndex={question.correctIndex}
       explanation={question.explanation}
+      theme="pattern"
       continueLabel={isLast ? "À toi de construire" : "Question suivante"}
       onContinue={() => (isLast ? onNext() : setIndex(index + 1))}
     />
@@ -521,6 +522,7 @@ export function StepUse({ lesson, onNext }: StepProps) {
       subtitle="Choisis la réponse qu'un natif dirait vraiment."
       choices={lesson.use.options}
       correctIndex={lesson.use.correctIndex}
+      theme="speaking"
       explanation={`Le bloc « ${lesson.structure} » sort tout seul — c'est exactement le réflexe qu'on construit.`}
       continueLabel="Mark as learned"
       onContinue={() => onNext()}
@@ -603,9 +605,13 @@ export function StepUnlock({
         >
           <div className="flex flex-wrap justify-center gap-2">
             <Chip tone="primary">+{outcome.xpEarned} FP</Chip>
-            <Chip tone="gold">🧰 Coffre +{CHEST_FILL.lesson}%</Chip>
+            <Chip tone="gold">
+              <LearningGlyph name="chest" className="size-3" /> Coffre +{CHEST_FILL.lesson}%
+            </Chip>
             {outcome.newBadges.includes("first-lesson") && (
-              <Chip tone="gold">🧱 Badge First Lesson</Chip>
+              <Chip tone="gold">
+                <LearningGlyph name="quest" className="size-3" /> Badge First Lesson
+              </Chip>
             )}
           </div>
           {extra}
@@ -620,8 +626,8 @@ export function StepUnlock({
                 className="text-xs font-bold text-primary-600 hover:text-primary-700"
               >
                 {shopHint.missing === 0
-                  ? `💡 Tu peux t'offrir « ${shopHint.name} » en boutique →`
-                  : `💡 Plus que ${shopHint.missing} FP pour « ${shopHint.name} » →`}
+                  ? `Tu peux t'offrir « ${shopHint.name} » en boutique →`
+                  : `Plus que ${shopHint.missing} FP pour « ${shopHint.name} » →`}
               </Link>
             </motion.div>
           )}

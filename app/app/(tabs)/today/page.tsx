@@ -224,7 +224,7 @@ export default function TodayPage() {
         <QuestList
           quests={quests}
           scope="daily"
-          title="⚔️ Quêtes du jour"
+          title="Quêtes du jour"
           onClaim={(quest) => takeQuestReward(quest.key, quest.xp)}
         />
       </motion.div>

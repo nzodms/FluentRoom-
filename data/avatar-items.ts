@@ -18,6 +18,10 @@ export const avatarItems: AvatarItem[] = [
   { id: "hair-short-blond", type: "hair", name: "Court blond", rarity: "rare", color: "#D8B266", unlock: { kind: "streak", value: 3, label: "Série de 3 jours" } },
   { id: "hair-curly", type: "hair", name: "Bouclé noir", rarity: "rare", color: "#241C18", unlock: { kind: "rooms", value: 3, label: "3 rooms terminées" } },
   { id: "hair-bun", type: "hair", name: "Chignon lavande", rarity: "epic", color: "#8E7CC3", unlock: { kind: "chest", label: "Dans un coffre" } },
+  { id: "hair-ponytail", type: "hair", name: "Queue de cheval", rarity: "common", color: "#6B4F35", unlock: { kind: "default", label: "Inclus" } },
+  { id: "hair-messy", type: "hair", name: "Messy brun", rarity: "common", color: "#4A3728", unlock: { kind: "default", label: "Inclus" } },
+  { id: "hair-afro", type: "hair", name: "Afro noir", rarity: "rare", color: "#241C18", unlock: { kind: "rooms", value: 5, label: "5 rooms terminées" } },
+  { id: "hair-wavy", type: "hair", name: "Ondulé blond foncé", rarity: "rare", color: "#B8925A", unlock: { kind: "streak", value: 7, label: "Série de 7 jours" } },
 
   /* --- Tenues --- */
   { id: "outfit-tee-blue", type: "outfit", name: "Tee essentiel", rarity: "common", color: "#585CE2", unlock: { kind: "default", label: "Inclus" } },

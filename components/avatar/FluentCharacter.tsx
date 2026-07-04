@@ -14,7 +14,11 @@ export type CharacterExpression =
   | "focused"
   | "surprised"
   | "encouraging"
-  | "celebrating";
+  | "celebrating"
+  | "shy"
+  | "determined"
+  | "worried"
+  | "relaxed";
 
 type Pose = "normal" | "celebrate" | "tired";
 
@@ -28,7 +32,21 @@ const POSE_BY_EXPRESSION: Record<CharacterExpression, Pose> = {
   surprised: "normal",
   encouraging: "normal",
   celebrating: "celebrate",
+  shy: "normal",
+  determined: "normal",
+  worried: "normal",
+  relaxed: "normal",
 };
+
+/** Expressions où les joues rosissent. */
+const BLUSH: CharacterExpression[] = [
+  "happy",
+  "excited",
+  "celebrating",
+  "encouraging",
+  "shy",
+  "relaxed",
+];
 
 interface FluentCharacterProps {
   config: AvatarConfig;
@@ -42,9 +60,9 @@ interface FluentCharacterProps {
 }
 
 /**
- * Le personnage FluentRoom : 2D vectoriel en calques
- * (ombre, aura, corps, bras, tête, cheveux, visage, accessoire),
- * expressions et postures. Premium, expressif, jamais bébé.
+ * Le personnage FluentRoom : 2D cartoon premium en calques
+ * (ombre, aura, corps, bras, tête inclinable, cheveux, visage, accessoire).
+ * Expressif, attachant, jamais bébé — la figure centrale de l'app.
  */
 export function FluentCharacter({
   config,
@@ -66,10 +84,13 @@ export function FluentCharacter({
   const isHoodie = config.outfit.includes("hoodie");
   const pose = POSE_BY_EXPRESSION[expression];
 
-  // Yeux : fermés-joyeux (arcs) pour celebrating/proud, mi-clos si tired.
+  // Yeux : fermés-joyeux (arcs hauts) en célébration, arcs doux si relaxed,
+  // mi-clos si fatigué, grands ouverts si surpris/excité.
   const eyesClosed = expression === "celebrating";
+  const eyesRelaxed = expression === "relaxed";
   const eyesHalf = expression === "tired";
   const eyesWide = expression === "surprised" || expression === "excited";
+  const blush = BLUSH.includes(expression);
 
   return (
     <motion.svg
@@ -160,48 +181,69 @@ export function FluentCharacter({
           <circle cx="155" cy="192" r="9" fill={skin} />
         </motion.g>
 
-        {/* Torse */}
-        <path
-          d="M42 200 C42 152 62 136 100 136 C138 136 158 152 158 200 Z"
-          fill={outfit}
-        />
-        {/* Ombre du torse côté droit */}
-        <path
-          d="M118 140 C142 148 152 166 154 200 L158 200 C158 152 138 136 100 136 Z"
-          fill="rgba(0,0,0,0.1)"
-        />
-        {/* Highlight torse */}
-        <path
-          d="M52 200 C52 164 62 148 78 142"
-          fill="none"
-          stroke="rgba(255,255,255,0.28)"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        {/* Capuche + cordons */}
-        {isHoodie && (
-          <>
-            <path
-              d="M58 200 C58 164 72 150 100 150 C128 150 142 164 142 200"
-              fill="none"
-              stroke="rgba(255,255,255,0.3)"
-              strokeWidth="4"
-            />
-            <line x1="92" y1="152" x2="92" y2="172" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
-            <line x1="108" y1="152" x2="108" y2="172" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
-          </>
-        )}
-        {/* Col en V */}
-        {!isHoodie && (
-          <path d="M86 138 L100 152 L114 138 L114 145 L100 160 L86 145 Z" fill="rgba(0,0,0,0.15)" />
-        )}
+        {/* Torse : respire doucement */}
+        <motion.g
+          style={{ transformBox: "fill-box", transformOrigin: "50% 100%" }}
+          animate={animated ? { scaleY: [1, 1.018, 1] } : undefined}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {/* Épaules arrondies */}
+          <path
+            d="M42 200 C42 158 56 140 76 136 C84 134 92 133 100 133 C108 133 116 134 124 136 C144 140 158 158 158 200 Z"
+            fill={outfit}
+          />
+          {/* Ombre du torse côté droit */}
+          <path
+            d="M118 138 C142 146 152 166 154 200 L158 200 C158 158 144 140 124 136 Z"
+            fill="rgba(0,0,0,0.1)"
+          />
+          {/* Highlight torse */}
+          <path
+            d="M52 200 C52 164 62 148 78 141"
+            fill="none"
+            stroke="rgba(255,255,255,0.28)"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          {/* Capuche + cordons */}
+          {isHoodie && (
+            <>
+              <path
+                d="M58 200 C58 164 72 150 100 150 C128 150 142 164 142 200"
+                fill="none"
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="4"
+              />
+              <line x1="92" y1="152" x2="92" y2="172" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
+              <line x1="108" y1="152" x2="108" y2="172" stroke="rgba(255,255,255,0.5)" strokeWidth="3" strokeLinecap="round" />
+            </>
+          )}
+          {/* Col en V */}
+          {!isHoodie && (
+            <path d="M86 136 L100 150 L114 136 L114 143 L100 158 L86 143 Z" fill="rgba(0,0,0,0.15)" />
+          )}
+        </motion.g>
 
         {/* Cou */}
         <rect x="88" y="112" width="24" height="26" rx="10" fill={skin} />
         <rect x="88" y="112" width="24" height="10" fill={skinShade} rx="8" />
 
-        {/* Tête */}
-        <g>
+        {/* Tête + visage + cheveux : légère inclinaison vivante */}
+        <motion.g
+          style={{ transformBox: "fill-box", transformOrigin: "50% 82%" }}
+          animate={
+            animated
+              ? pose === "celebrate"
+                ? { rotate: [-2, 2, -2] }
+                : { rotate: [0, -1.6, 0, 1.6, 0] }
+              : undefined
+          }
+          transition={
+            pose === "celebrate"
+              ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 7, repeat: Infinity, ease: "easeInOut" }
+          }
+        >
           {/* Oreilles */}
           <circle cx="55" cy="78" r="7" fill={skin} />
           <circle cx="145" cy="78" r="7" fill={skin} />
@@ -218,175 +260,258 @@ export function FluentCharacter({
             fill={skinShade}
             opacity="0.4"
           />
-        </g>
+          {/* Lumière du menton */}
+          <path
+            d="M84 112 Q100 118 116 112"
+            fill="none"
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
 
-        {/* Cheveux */}
-        {hairStyle.startsWith("hair-short") && (
-          <g fill={hair}>
-            <path d="M54 76 C54 42 72 28 100 28 C128 28 146 42 146 76 C146 66 138 54 128 52 C122 44 112 42 100 42 C88 42 78 44 72 52 C62 54 54 66 54 76 Z" />
-            <path d="M66 44 Q76 34 92 32" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="5" strokeLinecap="round" />
-          </g>
-        )}
-        {hairStyle === "hair-long" && (
-          <g fill={hair}>
-            <path d="M50 118 C46 60 66 26 100 26 C134 26 154 60 150 118 C144 112 142 96 140 82 C138 62 124 44 100 44 C76 44 62 62 60 82 C58 96 56 112 50 118 Z" />
-            <path d="M64 48 Q76 32 94 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round" />
-          </g>
-        )}
-        {hairStyle === "hair-curly" && (
-          <g fill={hair}>
-            <circle cx="70" cy="42" r="15" />
-            <circle cx="100" cy="32" r="17" />
-            <circle cx="130" cy="42" r="15" />
-            <circle cx="56" cy="60" r="11" />
-            <circle cx="144" cy="60" r="11" />
-            <path d="M56 62 C60 40 76 30 100 30 C124 30 140 40 144 62 C132 50 116 46 100 46 C84 46 68 50 56 62 Z" />
-            <circle cx="83" cy="34" r="4" fill="rgba(255,255,255,0.2)" />
-          </g>
-        )}
-        {hairStyle === "hair-bun" && (
-          <g fill={hair}>
-            <circle cx="100" cy="18" r="13" />
-            <circle cx="96" cy="14" r="4" fill="rgba(255,255,255,0.25)" />
-            <path d="M56 76 C56 42 74 28 100 28 C126 28 144 42 144 76 C138 62 126 52 100 52 C74 52 62 62 56 76 Z" />
-          </g>
-        )}
-
-        {/* Sourcils */}
-        <g stroke={hair} strokeWidth="4" strokeLinecap="round" fill="none">
-          {expression === "surprised" || expression === "excited" ? (
-            <>
-              <path d="M74 56 Q82 50 90 54" />
-              <path d="M110 54 Q118 50 126 56" />
-            </>
-          ) : expression === "tired" ? (
-            <>
-              <path d="M76 60 Q84 62 90 64" />
-              <path d="M110 64 Q116 62 124 60" />
-            </>
-          ) : expression === "focused" ? (
-            <>
-              <path d="M76 61 L90 62" />
-              <path d="M110 62 L124 61" />
-            </>
-          ) : expression === "proud" ? (
-            <>
-              <path d="M74 58 Q82 53 90 56" />
-              <path d="M110 58 Q118 56 126 60" />
-            </>
-          ) : (
-            <>
-              <path d="M75 58 Q83 54 90 57" />
-              <path d="M110 57 Q117 54 125 58" />
-            </>
+          {/* Cheveux */}
+          {hairStyle.startsWith("hair-short") && (
+            <g fill={hair}>
+              <path d="M54 76 C54 42 72 28 100 28 C128 28 146 42 146 76 C146 66 138 54 128 52 C122 44 112 42 100 42 C88 42 78 44 72 52 C62 54 54 66 54 76 Z" />
+              <path d="M66 44 Q76 34 92 32" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="5" strokeLinecap="round" />
+            </g>
           )}
-        </g>
+          {hairStyle === "hair-long" && (
+            <g fill={hair}>
+              <path d="M50 118 C46 60 66 26 100 26 C134 26 154 60 150 118 C144 112 142 96 140 82 C138 62 124 44 100 44 C76 44 62 62 60 82 C58 96 56 112 50 118 Z" />
+              <path d="M64 48 Q76 32 94 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round" />
+            </g>
+          )}
+          {hairStyle === "hair-curly" && (
+            <g fill={hair}>
+              <circle cx="70" cy="42" r="15" />
+              <circle cx="100" cy="32" r="17" />
+              <circle cx="130" cy="42" r="15" />
+              <circle cx="56" cy="60" r="11" />
+              <circle cx="144" cy="60" r="11" />
+              <path d="M56 62 C60 40 76 30 100 30 C124 30 140 40 144 62 C132 50 116 46 100 46 C84 46 68 50 56 62 Z" />
+              <circle cx="83" cy="34" r="4" fill="rgba(255,255,255,0.2)" />
+            </g>
+          )}
+          {hairStyle === "hair-bun" && (
+            <g fill={hair}>
+              <circle cx="100" cy="18" r="13" />
+              <circle cx="96" cy="14" r="4" fill="rgba(255,255,255,0.25)" />
+              <path d="M56 76 C56 42 74 28 100 28 C126 28 144 42 144 76 C138 62 126 52 100 52 C74 52 62 62 56 76 Z" />
+            </g>
+          )}
+          {hairStyle === "hair-afro" && (
+            <g fill={hair}>
+              <circle cx="100" cy="34" r="27" />
+              <circle cx="68" cy="46" r="21" />
+              <circle cx="132" cy="46" r="21" />
+              <circle cx="55" cy="68" r="14" />
+              <circle cx="145" cy="68" r="14" />
+              <path d="M54 70 C56 42 74 24 100 24 C126 24 144 42 146 70 C134 54 118 48 100 48 C82 48 66 54 54 70 Z" />
+              <circle cx="80" cy="30" r="4.5" fill="rgba(255,255,255,0.18)" />
+              <circle cx="118" cy="26" r="3.5" fill="rgba(255,255,255,0.15)" />
+            </g>
+          )}
+          {hairStyle === "hair-ponytail" && (
+            <g fill={hair}>
+              <path d="M54 76 C54 42 72 28 100 28 C128 28 146 42 146 76 C146 66 138 54 128 52 C122 44 112 42 100 42 C88 42 78 44 72 52 C62 54 54 66 54 76 Z" />
+              {/* Queue de cheval qui retombe */}
+              <path d="M138 44 C158 50 164 76 156 104 C152 116 144 118 142 110 C148 88 146 62 132 52 Z" />
+              <circle cx="139" cy="48" r="6" fill="rgba(255,255,255,0.22)" />
+              <path d="M66 44 Q76 34 92 32" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="5" strokeLinecap="round" />
+            </g>
+          )}
+          {hairStyle === "hair-wavy" && (
+            <g fill={hair}>
+              <path d="M50 112 C44 62 66 26 100 26 C134 26 156 62 150 112 C146 104 148 94 142 88 C146 78 140 70 136 64 C134 50 120 42 100 42 C80 42 66 50 64 64 C60 70 54 78 58 88 C52 94 54 104 50 112 Z" />
+              <path d="M64 48 Q78 32 96 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="5" strokeLinecap="round" />
+            </g>
+          )}
+          {hairStyle === "hair-messy" && (
+            <g fill={hair}>
+              <path d="M54 74 C52 52 60 40 70 36 C74 26 88 22 100 26 C112 20 126 26 130 34 C142 38 148 54 146 74 C142 62 136 56 128 52 C120 46 110 44 100 44 C90 44 80 46 72 52 C64 56 58 64 54 74 Z" />
+              <path d="M78 28 L84 20 L90 28" />
+              <path d="M108 26 L116 18 L120 27" />
+              <path d="M66 40 Q76 32 90 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="4" strokeLinecap="round" />
+            </g>
+          )}
 
-        {/* Yeux */}
-        {eyesClosed ? (
-          <g stroke="#2B2E3A" strokeWidth="3.5" strokeLinecap="round" fill="none">
-            <path d="M76 74 Q82 68 88 74" />
-            <path d="M112 74 Q118 68 124 74" />
-          </g>
-        ) : (
-          <g>
-            <ellipse cx="82" cy="73" rx="7.5" ry={eyesHalf ? 4.5 : 8.5} fill="#FFFFFF" />
-            <ellipse cx="118" cy="73" rx="7.5" ry={eyesHalf ? 4.5 : 8.5} fill="#FFFFFF" />
-            <motion.g
-              animate={animated && !eyesHalf ? { scaleY: [1, 1, 0.08, 1, 1] } : undefined}
-              transition={{
-                duration: 4.6,
-                times: [0, 0.46, 0.5, 0.54, 1],
-                repeat: Infinity,
-              }}
-              style={{ transformBox: "fill-box", transformOrigin: "50% 50%" }}
-            >
-              <circle cx={expression === "focused" ? 84 : 82} cy={eyesHalf ? 75 : 74} r={eyesWide ? 4.6 : 3.8} fill="#2B2E3A" />
-              <circle cx={expression === "focused" ? 120 : 118} cy={eyesHalf ? 75 : 74} r={eyesWide ? 4.6 : 3.8} fill="#2B2E3A" />
-              <circle cx="83.5" cy="72" r="1.4" fill="#FFFFFF" />
-              <circle cx="119.5" cy="72" r="1.4" fill="#FFFFFF" />
-            </motion.g>
-            {eyesHalf && (
-              <g fill={skin}>
-                <rect x="73" y="63" width="18" height="7" rx="3" />
-                <rect x="109" y="63" width="18" height="7" rx="3" />
-              </g>
+          {/* Sourcils */}
+          <g stroke={hair} strokeWidth="4" strokeLinecap="round" fill="none">
+            {expression === "surprised" || expression === "excited" ? (
+              <>
+                <path d="M74 56 Q82 50 90 54" />
+                <path d="M110 54 Q118 50 126 56" />
+              </>
+            ) : expression === "tired" ? (
+              <>
+                <path d="M76 60 Q84 62 90 64" />
+                <path d="M110 64 Q116 62 124 60" />
+              </>
+            ) : expression === "focused" || expression === "determined" ? (
+              <>
+                <path d="M76 62 L90 60" />
+                <path d="M110 60 L124 62" />
+              </>
+            ) : expression === "worried" ? (
+              <>
+                <path d="M76 56 Q84 60 90 62" />
+                <path d="M110 62 Q116 60 124 56" />
+              </>
+            ) : expression === "shy" ? (
+              <>
+                <path d="M76 57 Q83 55 90 58" />
+                <path d="M110 58 Q117 55 124 57" />
+              </>
+            ) : expression === "proud" ? (
+              <>
+                <path d="M74 58 Q82 53 90 56" />
+                <path d="M110 58 Q118 56 126 60" />
+              </>
+            ) : (
+              <>
+                <path d="M75 58 Q83 54 90 57" />
+                <path d="M110 57 Q117 54 125 58" />
+              </>
             )}
           </g>
-        )}
 
-        {/* Bouche */}
-        {expression === "surprised" ? (
-          <ellipse cx="100" cy="95" rx="6.5" ry="8" fill="#7A3B36" />
-        ) : expression === "excited" || expression === "celebrating" ? (
-          <path d="M86 90 Q100 106 114 90 Q100 98 86 90 Z" fill="#7A3B36" />
-        ) : expression === "tired" ? (
-          <path d="M92 96 L108 96" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-        ) : expression === "focused" ? (
-          <path d="M94 95 Q100 98 106 95" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-        ) : expression === "proud" ? (
-          <path d="M90 93 Q100 100 112 91" stroke="#7A3B36" strokeWidth="4" strokeLinecap="round" fill="none" />
-        ) : expression === "happy" || expression === "encouraging" ? (
-          <path d="M88 91 Q100 102 112 91" stroke="#7A3B36" strokeWidth="4" strokeLinecap="round" fill="none" />
-        ) : (
-          <path d="M92 94 Q100 99 108 94" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-        )}
+          {/* Yeux */}
+          {eyesClosed ? (
+            <g stroke="#2B2E3A" strokeWidth="3.5" strokeLinecap="round" fill="none">
+              <path d="M76 74 Q82 68 88 74" />
+              <path d="M112 74 Q118 68 124 74" />
+            </g>
+          ) : eyesRelaxed ? (
+            <g stroke="#2B2E3A" strokeWidth="3.5" strokeLinecap="round" fill="none">
+              <path d="M76 72 Q82 77 88 72" />
+              <path d="M112 72 Q118 77 124 72" />
+            </g>
+          ) : (
+            <g>
+              <ellipse cx="82" cy="73" rx="8" ry={eyesHalf ? 4.5 : 9} fill="#FFFFFF" />
+              <ellipse cx="118" cy="73" rx="8" ry={eyesHalf ? 4.5 : 9} fill="#FFFFFF" />
+              <motion.g
+                animate={animated && !eyesHalf ? { scaleY: [1, 1, 0.08, 1, 1] } : undefined}
+                transition={{
+                  duration: 4.6,
+                  times: [0, 0.46, 0.5, 0.54, 1],
+                  repeat: Infinity,
+                }}
+                style={{ transformBox: "fill-box", transformOrigin: "50% 50%" }}
+              >
+                {/* Iris + pupille + double reflet : regard vivant */}
+                <circle cx={expression === "focused" || expression === "determined" ? 84 : 82} cy={eyesHalf ? 75 : 74} r={eyesWide ? 5.4 : 4.6} fill="#5C4632" />
+                <circle cx={expression === "focused" || expression === "determined" ? 120 : 118} cy={eyesHalf ? 75 : 74} r={eyesWide ? 5.4 : 4.6} fill="#5C4632" />
+                <circle cx={expression === "focused" || expression === "determined" ? 84 : 82} cy={eyesHalf ? 75 : 74} r={eyesWide ? 3 : 2.5} fill="#26202A" />
+                <circle cx={expression === "focused" || expression === "determined" ? 120 : 118} cy={eyesHalf ? 75 : 74} r={eyesWide ? 3 : 2.5} fill="#26202A" />
+                <circle cx="84" cy="71.5" r="1.6" fill="#FFFFFF" />
+                <circle cx="120" cy="71.5" r="1.6" fill="#FFFFFF" />
+                <circle cx="80.5" cy="75.5" r="0.9" fill="rgba(255,255,255,0.7)" />
+                <circle cx="116.5" cy="75.5" r="0.9" fill="rgba(255,255,255,0.7)" />
+              </motion.g>
+              {eyesHalf && (
+                <g fill={skin}>
+                  <rect x="73" y="63" width="18" height="7" rx="3" />
+                  <rect x="109" y="63" width="18" height="7" rx="3" />
+                </g>
+              )}
+            </g>
+          )}
 
-        {/* Joues */}
-        {(expression === "happy" ||
-          expression === "excited" ||
-          expression === "celebrating" ||
-          expression === "encouraging") && (
-          <g fill="rgba(249,113,74,0.3)">
-            <ellipse cx="70" cy="86" rx="6" ry="4" />
-            <ellipse cx="130" cy="86" rx="6" ry="4" />
-          </g>
-        )}
+          {/* Nez discret */}
+          <path
+            d="M97 84 Q100 87 103 84"
+            fill="none"
+            stroke={skinShade}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
 
-        {/* Accessoires */}
-        {accessory?.id.startsWith("acc-glasses") && (
-          <g stroke={accessory.color ?? "#2B2E3A"} strokeWidth="3" fill="rgba(255,255,255,0.12)">
-            <rect x="70" y="63" width="25" height="21" rx="9" />
-            <rect x="105" y="63" width="25" height="21" rx="9" />
-            <path d="M95 72 L105 72" fill="none" />
-            <path d="M70 70 L57 66" fill="none" />
-            <path d="M130 70 L143 66" fill="none" />
-          </g>
-        )}
-        {accessory?.id.startsWith("acc-headphones") && (
-          <g>
-            <path
-              d="M53 74 C53 42 72 24 100 24 C128 24 147 42 147 74"
-              fill="none"
-              stroke={accessory.color ?? "#585CE2"}
-              strokeWidth="8"
-              strokeLinecap="round"
-            />
-            <rect x="45" y="64" width="15" height="26" rx="7" fill={accessory.color ?? "#585CE2"} />
-            <rect x="140" y="64" width="15" height="26" rx="7" fill={accessory.color ?? "#585CE2"} />
-            <rect x="48" y="68" width="4" height="18" rx="2" fill="rgba(255,255,255,0.35)" />
-            <rect x="143" y="68" width="4" height="18" rx="2" fill="rgba(255,255,255,0.35)" />
-          </g>
-        )}
-        {accessory?.id.startsWith("acc-cap") && (
-          <g>
-            <path
-              d="M56 60 C56 36 74 24 100 24 C126 24 144 36 144 60 L56 60 Z"
-              fill={accessory.color ?? "#F9714A"}
-            />
-            <path d="M140 54 L168 60 C170 63 168 66 165 66 L140 61 Z" fill={accessory.color ?? "#F9714A"} />
-            <path d="M64 42 Q76 30 94 28" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
-            <circle cx="100" cy="28" r="3.5" fill="rgba(0,0,0,0.15)" />
-          </g>
-        )}
-        {accessory?.id === "acc-earbuds" && (
-          <g>
-            <ellipse cx="54" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
-            <ellipse cx="146" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
-            <rect x="51" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
-            <rect x="144" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
-          </g>
-        )}
+          {/* Bouche */}
+          {expression === "surprised" ? (
+            <ellipse cx="100" cy="95" rx="6.5" ry="8" fill="#7A3B36" />
+          ) : expression === "excited" || expression === "celebrating" ? (
+            <g>
+              <path d="M86 90 Q100 108 114 90 Q100 96 86 90 Z" fill="#7A3B36" />
+              <path d="M92 91 Q100 95 108 91 L108 93 Q100 97 92 93 Z" fill="#FFFFFF" opacity="0.9" />
+            </g>
+          ) : expression === "tired" ? (
+            <path d="M92 96 L108 96" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          ) : expression === "focused" ? (
+            <path d="M94 95 Q100 98 106 95" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          ) : expression === "determined" ? (
+            <path d="M92 95 Q100 92 108 95" stroke="#7A3B36" strokeWidth="3.8" strokeLinecap="round" fill="none" />
+          ) : expression === "worried" ? (
+            <path d="M92 96 Q96 93 100 96 Q104 99 108 96" stroke="#7A3B36" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+          ) : expression === "shy" ? (
+            <path d="M94 94 Q100 98 105 93" stroke="#7A3B36" strokeWidth="3.2" strokeLinecap="round" fill="none" />
+          ) : expression === "relaxed" ? (
+            <path d="M90 92 Q100 101 110 92" stroke="#7A3B36" strokeWidth="3.8" strokeLinecap="round" fill="none" />
+          ) : expression === "proud" ? (
+            <path d="M90 93 Q100 100 112 91" stroke="#7A3B36" strokeWidth="4" strokeLinecap="round" fill="none" />
+          ) : expression === "happy" || expression === "encouraging" ? (
+            <path d="M88 91 Q100 102 112 91" stroke="#7A3B36" strokeWidth="4" strokeLinecap="round" fill="none" />
+          ) : (
+            <path d="M92 94 Q100 99 108 94" stroke="#7A3B36" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          )}
+
+          {/* Joues */}
+          {blush && (
+            <g fill="rgba(249,113,74,0.3)">
+              <ellipse cx="70" cy="86" rx={expression === "shy" ? 7.5 : 6} ry={expression === "shy" ? 5 : 4} />
+              <ellipse cx="130" cy="86" rx={expression === "shy" ? 7.5 : 6} ry={expression === "shy" ? 5 : 4} />
+            </g>
+          )}
+
+          {/* Accessoires portés sur la tête (suivent l'inclinaison) */}
+          {accessory?.id.startsWith("acc-glasses") && (
+            <g stroke={accessory.color ?? "#2B2E3A"} strokeWidth="3" fill="rgba(255,255,255,0.12)">
+              <rect x="70" y="63" width="25" height="21" rx="9" />
+              <rect x="105" y="63" width="25" height="21" rx="9" />
+              <path d="M95 72 L105 72" fill="none" />
+              <path d="M70 70 L57 66" fill="none" />
+              <path d="M130 70 L143 66" fill="none" />
+            </g>
+          )}
+          {accessory?.id.startsWith("acc-headphones") && (
+            <g>
+              <path
+                d="M53 74 C53 42 72 24 100 24 C128 24 147 42 147 74"
+                fill="none"
+                stroke={accessory.color ?? "#585CE2"}
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+              <rect x="45" y="64" width="15" height="26" rx="7" fill={accessory.color ?? "#585CE2"} />
+              <rect x="140" y="64" width="15" height="26" rx="7" fill={accessory.color ?? "#585CE2"} />
+              <rect x="48" y="68" width="4" height="18" rx="2" fill="rgba(255,255,255,0.35)" />
+              <rect x="143" y="68" width="4" height="18" rx="2" fill="rgba(255,255,255,0.35)" />
+            </g>
+          )}
+          {accessory?.id.startsWith("acc-cap") && (
+            <g>
+              <path
+                d="M56 60 C56 36 74 24 100 24 C126 24 144 36 144 60 L56 60 Z"
+                fill={accessory.color ?? "#F9714A"}
+              />
+              <path d="M140 54 L168 60 C170 63 168 66 165 66 L140 61 Z" fill={accessory.color ?? "#F9714A"} />
+              <path d="M64 42 Q76 30 94 28" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
+              <circle cx="100" cy="28" r="3.5" fill="rgba(0,0,0,0.15)" />
+            </g>
+          )}
+          {accessory?.id === "acc-earbuds" && (
+            <g>
+              <ellipse cx="54" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+              <ellipse cx="146" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+              <rect x="51" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+              <rect x="144" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+            </g>
+          )}
+        </motion.g>
+
+        {/* Accessoires portés sur le torse */}
         {accessory?.id.startsWith("acc-badge") && (
           <g>
             <circle cx="128" cy="158" r="10" fill={accessory.color ?? "#F9714A"} />

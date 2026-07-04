@@ -43,6 +43,7 @@ export function StepQuickCheck({
       choices={question.options}
       correctIndex={question.correctIndex}
       explanation={question.explanation}
+      theme="listening"
       continueLabel={isLast ? "Voir le décodage" : "Question suivante"}
       onContinue={handleContinue}
     />

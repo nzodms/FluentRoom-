@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, ChevronRight, Crown, RotateCcw, ShoppingBag } from "lucide-react";
+import { Check, ChevronRight, Crown, RotateCcw, Shield, ShoppingBag } from "lucide-react";
 import { getLevelForXp } from "@/data/levels";
 import { useProgress } from "@/lib/useProgress";
 import { availableFP } from "@/lib/shop";
 import { MAX_SHIELDS } from "@/lib/chests";
 import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
+import { LearningGlyph } from "@/components/icons/learning-icons";
 import { AvatarCustomizer } from "@/components/avatar/AvatarCustomizer";
 import { BRAND } from "@/lib/brand";
 import { Card } from "@/components/ui/Card";
@@ -69,7 +70,7 @@ export default function SettingsPage() {
       {/* Streak shields */}
       <Card animate delay={0.04} className="flex items-center gap-3.5 p-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-600">
-          🛡️
+          <Shield className="size-5" strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink">
@@ -81,16 +82,14 @@ export default function SettingsPage() {
         </div>
         <div className="flex gap-1.5">
           {Array.from({ length: MAX_SHIELDS }, (_, i) => (
-            <span
+            <Shield
               key={i}
               className={
                 i < (progress.streakShields ?? 0)
-                  ? "text-lg"
-                  : "text-lg opacity-25 grayscale"
+                  ? "size-5 fill-primary-500 text-primary-500"
+                  : "size-5 text-ink/20"
               }
-            >
-              🛡️
-            </span>
+            />
           ))}
         </div>
       </Card>
@@ -110,7 +109,9 @@ export default function SettingsPage() {
       {/* Historique des récompenses */}
       {(progress.rewardHistory ?? []).length > 0 && (
         <Card animate delay={0.08} className="p-4">
-          <p className="text-sm font-bold text-ink">🎁 Derniers coffres</p>
+          <p className="flex items-center gap-1.5 text-sm font-bold text-ink">
+            <LearningGlyph name="chest" className="size-4 text-gold-500" /> Derniers coffres
+          </p>
           <div className="mt-2.5 space-y-2">
             {[...(progress.rewardHistory ?? [])].reverse().slice(0, 5).map((entry, i) => (
               <div key={`${entry.at}-${i}`} className="flex items-center gap-2.5">

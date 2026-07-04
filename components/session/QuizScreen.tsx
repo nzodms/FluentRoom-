@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
-import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { Chip } from "@/components/ui/Chip";
+import {
+  AnswerChoiceCard,
+  type ChoiceVisualState,
+} from "@/components/exercises/AnswerChoiceCard";
+import { QuizFeedbackPanel } from "@/components/exercises/QuizFeedbackPanel";
+import {
+  EXERCISE_THEMES,
+  type ExerciseTheme,
+} from "@/components/exercises/exercise-themes";
+import { LearningGlyph } from "@/components/icons/learning-icons";
 import { useProgress } from "@/lib/useProgress";
 import { LearningScreen } from "./LearningScreen";
-import { cn } from "@/lib/utils";
 
 export interface QuizScreenProps {
   label?: React.ReactNode;
@@ -16,6 +24,10 @@ export interface QuizScreenProps {
   choices: string[];
   correctIndex: number;
   explanation: string;
+  /** Sous-textes pédagogiques révélés par choix après la réponse. */
+  choiceNotes?: string[];
+  /** Thème visuel de l'exercice (accent, icône, halo). */
+  theme?: ExerciseTheme;
   /** Contenu optionnel au-dessus des choix (audio, phrase…). */
   media?: React.ReactNode;
   submitLabel?: string;
@@ -23,10 +35,12 @@ export interface QuizScreenProps {
   onContinue: (wasCorrect: boolean) => void;
 }
 
+/** Machine d'état du QCM : aucun double-submit, aucun état mélangé. */
+type QuizPhase = "idle" | "selected" | "submitted" | "continuing";
+
 /**
- * QCM plein écran : question, 2-4 choix en cascade, feedback immédiat
- * (glow sur la bonne, shake sur l'erreur), réaction du personnage.
- * Aucun scroll requis pour comprendre ou répondre.
+ * QCM plein écran premium : choix en cascade, états visuels forts,
+ * feedback pédagogique avec le personnage, CTA toujours visible.
  */
 export function QuizScreen({
   label,
@@ -35,19 +49,56 @@ export function QuizScreen({
   choices,
   correctIndex,
   explanation,
+  choiceNotes,
+  theme = "pattern",
   media,
   submitLabel = "Valider",
   continueLabel,
   onContinue,
 }: QuizScreenProps) {
   const { progress } = useProgress();
+  const [phase, setPhase] = useState<QuizPhase>("idle");
   const [selected, setSelected] = useState<number | null>(null);
-  const [answered, setAnswered] = useState(false);
+  const continued = useRef(false);
+
+  const themeConfig = EXERCISE_THEMES[theme];
+  const answered = phase === "submitted" || phase === "continuing";
   const isCorrect = selected === correctIndex;
+
+  const select = (i: number) => {
+    if (answered) return;
+    setSelected(i);
+    setPhase("selected");
+  };
+
+  const submit = () => {
+    if (phase !== "selected" || selected === null) return;
+    setPhase("submitted");
+  };
+
+  const handleContinue = () => {
+    if (phase !== "submitted" || continued.current) return;
+    continued.current = true;
+    setPhase("continuing");
+    onContinue(isCorrect);
+  };
+
+  const choiceState = (i: number): ChoiceVisualState => {
+    if (!answered) return selected === i ? "selected" : "default";
+    if (i === correctIndex) return selected === i ? "correct" : "revealedCorrect";
+    if (selected === i) return "wrong";
+    return "dimmed";
+  };
 
   return (
     <LearningScreen
-      label={label}
+      label={
+        label ?? (
+          <Chip tone={themeConfig.chipTone}>
+            <LearningGlyph name={themeConfig.icon} className="size-3" /> Check
+          </Chip>
+        )
+      }
       title={question}
       subtitle={subtitle}
       action={
@@ -55,114 +106,58 @@ export function QuizScreen({
           <Button
             size="lg"
             fullWidth
-            disabled={selected === null}
-            onClick={() => setAnswered(true)}
+            disabled={phase !== "selected"}
+            onClick={submit}
+            className={phase === "selected" ? "shadow-glow" : undefined}
           >
             {submitLabel}
           </Button>
         ) : (
-          <Button size="lg" fullWidth onClick={() => onContinue(isCorrect)}>
-            {continueLabel}
+          <Button
+            size="lg"
+            fullWidth
+            variant={isCorrect ? "mint" : "primary"}
+            disabled={phase === "continuing"}
+            onClick={handleContinue}
+          >
+            {isCorrect ? continueLabel : "J'ai compris"}
           </Button>
         )
       }
     >
-      {media && <div className="mb-3">{media}</div>}
-      <div className="space-y-2.5">
-        {choices.map((choice, i) => {
-          const isThisCorrect = i === correctIndex;
-          const isThisSelected = selected === i;
-          const wrongPick = answered && isThisSelected && !isThisCorrect;
-          return (
-            <motion.button
+      <div className="relative">
+        {/* Halo thématique très subtil */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-6 -top-8 size-44 rounded-full blur-3xl"
+          style={{ background: themeConfig.halo }}
+        />
+        {media && <div className="relative mb-3">{media}</div>}
+        <div className="relative space-y-2.5">
+          {choices.map((choice, i) => (
+            <AnswerChoiceCard
               key={choice}
-              initial={{ opacity: 0, y: 14 }}
-              animate={
-                wrongPick
-                  ? { opacity: 1, y: 0, x: [0, -8, 8, -5, 5, 0] }
-                  : { opacity: 1, y: 0, x: 0 }
-              }
-              transition={
-                wrongPick
-                  ? { x: { duration: 0.45 } }
-                  : { delay: 0.08 + i * 0.07, type: "spring", stiffness: 300, damping: 24 }
-              }
-              whileTap={!answered ? { scale: 0.98 } : undefined}
-              onClick={() => !answered && setSelected(i)}
-              disabled={answered}
-              className={cn(
-                "card-soft flex w-full items-center gap-3 px-4 py-3.5 text-left text-[15px] font-medium transition-all",
-                !answered &&
-                  "cursor-pointer hover:ring-2 hover:ring-primary-200",
-                !answered &&
-                  isThisSelected &&
-                  "ring-2 ring-primary-500 bg-primary-50",
-                answered &&
-                  isThisCorrect &&
-                  "ring-2 ring-mint-500 bg-mint-50 shadow-[0_0_24px_-4px_rgba(44,183,131,0.55)]",
-                wrongPick && "ring-2 ring-coral-500 bg-coral-50",
-                answered && !isThisSelected && !isThisCorrect && "opacity-45",
-              )}
-            >
-              <span className="flex-1 text-ink">{choice}</span>
-              {answered && isThisCorrect && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: [0, 1.25, 1] }}
-                  transition={{ duration: 0.4 }}
-                  className="grid size-6 shrink-0 place-items-center rounded-full bg-mint-500 text-white"
-                >
-                  <Check className="size-3.5" strokeWidth={3.5} />
-                </motion.span>
-              )}
-              {wrongPick && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="grid size-6 shrink-0 place-items-center rounded-full bg-coral-500 text-white"
-                >
-                  <X className="size-3.5" strokeWidth={3.5} />
-                </motion.span>
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
+              text={choice}
+              subLabel={answered ? choiceNotes?.[i] : undefined}
+              state={choiceState(i)}
+              locked={answered}
+              onSelect={() => select(i)}
+              index={i}
+            />
+          ))}
+        </div>
 
-      <AnimatePresence>
-        {answered && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={cn(
-              "mt-3 flex items-start gap-3 rounded-2xl p-3.5 text-sm",
-              isCorrect
-                ? "bg-mint-50 text-mint-600"
-                : "bg-coral-50 text-coral-600",
-            )}
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 18, delay: 0.1 }}
-              className="shrink-0"
-            >
-              <FluentCharacter
-                config={progress.avatar}
-                size={52}
-                expression={isCorrect ? "celebrating" : "encouraging"}
-                showBackground={false}
-              />
-            </motion.div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold">
-                {isCorrect ? "Bien vu ! 🎯" : "Pas tout à fait."}
-              </p>
-              <p className="mt-0.5">{explanation}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {answered && (
+            <QuizFeedbackPanel
+              correct={isCorrect}
+              explanation={explanation}
+              correctAnswer={!isCorrect ? choices[correctIndex] : undefined}
+              avatar={progress.avatar}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </LearningScreen>
   );
 }
