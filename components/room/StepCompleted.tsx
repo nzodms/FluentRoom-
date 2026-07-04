@@ -5,6 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Flame, Sparkles } from "lucide-react";
 import { AnimatedCheck } from "@/components/reward/AnimatedCheck";
+import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { completionLine } from "@/lib/avatar-reactions";
 import type { Room } from "@/types/learning";
 import { getBadgeById } from "@/data/badges";
 import { getLevelForXp, getNextLevel } from "@/data/levels";
@@ -92,19 +94,31 @@ export function StepCompleted({
           transition={{ delay: 0.3 }}
           className="mt-5 text-3xl font-bold tracking-tight text-ink"
         >
-          Room Completed
+          Mission accomplie
         </motion.h2>
-        <motion.p
+
+        {/* Le personnage fier + sa phrase */}
+        <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-1.5 text-ink-soft"
+          className="mt-3 flex items-center gap-3"
         >
-          {room.emoji} {room.title} — terminée.{" "}
-          <span className="font-semibold text-ink">
-            Tu construis des réflexes.
-          </span>
-        </motion.p>
+          <FluentCharacter
+            config={progress.avatar}
+            expression="proud"
+            size={72}
+            showBackground={false}
+          />
+          <div className="relative rounded-2xl rounded-bl-md bg-white px-4 py-2.5 text-left shadow-soft">
+            <p className="text-sm font-semibold text-ink">
+              {completionLine(comprehension)}
+            </p>
+            <p className="text-xs text-ink-faint">
+              {room.emoji} {room.title} — terminée
+            </p>
+          </div>
+        </motion.div>
 
         {/* XP + streak */}
         <motion.div

@@ -9,7 +9,10 @@ import type {
   AvatarItemType,
 } from "@/types/learning";
 import { avatarItems } from "@/data/avatar-items";
-import { AvatarCharacter } from "./AvatarCharacter";
+import {
+  FluentCharacter,
+  type CharacterExpression,
+} from "./FluentCharacter";
 import { Chip } from "@/components/ui/Chip";
 import { cn } from "@/lib/utils";
 
@@ -45,25 +48,55 @@ export function AvatarCustomizer({
   onChange,
 }: AvatarCustomizerProps) {
   const [tab, setTab] = useState<AvatarItemType>("outfit");
+  const [expression, setExpression] = useState<CharacterExpression>("neutral");
   const unlocked = new Set(unlockedItems);
   const items = avatarItems.filter((item) => item.type === tab);
 
   const equip = (item: AvatarItem) => {
     if (!unlocked.has(item.id)) return;
     onChange({ ...config, [item.type]: item.id });
+    // Le personnage réagit au nouvel item.
+    setExpression("happy");
+    setTimeout(() => setExpression("neutral"), 1400);
   };
 
   return (
     <div className="card-soft overflow-hidden p-0">
-      {/* Preview */}
-      <div className="flex items-center justify-center bg-gradient-to-b from-primary-50/60 to-transparent py-5">
+      {/* Preview sur scène */}
+      <div
+        className="relative flex items-center justify-center py-6"
+        style={{
+          background:
+            "linear-gradient(180deg, #EEEEFD 0%, #F7F6F1 78%)",
+        }}
+      >
+        {/* Halo de scène */}
+        <span
+          aria-hidden
+          className="absolute top-8 size-40 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(88,92,226,0.18), transparent 65%)",
+          }}
+        />
+        {/* Plateforme */}
+        <span
+          aria-hidden
+          className="absolute bottom-5 h-6 w-44 rounded-[50%] bg-ink/8"
+        />
         <motion.div
           key={JSON.stringify(config)}
           initial={{ scale: 0.92 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 18 }}
+          className="relative"
         >
-          <AvatarCharacter config={config} size={132} />
+          <FluentCharacter
+            config={config}
+            expression={expression}
+            size={160}
+            showBackground={false}
+          />
         </motion.div>
       </div>
 

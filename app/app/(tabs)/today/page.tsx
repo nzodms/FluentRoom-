@@ -18,8 +18,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { StreakPulse } from "@/components/reward/StreakPulse";
 import { EnergyPill } from "@/components/energy/EnergyPill";
-import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
-import { ChestFullScreen } from "@/components/chest/ChestFullScreen";
+import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { expressionForToday } from "@/lib/avatar-reactions";
+import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { DailyPath } from "@/components/today/DailyPath";
 import { NextActionHero } from "@/components/today/NextActionHero";
 import { QuestList } from "@/components/today/QuestList";
@@ -79,7 +80,11 @@ export default function TodayPage() {
       {/* Salutation + avatar + streak vivant */}
       <div className="flex items-center justify-between gap-3">
         <Link href="/app/settings" className="flex min-w-0 items-center gap-3">
-          <AvatarCharacter config={progress.avatar} size={52} />
+          <FluentCharacter
+            config={progress.avatar}
+            size={56}
+            expression={expressionForToday(progress)}
+          />
           <div className="min-w-0">
             <h1 className="truncate text-xl font-bold tracking-tight text-ink">
               {allDone
@@ -144,10 +149,10 @@ export default function TodayPage() {
         <div className="min-w-0 flex-1">
           <p className="font-bold text-ink">
             {energy >= 100
-              ? "Énergie du jour : pleine ⚡️"
+              ? "Objectif du jour atteint ⚡️"
               : energy > 0
                 ? `Encore ${Math.max(goalMinutes - minutesDone, 1)} min pour sécuriser ta série.`
-                : "Ton énergie du jour est à zéro. On la remplit ?"}
+                : "Ta session du jour t'attend. On s'y met ?"}
           </p>
           <div className="mt-2.5 flex items-center justify-between">
             {week.map((day) => {
@@ -373,12 +378,14 @@ export default function TodayPage() {
           })}
         </div>
       </div>
-      {/* Ouverture de coffre plein écran */}
+      {/* Reward Room plein écran */}
       <AnimatePresence>
         {chestOpen && (
-          <ChestFullScreen
+          <RewardRoom
+            chestType="daily"
+            avatar={progress.avatar}
             onOpen={openChest}
-            onClose={() => setChestOpen(false)}
+            onCollect={() => setChestOpen(false)}
           />
         )}
       </AnimatePresence>
