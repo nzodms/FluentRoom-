@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Check, Crown, RotateCcw } from "lucide-react";
+import { Check, ChevronRight, Crown, RotateCcw, ShoppingBag } from "lucide-react";
 import { getLevelForXp } from "@/data/levels";
 import { useProgress } from "@/lib/useProgress";
+import { availableFP } from "@/lib/shop";
 import { MAX_SHIELDS } from "@/lib/chests";
 import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
 import { AvatarCustomizer } from "@/components/avatar/AvatarCustomizer";
@@ -45,8 +47,24 @@ export default function SettingsPage() {
             {level.name} · {level.cefr} · série de {progress.streak}
           </p>
         </div>
-        <Chip tone="primary">{progress.xp} FP</Chip>
+        <Chip tone="primary">{availableFP(progress)} FP</Chip>
       </Card>
+
+      {/* Boutique */}
+      <Link href="/app/shop" className="block">
+        <Card animate delay={0.02} className="flex items-center gap-3.5 p-4 transition-all hover:shadow-lift">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl gradient-primary text-white shadow-glow">
+            <ShoppingBag className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ink">Boutique</p>
+            <p className="text-xs text-ink-soft">
+              Dépense tes {availableFP(progress)} FP en style pour ton personnage.
+            </p>
+          </div>
+          <ChevronRight className="size-4 shrink-0 text-ink-faint" />
+        </Card>
+      </Link>
 
       {/* Streak shields */}
       <Card animate delay={0.04} className="flex items-center gap-3.5 p-4">

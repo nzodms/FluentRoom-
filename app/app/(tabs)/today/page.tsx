@@ -21,6 +21,7 @@ import { EnergyPill } from "@/components/energy/EnergyPill";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
 import { expressionForToday } from "@/lib/avatar-reactions";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
+import { ShopTeaser } from "@/components/shop/ShopTeaser";
 import { DailyPath } from "@/components/today/DailyPath";
 import { NextActionHero } from "@/components/today/NextActionHero";
 import { QuestList } from "@/components/today/QuestList";
@@ -226,6 +227,15 @@ export default function TodayPage() {
           title="⚔️ Quêtes du jour"
           onClaim={(quest) => takeQuestReward(quest.key, quest.xp)}
         />
+      </motion.div>
+
+      {/* Boutique : rappel qu'il y a une raison de gagner des FP */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, delay: 0.22 }}
+      >
+        <ShopTeaser progress={progress} />
       </motion.div>
 
       {/* Niveau compact */}

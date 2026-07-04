@@ -17,6 +17,7 @@ function fromRoom(id: string): Phrase {
 export const lessons: Lesson[] = [
   {
     id: "trying-to",
+    template: "pattern",
     structure: "I'm trying to…",
     title: "Expliquer ce que tu essaies de faire",
     emoji: "🎯",
@@ -79,6 +80,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "used-to",
+    template: "timeline",
     structure: "I used to…",
     title: "Parler d'une ancienne habitude",
     emoji: "⏪",
@@ -148,6 +150,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "about-to",
+    template: "reflex",
     structure: "I'm about to…",
     title: "Dire que tu vas le faire, là, maintenant",
     emoji: "🚀",
@@ -217,6 +220,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "feel-like",
+    template: "pattern",
     structure: "I feel like…",
     title: "Donner ton avis en douceur",
     emoji: "💭",
@@ -278,6 +282,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "it-depends",
+    template: "chat",
     structure: "It depends…",
     title: "Répondre sans être catégorique",
     emoji: "⚖️",
@@ -335,6 +340,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "didnt-mean-to",
+    template: "reflex",
     structure: "I didn't mean to…",
     title: "Dire que tu n'as pas fait exprès",
     emoji: "🙏",
@@ -404,6 +410,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "ended-up",
+    template: "timeline",
     structure: "I ended up…",
     title: "Raconter ce qui s'est finalement passé",
     emoji: "🌀",
@@ -465,6 +472,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "do-you-mind",
+    template: "chat",
     structure: "Do you mind if…?",
     title: "Demander la permission poliment",
     emoji: "🚪",
@@ -530,6 +538,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "not-sure",
+    template: "pattern",
     structure: "I'm not sure…",
     title: "Exprimer une hésitation sans bloquer",
     emoji: "🤔",
@@ -587,6 +596,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "makes-sense",
+    template: "reflex",
     structure: "That makes sense",
     title: "Réagir comme un natif",
     emoji: "💡",
@@ -644,6 +654,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "i-guess",
+    template: "pattern",
     structure: "I guess…",
     title: "Répondre avec de la nuance",
     emoji: "🌗",
@@ -709,6 +720,7 @@ export const lessons: Lesson[] = [
   },
   {
     id: "let-me-know",
+    template: "chat",
     structure: "Let me know…",
     title: "Demander un retour naturellement",
     emoji: "📬",

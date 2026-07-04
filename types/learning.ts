@@ -195,8 +195,13 @@ export interface LessonExample {
   french: string;
 }
 
+/** Template pédagogique : chaque leçon a sa mécanique principale. */
+export type LessonTemplate = "pattern" | "timeline" | "reflex" | "chat";
+
 export interface Lesson {
   id: string;
+  /** Mécanique principale de la leçon (varie l'expérience). */
+  template: LessonTemplate;
   /** Structure enseignée, ex: "I'm trying to…". */
   structure: string;
   title: string;
@@ -247,7 +252,8 @@ export type AvatarItemType =
   | "outfit"
   | "accessory"
   | "aura"
-  | "background";
+  | "background"
+  | "effect";
 
 export type RewardRarity = "common" | "rare" | "epic" | "special";
 
@@ -266,10 +272,17 @@ export interface AvatarItem {
       | "streak"
       | "speak"
       | "phrases"
-      | "xp";
+      | "xp"
+      | "shop";
     value?: number;
     label: string;
   };
+}
+
+export interface Purchase {
+  itemId: string;
+  price: number;
+  at: string;
 }
 
 /** Configuration du personnage : un item id par emplacement. */
@@ -358,4 +371,9 @@ export interface UserProgress {
   rewardHistory: RewardHistoryEntry[];
   /** Boucliers de série (max 2) : protègent un jour manqué. */
   streakShields: number;
+  /** FP dépensés en boutique (availableFP = xp - spentFP). */
+  spentFP: number;
+  /** Items achetés en boutique. */
+  purchasedItems: string[];
+  purchaseHistory: Purchase[];
 }

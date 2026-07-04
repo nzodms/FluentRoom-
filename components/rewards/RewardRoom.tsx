@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import type { AvatarConfig, Reward } from "@/types/learning";
 import type { ChestVariant } from "@/data/chest-variants";
@@ -180,6 +181,14 @@ export function RewardRoom({
               <Button size="lg" fullWidth onClick={onCollect}>
                 Collecter
               </Button>
+              {reward?.type === "fp" && (
+                <Link
+                  href="/app/shop"
+                  className="mt-3 block text-center text-sm font-bold text-white/70 transition-colors hover:text-white"
+                >
+                  Dépenser mes FP en boutique →
+                </Link>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

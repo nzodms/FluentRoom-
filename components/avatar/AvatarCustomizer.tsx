@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, Lock } from "lucide-react";
+import { Check, Lock, ShoppingBag } from "lucide-react";
 import type {
   AvatarConfig,
   AvatarItem,
@@ -47,13 +48,19 @@ export function AvatarCustomizer({
   unlockedItems,
   onChange,
 }: AvatarCustomizerProps) {
+  const router = useRouter();
   const [tab, setTab] = useState<AvatarItemType>("outfit");
   const [expression, setExpression] = useState<CharacterExpression>("neutral");
   const unlocked = new Set(unlockedItems);
   const items = avatarItems.filter((item) => item.type === tab);
 
   const equip = (item: AvatarItem) => {
-    if (!unlocked.has(item.id)) return;
+    if (!unlocked.has(item.id)) {
+      // Un item boutique verrouillé emmène directement à la boutique.
+      if (item.unlock.kind === "shop") router.push("/app/shop");
+      return;
+    }
+    if (item.type === "effect") return;
     onChange({ ...config, [item.type]: item.id });
     // Le personnage réagit au nouvel item.
     setExpression("happy");
@@ -122,11 +129,14 @@ export function AvatarCustomizer({
       <div className="grid grid-cols-2 gap-2.5 p-4">
         {items.map((item) => {
           const isUnlocked = unlocked.has(item.id);
-          const equipped = config[item.type] === item.id;
+          const fromShop = !isUnlocked && item.unlock.kind === "shop";
+          const equipped =
+            item.type !== "effect" &&
+            config[item.type as keyof AvatarConfig] === item.id;
           return (
             <motion.button
               key={item.id}
-              whileTap={isUnlocked ? { scale: 0.95 } : undefined}
+              whileTap={isUnlocked || fromShop ? { scale: 0.95 } : undefined}
               onClick={() => equip(item)}
               className={cn(
                 "relative rounded-2xl border p-3 text-left transition-all",
@@ -134,7 +144,9 @@ export function AvatarCustomizer({
                   ? "border-primary-500 bg-primary-50 ring-1 ring-primary-500"
                   : isUnlocked
                     ? "cursor-pointer border-ink/8 bg-white hover:border-primary-200"
-                    : "border-ink/5 bg-ink/[0.03] opacity-70",
+                    : fromShop
+                      ? "cursor-pointer border-gold-400/40 bg-gold-50/60 hover:border-gold-400"
+                      : "border-ink/5 bg-ink/[0.03] opacity-70",
               )}
             >
               <div className="flex items-center gap-2.5">
@@ -165,6 +177,10 @@ export function AvatarCustomizer({
                       <Chip tone={RARITY_CHIP[item.rarity]} className="!px-1.5 !py-0 !text-[9px]">
                         {item.rarity}
                       </Chip>
+                    ) : fromShop ? (
+                      <span className="font-bold text-gold-500">
+                        Voir dans la boutique →
+                      </span>
                     ) : (
                       item.unlock.label
                     )}
@@ -174,6 +190,8 @@ export function AvatarCustomizer({
                   <span className="grid size-5 shrink-0 place-items-center rounded-full bg-primary-500 text-white">
                     <Check className="size-3" strokeWidth={3.5} />
                   </span>
+                ) : fromShop ? (
+                  <ShoppingBag className="size-3.5 shrink-0 text-gold-500" />
                 ) : !isUnlocked ? (
                   <Lock className="size-3.5 shrink-0 text-ink-faint" />
                 ) : null}

@@ -344,7 +344,7 @@ export function FluentCharacter({
         )}
 
         {/* Accessoires */}
-        {accessory?.id === "acc-glasses" && (
+        {accessory?.id.startsWith("acc-glasses") && (
           <g stroke={accessory.color ?? "#2B2E3A"} strokeWidth="3" fill="rgba(255,255,255,0.12)">
             <rect x="70" y="63" width="25" height="21" rx="9" />
             <rect x="105" y="63" width="25" height="21" rx="9" />
@@ -353,7 +353,7 @@ export function FluentCharacter({
             <path d="M130 70 L143 66" fill="none" />
           </g>
         )}
-        {accessory?.id === "acc-headphones" && (
+        {accessory?.id.startsWith("acc-headphones") && (
           <g>
             <path
               d="M53 74 C53 42 72 24 100 24 C128 24 147 42 147 74"
@@ -368,7 +368,7 @@ export function FluentCharacter({
             <rect x="143" y="68" width="4" height="18" rx="2" fill="rgba(255,255,255,0.35)" />
           </g>
         )}
-        {accessory?.id === "acc-cap" && (
+        {accessory?.id.startsWith("acc-cap") && (
           <g>
             <path
               d="M56 60 C56 36 74 24 100 24 C126 24 144 36 144 60 L56 60 Z"
@@ -377,6 +377,21 @@ export function FluentCharacter({
             <path d="M140 54 L168 60 C170 63 168 66 165 66 L140 61 Z" fill={accessory.color ?? "#F9714A"} />
             <path d="M64 42 Q76 30 94 28" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="4" strokeLinecap="round" />
             <circle cx="100" cy="28" r="3.5" fill="rgba(0,0,0,0.15)" />
+          </g>
+        )}
+        {accessory?.id === "acc-earbuds" && (
+          <g>
+            <ellipse cx="54" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+            <ellipse cx="146" cy="76" rx="6" ry="8" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+            <rect x="51" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+            <rect x="144" y="82" width="5" height="12" rx="2.5" fill={accessory.color ?? "#FFFFFF"} stroke="rgba(23,26,38,0.15)" strokeWidth="1.5" />
+          </g>
+        )}
+        {accessory?.id.startsWith("acc-badge") && (
+          <g>
+            <circle cx="128" cy="158" r="10" fill={accessory.color ?? "#F9714A"} />
+            <circle cx="128" cy="158" r="10" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" />
+            <path d="M123 158 L127 162 L134 154" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           </g>
         )}
       </g>

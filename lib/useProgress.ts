@@ -8,6 +8,7 @@ import type {
 } from "@/types/learning";
 import type { AvatarConfig, DailyStepId, Reward } from "@/types/learning";
 import { openRewardChest } from "./chests";
+import { PurchaseOutcome, purchaseItem } from "./shop";
 import {
   CompleteLessonOutcome,
   CompleteRoomInput,
@@ -116,6 +117,13 @@ export function useProgress() {
     setState({ ...getSnapshot(), avatar: config });
   }, []);
 
+  /** Achat boutique : débite les FP et ajoute l'item à l'inventaire. */
+  const buyItem = useCallback((itemId: string): PurchaseOutcome => {
+    const outcome = purchaseItem(getSnapshot(), itemId);
+    if (outcome.ok) setState(outcome.progress);
+    return outcome;
+  }, []);
+
   const beginLesson = useCallback((lessonId: string) => {
     setState(startLesson(getSnapshot(), lessonId));
   }, []);
@@ -153,6 +161,7 @@ export function useProgress() {
     doDailyStep,
     openChest,
     setAvatar,
+    buyItem,
     beginLesson,
     finishLesson,
     finishDrillSession,

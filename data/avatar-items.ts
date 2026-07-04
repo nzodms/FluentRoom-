@@ -42,6 +42,26 @@ export const avatarItems: AvatarItem[] = [
   { id: "bg-cream", type: "background", name: "Ivoire", rarity: "common", color: "#F2F1EA", unlock: { kind: "default", label: "Inclus" } },
   { id: "bg-primary", type: "background", name: "Indigo doux", rarity: "rare", color: "#DFDFFB", unlock: { kind: "rooms", value: 5, label: "5 rooms terminées" } },
   { id: "bg-sunset", type: "background", name: "Morning Focus", rarity: "epic", color: "#FFE4D1", unlock: { kind: "chest", label: "Coffre rare" } },
+
+  /* --- Items boutique (achetables en FP) --- */
+  { id: "outfit-tee-white", type: "outfit", name: "Tee minimal", rarity: "common", color: "#E9E9F2", unlock: { kind: "shop", label: "Boutique · 90 FP" } },
+  { id: "outfit-hoodie-coral", type: "outfit", name: "Hoodie corail", rarity: "common", color: "#F9714A", unlock: { kind: "shop", label: "Boutique · 120 FP" } },
+  { id: "outfit-sweat-mint", type: "outfit", name: "Sweat menthe", rarity: "rare", color: "#43CB95", unlock: { kind: "shop", label: "Boutique · 150 FP" } },
+  { id: "outfit-jacket-night", type: "outfit", name: "Veste nuit", rarity: "rare", color: "#2E3184", unlock: { kind: "shop", label: "Boutique · 180 FP" } },
+  { id: "outfit-pull-gold", type: "outfit", name: "Pull doré", rarity: "epic", color: "#E0B54B", unlock: { kind: "shop", label: "Boutique · 250 FP" } },
+  { id: "acc-cap-fluent", type: "accessory", name: "Casquette Fluent", rarity: "common", color: "#585CE2", unlock: { kind: "shop", label: "Boutique · 140 FP" } },
+  { id: "acc-headphones-violet", type: "accessory", name: "Casque violet", rarity: "rare", color: "#6A5AE0", unlock: { kind: "shop", label: "Boutique · 160 FP" } },
+  { id: "acc-earbuds", type: "accessory", name: "Écouteurs blancs", rarity: "rare", color: "#FFFFFF", unlock: { kind: "shop", label: "Boutique · 180 FP" } },
+  { id: "acc-glasses-focus", type: "accessory", name: "Lunettes focus", rarity: "rare", color: "#585CE2", unlock: { kind: "shop", label: "Boutique · 200 FP" } },
+  { id: "acc-badge-notranslate", type: "accessory", name: "Badge « No Translate »", rarity: "epic", color: "#F9714A", unlock: { kind: "shop", label: "Boutique · 220 FP" } },
+  { id: "aura-night", type: "aura", name: "Aura nuit", rarity: "rare", color: "#4F6BE8", unlock: { kind: "shop", label: "Boutique · 300 FP" } },
+  { id: "aura-calm", type: "aura", name: "Aura calm focus", rarity: "rare", color: "#6FA8DC", unlock: { kind: "shop", label: "Boutique · 350 FP" } },
+  { id: "aura-fast", type: "aura", name: "Aura Fast English", rarity: "epic", color: "#F9714A", unlock: { kind: "shop", label: "Boutique · 400 FP" } },
+  { id: "bg-minimal-white", type: "background", name: "Minimal White", rarity: "common", color: "#FDFDFD", unlock: { kind: "shop", label: "Boutique · 150 FP" } },
+  { id: "bg-night-reward", type: "background", name: "Night Reward Room", rarity: "rare", color: "#241E55", unlock: { kind: "shop", label: "Boutique · 300 FP" } },
+  { id: "bg-purple-studio", type: "background", name: "Purple Studio", rarity: "epic", color: "#DCD3F8", unlock: { kind: "shop", label: "Boutique · 350 FP" } },
+  { id: "effect-completion-glow", type: "effect", name: "Completion Glow", rarity: "epic", color: "#43CB95", unlock: { kind: "shop", label: "Boutique · 250 FP" } },
+  { id: "effect-unlock-shimmer", type: "effect", name: "Phrase Unlock Shimmer", rarity: "rare", color: "#DFA92E", unlock: { kind: "shop", label: "Boutique · 200 FP" } },
 ];
 
 export const DEFAULT_AVATAR: AvatarConfig = {
