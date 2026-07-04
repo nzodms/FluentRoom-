@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Mic, Volume2 } from "lucide-react";
-import type { Phrase, PhraseStatus } from "@/types/learning";
+import type { Phrase, PhraseState, PhraseStatus } from "@/types/learning";
 import { getRoomById } from "@/data/rooms";
+import { lessons } from "@/data/lessons";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { speakText } from "@/lib/speech";
@@ -25,10 +26,25 @@ const statusConfig: Record<
 interface PhraseCardProps {
   phrase: Phrase;
   status: PhraseStatus;
+  state?: PhraseState;
   onPracticed: (score: number, transcript: string, manual: boolean) => void;
 }
 
-export function PhraseCard({ phrase, status, onPracticed }: PhraseCardProps) {
+/** Provenance : room ou leçon. */
+function phraseSource(phrase: Phrase): string {
+  const room = getRoomById(phrase.roomId);
+  if (room) return `Room · ${room.title}`;
+  const lesson = lessons.find((l) => l.phrase.id === phrase.id);
+  if (lesson) return `Leçon · ${lesson.structure}`;
+  return "Leçon";
+}
+
+export function PhraseCard({
+  phrase,
+  status,
+  state,
+  onPracticed,
+}: PhraseCardProps) {
   const [open, setOpen] = useState(false);
   const [practicing, setPracticing] = useState(false);
   const [result, setResult] = useState<number | null>(null);
@@ -69,9 +85,17 @@ export function PhraseCard({ phrase, status, onPracticed }: PhraseCardProps) {
           <p className="font-bold text-ink">{phrase.english}</p>
           <p className="truncate text-sm text-ink-soft">{phrase.french}</p>
         </div>
-        <Chip tone={config.tone} className="shrink-0">
-          {config.label}
-        </Chip>
+        <motion.span
+          key={status}
+          initial={status === "mastered" ? { scale: 0.4, rotate: -8 } : false}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 16 }}
+          className="shrink-0"
+        >
+          <Chip tone={config.tone}>
+            {status === "mastered" ? "⭐ Mastered" : config.label}
+          </Chip>
+        </motion.span>
         <ChevronDown
           className={cn(
             "size-4 shrink-0 text-ink-faint transition-transform",
@@ -99,7 +123,17 @@ export function PhraseCard({ phrase, status, onPracticed }: PhraseCardProps) {
                 {phrase.context}
               </p>
               <p className="mt-2 text-xs text-ink-faint">
-                Débloquée dans : {getRoomById(phrase.roomId)?.title ?? phrase.roomId}
+                {phraseSource(phrase)} ·{" "}
+                {state
+                  ? `${state.reviews} révision${state.reviews > 1 ? "s" : ""} · prochaine : ${
+                      status === "mastered"
+                        ? "quand tu veux"
+                        : state.lastReviewedAt?.slice(0, 10) ===
+                            new Date().toISOString().slice(0, 10)
+                          ? "demain"
+                          : "aujourd'hui"
+                    }`
+                  : "0 révision"}
               </p>
 
               {!practicing ? (

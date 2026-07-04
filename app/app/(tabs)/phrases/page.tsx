@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { BookMarked, Lock, Search } from "lucide-react";
-import type { PhraseStatus } from "@/types/learning";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookMarked, Lock, Play, Search, Sparkles } from "lucide-react";
+import type { Phrase, PhraseStatus } from "@/types/learning";
 import { allPhrases, phraseCategories } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
 import { PhraseCard } from "@/components/phrase/PhraseCard";
+import { ReviewSession } from "@/components/phrase/ReviewSession";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { cn } from "@/lib/utils";
+import { cn, todayKey } from "@/lib/utils";
 
 const statusFilters: Array<{ id: PhraseStatus | "all"; label: string }> = [
   { id: "all", label: "All" },
@@ -20,10 +21,23 @@ const statusFilters: Array<{ id: PhraseStatus | "all"; label: string }> = [
 ];
 
 export default function PhrasesPage() {
-  const { progress, ready, practice } = useProgress();
+  const { progress, ready, practice, finishReviewSession } = useProgress();
   const [statusFilter, setStatusFilter] = useState<PhraseStatus | "all">("all");
   const [category, setCategory] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  // Ouvre la review session si on arrive avec ?review=1 (depuis le Daily Path).
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      new URLSearchParams(window.location.search).get("review") !== "1"
+    ) {
+      return;
+    }
+    const t = setTimeout(() => setReviewOpen(true), 200);
+    return () => clearTimeout(t);
+  }, []);
 
   const unlockedIds = useMemo(
     () => new Set(Object.keys(progress.phrases)),
@@ -56,6 +70,38 @@ export default function PhrasesPage() {
 
   const lockedCount = allPhrases.length - unlockedIds.size;
 
+  // Compteurs du "trésor".
+  const counts = useMemo(() => {
+    const states = Object.entries(progress.phrases);
+    const today = todayKey();
+    return {
+      today: states.filter(([, s]) => s.unlockedAt.slice(0, 10) === today)
+        .length,
+      toReview: states.filter(
+        ([, s]) => s.status === "seen" || s.status === "new",
+      ).length,
+      almost: states.filter(([, s]) => s.status === "review").length,
+      mastered: states.filter(([, s]) => s.status === "mastered").length,
+    };
+  }, [progress.phrases]);
+
+  // Phrases de la session : priorité aux non maîtrisées, les plus anciennes d'abord.
+  const reviewPhrases: Phrase[] = useMemo(() => {
+    const entries = Object.entries(progress.phrases)
+      .sort(([, a], [, b]) => {
+        const rank = (s: PhraseStatus) =>
+          s === "seen" ? 0 : s === "review" ? 1 : s === "new" ? 2 : 3;
+        return (
+          rank(a.status) - rank(b.status) ||
+          (a.lastReviewedAt ?? "").localeCompare(b.lastReviewedAt ?? "")
+        );
+      })
+      .slice(0, 5)
+      .map(([id]) => allPhrases.find((p) => p.id === id))
+      .filter((p): p is Phrase => Boolean(p));
+    return entries;
+  }, [progress.phrases]);
+
   return (
     <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
       <div>
@@ -63,9 +109,61 @@ export default function PhrasesPage() {
           Phrase Bank
         </h1>
         <p className="text-sm text-ink-soft">
-          {`${unlockedIds.size} phrase${unlockedIds.size > 1 ? "s" : ""} débloquée${unlockedIds.size > 1 ? "s" : ""} sur ${allPhrases.length} — ta collection d'anglais réel`}
+          {`${unlockedIds.size} phrase${unlockedIds.size > 1 ? "s" : ""} sur ${allPhrases.length} — ton capital d'anglais réel`}
         </p>
       </div>
+
+      {/* Trésor : compteurs */}
+      {unlockedIds.size > 0 && (
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { value: counts.today, label: "Aujourd'hui", tone: "text-coral-500" },
+            { value: counts.toReview, label: "À revoir", tone: "text-primary-600" },
+            { value: counts.almost, label: "Presque", tone: "text-gold-500" },
+            { value: counts.mastered, label: "Mastered", tone: "text-mint-600" },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className="card-soft p-2.5 text-center"
+            >
+              <p className={cn("text-xl font-bold", stat.tone)}>{stat.value}</p>
+              <p className="text-[10px] font-semibold text-ink-faint">
+                {stat.label}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Review session CTA */}
+      {reviewPhrases.length > 0 && (
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setReviewOpen(true)}
+          className="w-full cursor-pointer overflow-hidden rounded-3xl gradient-primary p-4 text-left text-white shadow-lift"
+        >
+          <div className="flex items-center gap-3.5">
+            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/15">
+              <Play className="size-5 fill-current" />
+            </span>
+            <div className="flex-1">
+              <p className="font-bold">Review session · 1 min</p>
+              <p className="text-sm opacity-85">
+                {Math.min(reviewPhrases.length, 5)} phrases à ancrer. « Je la
+                connais » ou « à revoir » — c&apos;est tout.
+              </p>
+            </div>
+            <Chip className="bg-white/15 text-white">
+              <Sparkles className="size-3" /> +FP
+            </Chip>
+          </div>
+        </motion.button>
+      )}
 
       {/* Recherche */}
       <div className="relative">
@@ -96,22 +194,36 @@ export default function PhrasesPage() {
         ))}
       </div>
 
-      {/* Catégories */}
+      {/* Catégories avec progression */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar">
-        {phraseCategories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setCategory(category === cat.id ? null : cat.id)}
-            className={cn(
-              "shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
-              category === cat.id
-                ? "bg-ink text-white"
-                : "bg-white text-ink-soft border border-ink/8",
-            )}
-          >
-            {cat.emoji} {cat.label}
-          </button>
-        ))}
+        {phraseCategories.map((cat) => {
+          const total = allPhrases.filter((p) => p.category === cat.id).length;
+          const have = allPhrases.filter(
+            (p) => p.category === cat.id && unlockedIds.has(p.id),
+          ).length;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setCategory(category === cat.id ? null : cat.id)}
+              className={cn(
+                "shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all",
+                category === cat.id
+                  ? "bg-ink text-white"
+                  : "bg-white text-ink-soft border border-ink/8",
+              )}
+            >
+              {cat.emoji} {cat.label}
+              <span
+                className={cn(
+                  "ml-1.5",
+                  category === cat.id ? "text-white/70" : "text-ink-faint",
+                )}
+              >
+                {have}/{total}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Liste */}
@@ -128,8 +240,8 @@ export default function PhrasesPage() {
             Ta banque est prête à se remplir
           </h2>
           <p className="mt-1.5 max-w-xs text-sm text-ink-soft">
-            Chaque room terminée débloque 5 phrases réelles. Elles arrivent
-            ici, avec exemples et révision espacée.
+            Chaque room et chaque leçon débloque des phrases réelles. Elles
+            arrivent ici, avec exemples et révision espacée.
           </p>
           <Link href="/app/today" className="mt-5">
             <Button>Faire ma première room</Button>
@@ -152,6 +264,7 @@ export default function PhrasesPage() {
               <PhraseCard
                 phrase={phrase}
                 status={progress.phrases[phrase.id]?.status ?? "new"}
+                state={progress.phrases[phrase.id]}
                 onPracticed={(score, transcript, manual) =>
                   practice({
                     phraseId: phrase.id,
@@ -179,13 +292,24 @@ export default function PhrasesPage() {
                 {lockedCount} phrases encore verrouillées
               </p>
               <p className="text-sm text-ink-soft">
-                Termine des rooms pour les débloquer.
+                Termine des rooms et des leçons pour les débloquer.
               </p>
             </div>
             <Chip tone="primary">Go</Chip>
           </div>
         </Link>
       )}
+
+      {/* Review session overlay */}
+      <AnimatePresence>
+        {reviewOpen && reviewPhrases.length > 0 && (
+          <ReviewSession
+            phrases={reviewPhrases}
+            onFinish={finishReviewSession}
+            onClose={() => setReviewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

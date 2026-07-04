@@ -11,9 +11,11 @@ import { DialoguePlayer } from "./DialoguePlayer";
 export function StepFirstListen({
   room,
   onNext,
+  onTranscriptShown,
 }: {
   room: Room;
   onNext: () => void;
+  onTranscriptShown?: () => void;
 }) {
   const [listened, setListened] = useState(false);
 
@@ -41,12 +43,14 @@ export function StepFirstListen({
         <DialoguePlayer
           dialogue={room.dialogue}
           onListened={() => setListened(true)}
+          onTranscriptShown={onTranscriptShown}
         />
       </motion.div>
 
       <div className="mt-4 rounded-2xl bg-primary-50 p-4 text-sm text-primary-700">
-        💡 Écoute au moins une fois en entier. Tu peux réécouter autant que tu
-        veux — les natifs ne ralentiront pas pour toi.
+        💡 Écoute au moins une fois en entier — sans transcript si tu peux :
+        c&apos;est comme ça que ton oreille apprend à se débrouiller seule.
+        Réécoute autant que tu veux.
       </div>
 
       <div className="mt-auto pt-6">

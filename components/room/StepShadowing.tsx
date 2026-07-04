@@ -71,10 +71,11 @@ export function StepShadowing({
         </span>
       </div>
       <p className="mt-1.5 text-ink-soft">
+        Cet exercice t&apos;apprend à copier le rythme naturel des phrases —
+        c&apos;est ce qui te permet de parler plus vite et moins mot à mot.{" "}
         <span className="font-semibold text-ink">
-          Copy the rhythm, not just the words.
-        </span>{" "}
-        Écoute, puis répète à voix haute.
+          Répète le rythme, pas seulement la phrase.
+        </span>
       </p>
       <ProgressBar value={(index / lines.length) * 100} className="mt-3" />
 

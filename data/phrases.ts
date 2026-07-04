@@ -1,8 +1,12 @@
 import type { Phrase, PhraseCategory } from "@/types/learning";
 import { rooms } from "./rooms";
+import { lessonOnlyPhrases } from "./lessons";
 
-/** Toutes les phrases du catalogue, agrégées depuis les rooms. */
-export const allPhrases: Phrase[] = rooms.flatMap((room) => room.phrases);
+/** Toutes les phrases du catalogue : rooms + structures des leçons. */
+export const allPhrases: Phrase[] = [
+  ...rooms.flatMap((room) => room.phrases),
+  ...lessonOnlyPhrases,
+];
 
 export function getPhraseById(id: string): Phrase | undefined {
   return allPhrases.find((phrase) => phrase.id === id);

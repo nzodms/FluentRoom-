@@ -1,24 +1,30 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronRight,
+  Ear,
   EarOff,
   Gauge,
   Headphones,
   MessagesSquare,
   Play,
+  Target,
   Volume2,
   Zap,
 } from "lucide-react";
 import { rooms } from "@/data/rooms";
 import { videoRooms } from "@/data/videoRooms";
 import { getRoomById } from "@/data/rooms";
+import { getDailyDrills } from "@/data/drills";
 import { useProgress } from "@/lib/useProgress";
 import { speakText } from "@/lib/speech";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
+import { ProgressRing } from "@/components/ui/ProgressRing";
+import { DrillSession } from "@/components/exercises/DrillSession";
 import { cn } from "@/lib/utils";
 
 const fastEnglishRoom = getRoomById("fast-english");
@@ -45,8 +51,10 @@ const accents = [
 ] as const;
 
 export default function ListenPage() {
-  const { progress, ready } = useProgress();
+  const { progress, ready, finishDrillSession } = useProgress();
+  const [drillsOpen, setDrillsOpen] = useState(false);
   const completedIds = Object.keys(progress.completedRooms);
+  const dailyDrills = getDailyDrills();
 
   const nativeSpeedRoom =
     rooms.find((r) => r.level === "B1" && !completedIds.includes(r.id)) ??
@@ -54,14 +62,84 @@ export default function ListenPage() {
   const noSubtitlesRoom =
     rooms.find((r) => !completedIds.includes(r.id)) ?? rooms[0];
 
+  // Weak spot : la room terminée avec le score de compréhension le plus bas.
+  const weakest = Object.values(progress.completedRooms)
+    .filter((r) => r.comprehension < 80)
+    .sort((a, b) => a.comprehension - b.comprehension)[0];
+  const weakestRoom = weakest ? getRoomById(weakest.roomId) : undefined;
+
   return (
     <div className={cn("space-y-6 transition-opacity", !ready && "opacity-0")}>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Listen</h1>
-        <p className="text-sm text-ink-soft">
-          Entraîne ton oreille à l&apos;anglais qui va vite.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">
+            Listen
+          </h1>
+          <p className="text-sm text-ink-soft">
+            Entraîne ton oreille à l&apos;anglais qui va vite.
+          </p>
+        </div>
+        <div className="flex flex-col items-center">
+          <ProgressRing
+            value={progress.listeningScore}
+            size={52}
+            strokeWidth={5}
+            label={
+              <span className="text-xs font-bold text-ink">
+                {progress.listeningScore}
+              </span>
+            }
+          />
+          <span className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            Listening
+          </span>
+        </div>
       </div>
+
+      {/* Challenge d'écoute du jour */}
+      <motion.button
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setDrillsOpen(true)}
+        className="w-full cursor-pointer overflow-hidden rounded-3xl gradient-primary p-5 text-left text-white shadow-lift"
+      >
+        <div className="flex items-center justify-between">
+          <Chip className="bg-white/15 text-white">
+            <Ear className="size-3" /> Today&apos;s listening challenge
+          </Chip>
+          <span className="text-xs font-semibold opacity-85">2 min</span>
+        </div>
+        <p className="mt-3 text-xl font-bold">
+          5 exercices pour ton oreille
+        </p>
+        <p className="mt-1 text-sm opacity-85">
+          Sens caché, mots manquants, contractions à vitesse réelle. Nouveau
+          chaque jour.
+        </p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary-700">
+          <Play className="size-3.5 fill-current" /> Lancer
+        </div>
+      </motion.button>
+
+      {/* Weak spot */}
+      {weakestRoom && (
+        <Link href={`/app/room/${weakestRoom.id}`} className="block">
+          <Card className="flex items-center gap-4 p-4 ring-1 ring-coral-100 transition-all hover:shadow-lift">
+            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-coral-50 text-coral-500">
+              <Target className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-ink">Ton point faible du moment</p>
+              <p className="truncate text-sm text-ink-soft">
+                {weakestRoom.emoji} {weakestRoom.title} — compris à{" "}
+                {weakest.comprehension} %. Une réécoute et ça monte.
+              </p>
+            </div>
+            <ChevronRight className="size-5 shrink-0 text-ink-faint" />
+          </Card>
+        </Link>
+      )}
 
       {/* Fast English cards */}
       <section>
@@ -251,6 +329,17 @@ export default function ListenPage() {
           ))}
         </div>
       </section>
+
+      {/* Session d'exercices */}
+      <AnimatePresence>
+        {drillsOpen && (
+          <DrillSession
+            drills={dailyDrills}
+            onFinish={finishDrillSession}
+            onClose={() => setDrillsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

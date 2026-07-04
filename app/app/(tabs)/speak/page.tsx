@@ -4,14 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Check,
   ChevronRight,
+  History,
   MessageSquareQuote,
   Mic,
   Repeat2,
+  ShieldCheck,
   Timer,
   Volume2,
 } from "lucide-react";
+import type { Phrase } from "@/types/learning";
 import { rooms } from "@/data/rooms";
+import { getPhraseById } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
 import { useRecognition } from "@/lib/useRecognition";
 import { speakText } from "@/lib/speech";
@@ -54,22 +59,64 @@ const PRONUNCIATION_TIPS = [
 ];
 
 export default function SpeakPage() {
-  const { progress, ready } = useProgress();
+  const { progress, ready, practice } = useProgress();
   const completedIds = Object.keys(progress.completedRooms);
   const shadowingRoom =
     rooms.find((r) => !completedIds.includes(r.id)) ?? rooms[0];
 
+  // Confidence builder : 3 phrases déjà débloquées, faciles à dire.
+  const confidencePhrases = rooms
+    .flatMap((r) => r.phrases)
+    .filter((p) => progress.phrases[p.id])
+    .slice(0, 3);
+
+  const attempts = [...progress.practiceLog].reverse().slice(0, 5);
+
   return (
     <div className={cn("space-y-6 transition-opacity", !ready && "opacity-0")}>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-ink">Speak</h1>
-        <p className="text-sm text-ink-soft">
-          Fais sortir les mots. Natural, not perfect.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Speak</h1>
+          <p className="text-sm text-ink-soft">
+            Fais sortir les mots. Natural, not perfect.
+          </p>
+        </div>
+        <div className="flex flex-col items-center">
+          <ProgressRing
+            value={progress.speakingScore}
+            size={52}
+            strokeWidth={5}
+            color="var(--color-mint-500)"
+            label={
+              <span className="text-xs font-bold text-ink">
+                {progress.speakingScore}
+              </span>
+            }
+          />
+          <span className="mt-0.5 text-[10px] font-semibold text-ink-faint">
+            Confiance
+          </span>
+        </div>
       </div>
 
       {/* 30-second challenge */}
       <ThirtySecondChallenge />
+
+      {/* Confidence builder */}
+      {confidencePhrases.length === 3 && (
+        <ConfidenceBuilder
+          phrases={confidencePhrases}
+          onSaid={(phraseId) =>
+            practice({
+              phraseId,
+              score: 70,
+              transcript: "",
+              markedManually: true,
+              at: new Date().toISOString(),
+            })
+          }
+        />
+      )}
 
       {/* Shadowing */}
       <section>
@@ -158,6 +205,52 @@ export default function SpeakPage() {
           ))}
         </div>
       </section>
+
+      {/* Historique des essais */}
+      {attempts.length > 0 && (
+        <section>
+          <SectionTitle
+            icon={<History className="size-4 text-ink-faint" />}
+            title="Tes derniers essais"
+            subtitle="Chaque tentative compte — regarde la courbe monter"
+          />
+          <div className="mt-3 space-y-2">
+            {attempts.map((attempt, i) => {
+              const phrase = getPhraseById(attempt.phraseId);
+              return (
+                <motion.div
+                  key={`${attempt.at}-${i}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="card-soft flex items-center gap-3 px-4 py-3"
+                >
+                  <span
+                    className={cn(
+                      "grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold",
+                      attempt.score >= 65
+                        ? "bg-mint-50 text-mint-600"
+                        : "bg-gold-50 text-gold-500",
+                    )}
+                  >
+                    {attempt.score}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-ink">
+                      {phrase?.english ?? attempt.phraseId}
+                    </p>
+                    <p className="text-xs text-ink-faint">
+                      {attempt.markedManually
+                        ? "Pratiquée à voix haute"
+                        : `Micro : “${attempt.transcript.slice(0, 40)}”`}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Pronunciation basics */}
       <section>
@@ -353,5 +446,92 @@ function SectionTitle({
       </h2>
       <p className="text-sm text-ink-soft">{subtitle}</p>
     </div>
+  );
+}
+
+/** 3 phrases faciles à dire à voix haute — pour se lancer sans pression. */
+function ConfidenceBuilder({
+  phrases,
+  onSaid,
+}: {
+  phrases: Phrase[];
+  onSaid: (phraseId: string) => void;
+}) {
+  const [said, setSaid] = useState<Set<string>>(new Set());
+  const allDone = said.size === phrases.length;
+
+  const markSaid = (phrase: Phrase) => {
+    if (said.has(phrase.id)) return;
+    setSaid((prev) => new Set(prev).add(phrase.id));
+    onSaid(phrase.id);
+  };
+
+  return (
+    <section className="card-soft p-5">
+      <div className="flex items-center justify-between">
+        <p className="flex items-center gap-2 font-bold text-ink">
+          <ShieldCheck className="size-4 text-mint-500" /> Confidence builder
+        </p>
+        {allDone && <Chip tone="mint">3/3 ✓</Chip>}
+      </div>
+      <p className="mt-1 text-sm text-ink-soft">
+        Dis ces 3 phrases à voix haute, là, maintenant. Personne n&apos;écoute
+        — c&apos;est le but.
+      </p>
+      <div className="mt-3.5 space-y-2">
+        {phrases.map((phrase) => {
+          const done = said.has(phrase.id);
+          return (
+            <div
+              key={phrase.id}
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border border-ink/5 p-3 transition-all",
+                done && "bg-mint-50 border-mint-400/30",
+              )}
+            >
+              <button
+                onClick={() => speakText(phrase.english)}
+                aria-label="Écouter"
+                className="grid size-8 shrink-0 cursor-pointer place-items-center rounded-full bg-primary-50 text-primary-600"
+              >
+                <Volume2 className="size-3.5" />
+              </button>
+              <p className="min-w-0 flex-1 truncate text-sm font-bold text-ink">
+                {phrase.english}
+              </p>
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                onClick={() => markSaid(phrase)}
+                disabled={done}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-all",
+                  done
+                    ? "bg-mint-500 text-white"
+                    : "cursor-pointer bg-ink/5 text-ink-soft hover:bg-primary-50 hover:text-primary-600",
+                )}
+              >
+                {done ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Check className="size-3" strokeWidth={3.5} /> Dite
+                  </span>
+                ) : (
+                  "Je l'ai dite"
+                )}
+              </motion.button>
+            </div>
+          );
+        })}
+      </div>
+      {allDone && (
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-3 rounded-2xl bg-mint-50 p-3 text-sm font-semibold text-mint-600"
+        >
+          🎙️ Trois phrases dites. C&apos;est exactement comme ça qu&apos;on
+          arrête de bloquer.
+        </motion.p>
+      )}
+    </section>
   );
 }

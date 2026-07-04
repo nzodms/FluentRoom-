@@ -6,9 +6,17 @@ import type {
   PracticeResult,
   UserProgress,
 } from "@/types/learning";
+import type { DailyStepId } from "@/types/learning";
 import {
+  CompleteLessonOutcome,
   CompleteRoomInput,
   CompleteRoomOutcome,
+  ReviewSessionResult,
+  claimChest,
+  completeDailyStep,
+  completeDrillSession,
+  completeLesson,
+  completeReviewSession,
   completeRoom,
   defaultProgress,
   getStats,
@@ -17,6 +25,7 @@ import {
   reviewPhrase,
   saveOnboarding,
   saveProgress,
+  startLesson,
   touchToday,
 } from "./progress";
 import { clearAll } from "./storage";
@@ -91,6 +100,35 @@ export function useProgress() {
     setState(defaultProgress());
   }, []);
 
+  const doDailyStep = useCallback((step: DailyStepId) => {
+    setState(completeDailyStep(getSnapshot(), step));
+  }, []);
+
+  const openChest = useCallback(() => {
+    setState(claimChest(getSnapshot()));
+  }, []);
+
+  const beginLesson = useCallback((lessonId: string) => {
+    setState(startLesson(getSnapshot(), lessonId));
+  }, []);
+
+  const finishLesson = useCallback(
+    (lessonId: string): CompleteLessonOutcome => {
+      const outcome = completeLesson(getSnapshot(), lessonId);
+      setState(outcome.progress);
+      return outcome;
+    },
+    [],
+  );
+
+  const finishDrillSession = useCallback((scorePercent: number) => {
+    setState(completeDrillSession(getSnapshot(), scorePercent));
+  }, []);
+
+  const finishReviewSession = useCallback((result: ReviewSessionResult) => {
+    setState(completeReviewSession(getSnapshot(), result));
+  }, []);
+
   return {
     progress,
     ready,
@@ -100,5 +138,11 @@ export function useProgress() {
     review,
     completeOnboarding,
     reset,
+    doDailyStep,
+    openChest,
+    beginLesson,
+    finishLesson,
+    finishDrillSession,
+    finishReviewSession,
   };
 }

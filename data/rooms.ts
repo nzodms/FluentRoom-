@@ -2191,9 +2191,9 @@ export function getRoomById(id: string): Room | undefined {
 }
 
 /** Room du jour : rotation déterministe selon la date, en sautant les rooms terminées si possible. */
-export function getTodayRoom(completedIds: string[]): Room {
+export function getTodayRoom(completedIds: string[], dayOffset = 0): Room {
   const remaining = rooms.filter((room) => !completedIds.includes(room.id));
   const pool = remaining.length > 0 ? remaining : rooms;
-  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  const dayIndex = Math.floor(Date.now() / 86_400_000) + dayOffset;
   return pool[dayIndex % pool.length];
 }

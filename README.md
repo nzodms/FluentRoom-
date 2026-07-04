@@ -39,18 +39,21 @@ données seed locales et `localStorage`.
 ```
 app/
   page.tsx                  → landing page
-  onboarding/               → onboarding en 4 étapes
+  onboarding/               → onboarding en 5 étapes + diagnostic animé
   app/
     (tabs)/                 → shell app (header + bottom nav)
       today/ listen/ speak/ phrases/ progress/ settings/
-    room/[id]/              → flow de room immersif (8 étapes)
+    room/[id]/              → flow de room immersif (intro + 7 étapes)
+    lesson/[id]/            → leçons écrites (structures de l'oral)
 components/
-  ui/ layout/ room/ phrase/
+  ui/ layout/ room/ lesson/ phrase/ today/ exercises/
 data/
   rooms.ts                  → 11 rooms complètes (dialogues, quiz, décodage…)
+  lessons.ts                → 12 leçons écrites avec quiz et exercices
+  drills.ts                 → mini-exercices d'écoute (ear training)
   phrases.ts badges.ts levels.ts videoRooms.ts
 lib/
-  progress.ts               → logique streak/XP/badges/spaced repetition
+  progress.ts               → streak/XP/badges/daily path/spaced repetition
   useProgress.ts            → store React (useSyncExternalStore + localStorage)
   speech.ts scoring.ts storage.ts utils.ts brand.ts
 types/
@@ -61,7 +64,13 @@ Le nom du produit est centralisé dans `lib/brand.ts`.
 
 ## Méthode pédagogique
 
-Chaque room suit le cycle : **Listen → Understand → Quick Check → Decode →
-Shadowing → Speak Back → Phrase Unlock → Completed**. Les phrases débloquées
-alimentent la Phrase Bank avec une révision espacée simple
+Chaque room suit le cycle : **Intro → Listen → Understand → Quick Check →
+Decode → Shadowing → Speak Back → Phrase Unlock → Completed**. Les phrases
+débloquées alimentent la Phrase Bank avec une révision espacée simple
 (New → Seen → To review → Mastered).
+
+La journée s'organise autour d'un **Daily Path** (Warm-up → Room → Leçon →
+Review) avec objectif quotidien en minutes, récompense du jour, streak et
+Fluency Points. Les **leçons écrites** enseignent les structures de l'anglais
+parlé (I'm trying to…, gonna/wanna, Do you mind if…?) avec quiz, piège du
+francophone, construction de phrase et shadowing.

@@ -144,11 +144,28 @@ export type OnboardingGoal =
   | "travel"
   | "natives"
   | "speaking"
+  | "conversation"
+  | "accent"
   | "basics";
 
-export type OnboardingLevel = "beginner" | "some" | "blocked" | "natural";
+export type OnboardingLevel =
+  | "beginner"
+  | "some"
+  | "blocked"
+  | "semi"
+  | "natural"
+  | "fluent";
+
+export type OnboardingBlocker =
+  | "fast-speech"
+  | "blocked-reply"
+  | "translating"
+  | "vocab"
+  | "shy";
 
 export interface OnboardingChoices {
+  /** Blocage principal ressenti (étape 1 du nouvel onboarding). */
+  blocker?: OnboardingBlocker;
   goal: OnboardingGoal;
   level: OnboardingLevel;
   dailyMinutes: 5 | 10 | 15 | 20;
@@ -165,7 +182,56 @@ export interface RoomResult {
   speaking: number;
   timeSpentSec: number;
   xpEarned: number;
+  /** Room terminée sans ouvrir le transcript (badge No Subtitles). */
+  noSubtitles?: boolean;
 }
+
+/* ---------- Leçons écrites (structures de l'oral) ---------- */
+
+export type LessonStatus = "new" | "learning" | "mastered";
+
+export interface LessonExample {
+  english: string;
+  french: string;
+}
+
+export interface Lesson {
+  id: string;
+  /** Structure enseignée, ex: "I'm trying to…". */
+  structure: string;
+  title: string;
+  emoji: string;
+  objective: string;
+  /** Explication naturelle en français, pas académique. */
+  explanation: string;
+  examples: LessonExample[];
+  commonMistake: {
+    wrong: string;
+    right: string;
+    note: string;
+  };
+  quiz: ComprehensionQuestion[];
+  /** Exercice "build your own sentence" : remettre les mots dans l'ordre. */
+  build: {
+    prompt: string;
+    words: string[];
+    answer: string;
+  };
+  /** Phrase à répéter en shadowing. */
+  shadowLine: string;
+  /** La structure rejoint la Phrase Bank une fois la leçon apprise. */
+  phrase: Phrase;
+}
+
+export interface LessonState {
+  status: LessonStatus;
+  startedAt: string;
+  completedAt: string | null;
+}
+
+/* ---------- Daily Path ---------- */
+
+export type DailyStepId = "warmup" | "room" | "lesson" | "review";
 
 export interface PhraseState {
   status: PhraseStatus;
@@ -190,7 +256,22 @@ export interface UserProgress {
   responseSpeed: number | null;
   speakingAttempts: number;
   earnedBadges: string[];
+  /** Date de déblocage de chaque badge (clé = badge id). */
+  badgeDates: Record<string, string>;
   /** XP gagné par jour (clé = date ISO yyyy-mm-dd). */
   activity: Record<string, number>;
   practiceLog: PracticeResult[];
+  /** Leçons écrites : statut par leçon. */
+  lessons: Record<string, LessonState>;
+  /** Étapes du Daily Path complétées, par jour. */
+  dailyPath: Record<string, DailyStepId[]>;
+  /** Dernier jour où le Daily Chest a été ouvert. */
+  chestClaimedOn: string | null;
+  /** Compteurs pédagogiques. */
+  shadowingAttempts: number;
+  speakBackAnswers: number;
+  drillsCompleted: number;
+  reviewSessions: number;
+  /** Retours après une pause de 2 jours ou plus. */
+  comebackCount: number;
 }

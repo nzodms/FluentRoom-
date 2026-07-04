@@ -6,8 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { Room } from "@/types/learning";
 import { useProgress } from "@/lib/useProgress";
-import { clamp } from "@/lib/utils";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { clamp, cn } from "@/lib/utils";
+import { StepIntro } from "./StepIntro";
 import { StepFirstListen } from "./StepFirstListen";
 import { StepUnderstand } from "./StepUnderstand";
 import { StepQuickCheck } from "./StepQuickCheck";
@@ -17,7 +17,17 @@ import { StepSpeakBack } from "./StepSpeakBack";
 import { StepPhraseUnlock } from "./StepPhraseUnlock";
 import { StepCompleted } from "./StepCompleted";
 
-const TOTAL_INTERACTIVE_STEPS = 7;
+const STEP_LABELS = [
+  "Intro",
+  "Listen",
+  "Understand",
+  "Check",
+  "Decode",
+  "Repeat",
+  "Speak",
+  "Unlock",
+];
+const TOTAL_INTERACTIVE_STEPS = STEP_LABELS.length;
 
 export function RoomFlow({ room }: { room: Room }) {
   const { finishRoom, progress } = useProgress();
@@ -26,11 +36,14 @@ export function RoomFlow({ room }: { room: Room }) {
   const [speaking, setSpeaking] = useState(0);
   const [outcome, setOutcome] = useState<{
     xpEarned: number;
+    xpBefore: number;
     newBadges: string[];
     timeSpentSec: number;
     streak: number;
   } | null>(null);
   const startRef = useRef<number | null>(null);
+  const transcriptOpenedRef = useRef(false);
+  const answeredSpeakBackRef = useRef(false);
 
   // Chronomètre démarré au montage (hors rendu pour rester pur).
   useEffect(() => {
@@ -50,7 +63,10 @@ export function RoomFlow({ room }: { room: Room }) {
   };
 
   const handleSpeakBack = (answered: boolean) => {
-    if (answered) setSpeaking((s) => clamp(s + 5, 0, 100));
+    if (answered) {
+      answeredSpeakBackRef.current = true;
+      setSpeaking((s) => clamp(s + 5, 0, 100));
+    }
     next();
   };
 
@@ -62,9 +78,12 @@ export function RoomFlow({ room }: { room: Room }) {
       comprehension,
       speaking,
       timeSpentSec,
+      noSubtitles: !transcriptOpenedRef.current,
+      answeredSpeakBack: answeredSpeakBackRef.current,
     });
     setOutcome({
       xpEarned: result.xpEarned,
+      xpBefore: result.xpBefore,
       newBadges: result.newBadges,
       timeSpentSec,
       streak: result.progress.streak,
@@ -88,9 +107,29 @@ export function RoomFlow({ room }: { room: Room }) {
           </Link>
           <div className="min-w-0 flex-1">
             {!isCompleted && (
-              <ProgressBar
-                value={((step + 1) / (TOTAL_INTERACTIVE_STEPS + 1)) * 100}
-              />
+              <div>
+                {/* Indicateur segmenté */}
+                <div className="flex items-center gap-1">
+                  {STEP_LABELS.map((label, i) => (
+                    <motion.span
+                      key={label}
+                      className={cn(
+                        "h-1.5 flex-1 rounded-full",
+                        i < step
+                          ? "gradient-mint"
+                          : i === step
+                            ? "gradient-primary"
+                            : "bg-ink/8",
+                      )}
+                      animate={i === step ? { opacity: [1, 0.6, 1] } : {}}
+                      transition={{ duration: 1.6, repeat: Infinity }}
+                    />
+                  ))}
+                </div>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-ink-faint">
+                  {STEP_LABELS[step]} · {step + 1}/{TOTAL_INTERACTIVE_STEPS}
+                </p>
+              </div>
             )}
           </div>
           <span className="shrink-0 text-sm font-semibold text-ink-faint">
@@ -109,19 +148,28 @@ export function RoomFlow({ room }: { room: Room }) {
             transition={{ duration: 0.3, ease: [0.21, 0.6, 0.35, 1] }}
             className="flex flex-1 flex-col"
           >
-            {step === 0 && <StepFirstListen room={room} onNext={next} />}
-            {step === 1 && <StepUnderstand room={room} onNext={next} />}
-            {step === 2 && (
+            {step === 0 && <StepIntro room={room} onNext={next} />}
+            {step === 1 && (
+              <StepFirstListen
+                room={room}
+                onNext={next}
+                onTranscriptShown={() => {
+                  transcriptOpenedRef.current = true;
+                }}
+              />
+            )}
+            {step === 2 && <StepUnderstand room={room} onNext={next} />}
+            {step === 3 && (
               <StepQuickCheck room={room} onNext={handleQuickCheck} />
             )}
-            {step === 3 && <StepDecode room={room} onNext={next} />}
-            {step === 4 && (
+            {step === 4 && <StepDecode room={room} onNext={next} />}
+            {step === 5 && (
               <StepShadowing room={room} onNext={handleShadowing} />
             )}
-            {step === 5 && (
+            {step === 6 && (
               <StepSpeakBack room={room} onNext={handleSpeakBack} />
             )}
-            {step === 6 && (
+            {step === 7 && (
               <StepPhraseUnlock room={room} onNext={handleUnlockDone} />
             )}
             {isCompleted && outcome && (
@@ -131,6 +179,7 @@ export function RoomFlow({ room }: { room: Room }) {
                 speaking={speaking}
                 timeSpentSec={outcome.timeSpentSec}
                 xpEarned={outcome.xpEarned}
+                xpBefore={outcome.xpBefore}
                 streak={outcome.streak ?? progress.streak}
                 newBadges={outcome.newBadges}
               />

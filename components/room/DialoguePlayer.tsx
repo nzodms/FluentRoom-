@@ -22,6 +22,8 @@ interface DialoguePlayerProps {
   /** Transcript masqué par défaut (entraînement de l'oreille). */
   defaultTranscriptVisible?: boolean;
   onListened?: () => void;
+  /** Signale que l'utilisateur a ouvert le transcript (badge No Subtitles). */
+  onTranscriptShown?: () => void;
 }
 
 /**
@@ -35,6 +37,7 @@ export function DialoguePlayer({
   dialogue,
   defaultTranscriptVisible = false,
   onListened,
+  onTranscriptShown,
 }: DialoguePlayerProps) {
   // Support TTS stable après hydratation (true côté serveur pour éviter le flash).
   const ttsSupported = useSyncExternalStore(
@@ -45,6 +48,7 @@ export function DialoguePlayer({
   const [playing, setPlaying] = useState(false);
   const [currentLine, setCurrentLine] = useState(-1);
   const [finished, setFinished] = useState(false);
+  const [nativeSpeed, setNativeSpeed] = useState(false);
   const [transcriptToggled, setTranscriptToggled] = useState(
     defaultTranscriptVisible,
   );
@@ -69,7 +73,7 @@ export function DialoguePlayer({
     }
     setCurrentLine(index);
     speakText(dialogue[index].text, {
-      rate: 0.95,
+      rate: nativeSpeed ? 1.12 : 0.95,
       onEnd: () => {
         if (cancelledRef.current) return;
         // Petite respiration entre les répliques.
@@ -137,11 +141,15 @@ export function DialoguePlayer({
                 ? `${dialogue[currentLine].speaker} parle…`
                 : finished
                   ? "Écouté ✓ — réécoute si besoin"
-                  : `${dialogue.length} répliques · vitesse native`
+                  : `${dialogue.length} répliques`
               : "Audio non supporté par ce navigateur — lis le dialogue ci-dessous"}
           </p>
           <button
-            onClick={() => setTranscriptToggled(!showTranscript)}
+            onClick={() => {
+              const next = !showTranscript;
+              setTranscriptToggled(next);
+              if (next) onTranscriptShown?.();
+            }}
             className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700"
           >
             {showTranscript ? (
@@ -155,6 +163,34 @@ export function DialoguePlayer({
             )}
           </button>
         </div>
+
+        {/* Vitesse de lecture */}
+        {ttsSupported && (
+          <div className="mt-3 flex items-center gap-1 rounded-full bg-ink/5 p-1 text-xs font-bold">
+            <button
+              onClick={() => setNativeSpeed(false)}
+              className={cn(
+                "flex-1 cursor-pointer rounded-full py-1.5 transition-all",
+                !nativeSpeed
+                  ? "bg-white text-ink shadow-soft"
+                  : "text-ink-faint",
+              )}
+            >
+              Normal
+            </button>
+            <button
+              onClick={() => setNativeSpeed(true)}
+              className={cn(
+                "flex-1 cursor-pointer rounded-full py-1.5 transition-all",
+                nativeSpeed
+                  ? "gradient-primary text-white shadow-glow"
+                  : "text-ink-faint",
+              )}
+            >
+              ⚡ Native speed
+            </button>
+          </div>
+        )}
       </div>
 
       <AnimatePresence initial={false}>
