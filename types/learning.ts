@@ -387,6 +387,14 @@ export interface UserProgress {
   hintDay: string | null;
   /** Aides (indices) consommées aujourd'hui — 3 gratuites par jour. */
   hintsUsedToday: number;
+  /** Journal des gains FP en direct (30 derniers). */
+  fpLog: { at: string; amount: number; reason: string }[];
+  /** Jour des achats d'énergie (reset quotidien). */
+  energyBuyDay: string | null;
+  /** Achats d'énergie effectués aujourd'hui (max 3). */
+  energyBuysToday: number;
+  /** Recharge complète déjà utilisée ce jour-là. */
+  fullRechargeOn: string | null;
   /** FP dépensés en boutique (availableFP = xp - spentFP). */
   spentFP: number;
   /** Items achetés en boutique. */

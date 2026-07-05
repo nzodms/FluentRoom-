@@ -8,7 +8,13 @@ import type {
 } from "@/types/learning";
 import type { AvatarConfig, DailyStepId, Reward } from "@/types/learning";
 import { openRewardChest } from "./chests";
-import { PurchaseOutcome, purchaseItem } from "./shop";
+import {
+  EnergyPurchaseOutcome,
+  PurchaseOutcome,
+  purchaseEnergy,
+  purchaseItem,
+} from "./shop";
+import { grantSessionFP } from "./rewards/engine";
 import { spendHintCharge } from "./lessons/hints";
 import {
   CompleteChapterInput,
@@ -149,6 +155,18 @@ export function useProgress() {
     setState(spendHintCharge(getSnapshot()));
   }, []);
 
+  /** FP gagnés en direct pendant une leçon (combo, rappel réussi…). */
+  const grantFP = useCallback((amount: number, reason: string) => {
+    setState(grantSessionFP(getSnapshot(), amount, reason));
+  }, []);
+
+  /** Achat d'énergie contre FP (limites quotidiennes). */
+  const buyEnergy = useCallback((packId: string): EnergyPurchaseOutcome => {
+    const outcome = purchaseEnergy(getSnapshot(), packId);
+    if (outcome.ok) setState(outcome.progress);
+    return outcome;
+  }, []);
+
   /** Achat boutique : débite les FP et ajoute l'item à l'inventaire. */
   const buyItem = useCallback((itemId: string): PurchaseOutcome => {
     const outcome = purchaseItem(getSnapshot(), itemId);
@@ -197,6 +215,8 @@ export function useProgress() {
     calibrate,
     finishChapter,
     spendHint,
+    grantFP,
+    buyEnergy,
     buyItem,
     beginLesson,
     finishLesson,

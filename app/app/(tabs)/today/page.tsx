@@ -10,6 +10,7 @@ import { allPhrases } from "@/data/phrases";
 import { getLevelForXp, getNextLevel } from "@/data/levels";
 import { useProgress } from "@/lib/useProgress";
 import { getDailySteps } from "@/lib/progress";
+import { currentEnergy } from "@/lib/energy";
 import { computeQuests } from "@/lib/quests";
 import { cn, todayKey } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
@@ -175,9 +176,18 @@ export default function TodayPage() {
         <span data-tour="energy" className="inline-block">
           <EnergyPill progress={progress} />
         </span>
-        <p className="text-xs font-medium text-ink-faint">
-          Ton énergie du jour · se recharge chaque matin.
-        </p>
+        {currentEnergy(progress) === 0 ? (
+          <Link
+            href="/app/shop"
+            className="rounded-full bg-gold-50 px-3 py-1.5 text-xs font-bold text-gold-500 transition-colors hover:bg-gold-400/20"
+          >
+            +1 énergie · 120 FP
+          </Link>
+        ) : (
+          <p className="text-xs font-medium text-ink-faint">
+            Ton énergie du jour · se recharge chaque matin.
+          </p>
+        )}
       </div>
 
       {/* Progression du jour + semaine */}

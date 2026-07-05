@@ -78,3 +78,107 @@ export function nextAffordableHint(progress: UserProgress): {
     missing: Math.max(0, target.price - balance),
   };
 }
+
+/* ---------- Énergie contre FP : équilibré, jamais du pay-to-win ---------- */
+
+import { MAX_ENERGY, applyEnergyReset, currentEnergy } from "./energy";
+import { todayKey } from "./utils";
+
+export interface EnergyPack {
+  id: string;
+  label: string;
+  description: string;
+  price: number;
+  /** Énergies créditées ("full" = recharge complète). */
+  energy: number | "full";
+}
+
+export const ENERGY_PACKS: EnergyPack[] = [
+  {
+    id: "energy-1",
+    label: "+1 énergie",
+    description: "Pour continuer une session aujourd'hui.",
+    price: 120,
+    energy: 1,
+  },
+  {
+    id: "energy-3",
+    label: "+3 énergies",
+    description: "Une vraie session de plus, sans compter.",
+    price: 300,
+    energy: 3,
+  },
+  {
+    id: "energy-full",
+    label: "Recharge complète",
+    description: "Énergie au maximum — une fois par jour.",
+    price: 650,
+    energy: "full",
+  },
+];
+
+/** Achats d'énergie maximum par jour (recharge complète : 1). */
+export const DAILY_ENERGY_BUYS = 3;
+
+export function energyBuysLeftToday(progress: UserProgress): number {
+  const used =
+    progress.energyBuyDay === todayKey() ? (progress.energyBuysToday ?? 0) : 0;
+  return Math.max(0, DAILY_ENERGY_BUYS - used);
+}
+
+export function fullRechargeUsedToday(progress: UserProgress): boolean {
+  return progress.fullRechargeOn === todayKey();
+}
+
+export interface EnergyPurchaseOutcome {
+  progress: UserProgress;
+  ok: boolean;
+  reason?: "not-enough" | "daily-limit" | "recharge-used" | "energy-full" | "unknown";
+}
+
+/**
+ * Achète de l'énergie : vérifie solde + limites quotidiennes,
+ * débite les FP, crédite l'énergie, journalise. La maîtrise et la
+ * progression pédagogique ne sont JAMAIS achetables.
+ */
+export function purchaseEnergy(
+  progress: UserProgress,
+  packId: string,
+): EnergyPurchaseOutcome {
+  const pack = ENERGY_PACKS.find((p) => p.id === packId);
+  if (!pack) return { progress, ok: false, reason: "unknown" };
+
+  const fresh = applyEnergyReset(progress);
+  if (availableFP(fresh) < pack.price)
+    return { progress, ok: false, reason: "not-enough" };
+  if (energyBuysLeftToday(fresh) <= 0)
+    return { progress, ok: false, reason: "daily-limit" };
+  if (pack.energy === "full" && fullRechargeUsedToday(fresh))
+    return { progress, ok: false, reason: "recharge-used" };
+
+  const current = currentEnergy(fresh);
+  if (current >= MAX_ENERGY)
+    return { progress, ok: false, reason: "energy-full" };
+
+  const today = todayKey();
+  const credited =
+    pack.energy === "full"
+      ? MAX_ENERGY
+      : Math.min(MAX_ENERGY, current + pack.energy);
+
+  const next: UserProgress = {
+    ...fresh,
+    energy: credited,
+    spentFP: (fresh.spentFP ?? 0) + pack.price,
+    energyBuyDay: today,
+    energyBuysToday:
+      (fresh.energyBuyDay === today ? (fresh.energyBuysToday ?? 0) : 0) + 1,
+    fullRechargeOn:
+      pack.energy === "full" ? today : (fresh.fullRechargeOn ?? null),
+    fpLog: [
+      ...(fresh.fpLog ?? []).slice(-29),
+      { at: new Date().toISOString(), amount: -pack.price, reason: pack.label },
+    ],
+  };
+  return { progress: next, ok: true };
+}

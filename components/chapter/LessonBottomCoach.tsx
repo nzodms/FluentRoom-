@@ -18,11 +18,14 @@ export function LessonBottomCoach({
   session,
   exercise,
   companionId,
+  chestProgress = 0,
 }: {
   chapter: Chapter;
   session: SessionState;
   exercise: Exercise;
   companionId: string | null;
+  /** Progression du prochain coffre (0-100). */
+  chestProgress?: number;
 }) {
   const keyPhrase = exercise.phraseId
     ? chapter.keyPhrases.find((p) => p.id === exercise.phraseId)
@@ -78,6 +81,11 @@ export function LessonBottomCoach({
           >
             {remaining <= 1 ? "Dernière étape" : `Encore ${remaining} étapes`}
           </span>
+          {chestProgress >= 50 && (
+            <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-600">
+              Coffre à {Math.min(Math.round(chestProgress), 99)} %
+            </span>
+          )}
         </div>
       </div>
     </motion.div>

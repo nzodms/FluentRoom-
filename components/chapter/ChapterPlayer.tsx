@@ -14,6 +14,16 @@ import {
   type SessionState,
 } from "@/lib/lessons/engine";
 import { hintAt, hintsLeftToday, maxHintLevel } from "@/lib/lessons/hints";
+import { TOO_FAST_MS } from "@/lib/lessons/engine";
+import { liveReward } from "@/lib/rewards/engine";
+import { availableFP } from "@/lib/shop";
+import {
+  ComboChip,
+  FlyingFPCoins,
+  FPWalletPill,
+  RewardToast,
+  type FPBurst,
+} from "./FPWallet";
 import { companionLine, recordQuizAnswer, resetQuizSession } from "@/lib/companion";
 import { useProgress } from "@/lib/useProgress";
 import { speakText } from "@/lib/speech";
@@ -39,7 +49,7 @@ type Stage = "intro" | "phrases" | "exercises" | "summary";
  * limités, compagnon au bon moment, résumé final gratifiant.
  */
 export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
-  const { progress, spendHint } = useProgress();
+  const { progress, spendHint, grantFP } = useProgress();
   const [stage, setStage] = useState<Stage>("intro");
   const [session, setSession] = useState<SessionState>(() =>
     createSession({
@@ -48,7 +58,9 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
     }),
   );
   const [hintLevel, setHintLevel] = useState(0);
+  const [burst, setBurst] = useState<FPBurst | null>(null);
   const startedAt = useRef(0);
+  const burstTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     resetQuizSession();
@@ -67,11 +79,26 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
     companionLine(recordQuizAnswer(correct), progress);
 
   const handleDone = (correct: boolean) => {
+    const elapsedMs = Date.now() - startedAt.current;
     const next = submitAnswer(session, {
       correct,
       hintsUsed: hintLevel,
-      elapsedMs: Date.now() - startedAt.current,
+      elapsedMs,
     });
+    // FP en direct : combo, rappel réussi, réflexe propre.
+    const reward = liveReward({
+      correct,
+      streakAfter: next.streak,
+      isRetry: queued?.isRetry ?? false,
+      hintsUsed: hintLevel,
+      tooFast: elapsedMs < TOO_FAST_MS,
+    });
+    if (reward) {
+      grantFP(reward.amount, reward.label);
+      setBurst({ id: session.index, amount: reward.amount, label: reward.label });
+      if (burstTimer.current) clearTimeout(burstTimer.current);
+      burstTimer.current = setTimeout(() => setBurst(null), 1300);
+    }
     setSession(next);
     setHintLevel(0);
     if (isSessionDone(next)) setStage("summary");
@@ -119,11 +146,16 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
                   transition={{ type: "spring", stiffness: 200, damping: 28 }}
                 />
               </div>
-              <p className="mt-1 truncate text-[10px] font-bold uppercase tracking-widest text-ink-faint">
-                {chapter.title}
-                {stage === "exercises" && ` · étape ${Math.min(session.index + 1, total)}/${total}`}
+              <p className="mt-1 flex items-center gap-1.5 truncate text-[10px] font-bold uppercase tracking-widest text-ink-faint">
+                <span className="truncate">
+                  {chapter.title}
+                  {stage === "exercises" &&
+                    ` · étape ${Math.min(session.index + 1, total)}/${total}`}
+                </span>
+                {stage === "exercises" && <ComboChip streak={session.streak} />}
               </p>
             </div>
+            <FPWalletPill balance={availableFP(progress)} />
             {/* Indice : progressif, limité, jamais la réponse */}
             {stage === "exercises" && queued && (
               <button
@@ -152,6 +184,9 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
             )}
           </div>
         </header>
+
+        <FlyingFPCoins burst={burst} />
+        <RewardToast burst={burst} />
 
         <main className="relative mx-auto flex min-h-[calc(100dvh-3.4rem)] w-full max-w-lg flex-col px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5">
           {/* Lumière douce derrière la carte principale */}
@@ -327,6 +362,7 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
                     session={session}
                     exercise={queued.exercise}
                     companionId={progress.companion}
+                    chestProgress={progress.chestProgress ?? 0}
                   />
                 </div>
               </motion.div>

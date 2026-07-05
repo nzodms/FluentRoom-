@@ -11,6 +11,7 @@ import { useProgress } from "@/lib/useProgress";
 import { availableFP, ownsItem } from "@/lib/shop";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
 import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
+import { EnergySection } from "@/components/shop/EnergySection";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { CountUp } from "@/components/ui/CountUp";
@@ -24,7 +25,7 @@ const RARITY_RING: Record<string, string> = {
 };
 
 export default function ShopPage() {
-  const { progress, ready, buyItem, setAvatar } = useProgress();
+  const { progress, ready, buyItem, buyEnergy, setAvatar } = useProgress();
   const [category, setCategory] = useState<AvatarItemType>("outfit");
   const [selected, setSelected] = useState<ShopItem | null>(null);
   const [justBought, setJustBought] = useState(false);
@@ -135,6 +136,11 @@ export default function ShopPage() {
           </p>
         </div>
       </div>
+
+      {/* Énergie contre FP */}
+
+      <EnergySection progress={progress} onBuy={buyEnergy} />
+
 
       {/* Recommandé */}
       {recommended.length > 0 && (

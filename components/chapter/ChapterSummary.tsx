@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/Button";
 import { CountUp } from "@/components/ui/CountUp";
 import { Chip } from "@/components/ui/Chip";
 import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
+import { RewardRoom } from "@/components/rewards/RewardRoom";
+import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const MASTERY_LABEL: Record<string, { label: string; tone: "mint" | "primary" | "coral" }> = {
@@ -35,7 +37,8 @@ export function ChapterSummary({
   chapter: Chapter;
   session: SessionState;
 }) {
-  const { progress, finishChapter } = useProgress();
+  const { progress, finishChapter, openChest } = useProgress();
+  const [chestOpen, setChestOpen] = useState(false);
   const [outcome, setOutcome] = useState<{ xpEarned: number } | null>(null);
   const committed = useRef(false);
 
@@ -108,6 +111,30 @@ export function ChapterSummary({
           </Chip>
           {result.noHints && <Chip tone="gold">Sans indice · bonus inclus</Chip>}
         </div>
+      </div>
+
+      {/* Décomposition des gains */}
+      <div className="mx-auto mt-4 max-w-xs space-y-1.5">
+        {[
+          { label: "Chapitre terminé", value: chapter.rewardFP },
+          ...(result.noHints ? [{ label: "Sans indice", value: 10 }] : []),
+          ...(result.outcomes.some((o) => o.recoveredOnRetry)
+            ? [{ label: "Rappels réussis", value: 0 }]
+            : []),
+        ].map((line, i) => (
+          <motion.div
+            key={line.label}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 + i * 0.25 }}
+            className="flex items-center justify-between rounded-2xl bg-white px-3.5 py-2 text-sm shadow-soft"
+          >
+            <span className="font-semibold text-ink-soft">{line.label}</span>
+            <span className="font-bold text-gold-500">
+              {line.value > 0 ? `+${line.value} FP` : "inclus"}
+            </span>
+          </motion.div>
+        ))}
       </div>
 
       {/* Commentaire du compagnon */}
@@ -191,8 +218,39 @@ export function ChapterSummary({
         transition={{ delay: 0.7 }}
         className="mt-5 space-y-2.5"
       >
+        {(progress.availableChests ?? 0) > 0 ? (
+          <Button
+            size="lg"
+            fullWidth
+            data-testid="open-chest-cta"
+            onClick={() => setChestOpen(true)}
+          >
+            Ouvrir mon coffre
+          </Button>
+        ) : (
+          <div className="rounded-2xl bg-white p-3.5 shadow-soft">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="text-ink">Prochain coffre</span>
+              <span className="text-primary-600">
+                {Math.round(progress.chestProgress ?? 0)} %
+              </span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-ink/8">
+              <motion.div
+                className="h-full rounded-full gradient-gold"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(progress.chestProgress ?? 0, 100)}%` }}
+                transition={{ duration: 0.9, delay: 0.4 }}
+              />
+            </div>
+          </div>
+        )}
         <Link href="/app/today" className="block">
-          <Button size="lg" fullWidth>
+          <Button
+            size="lg"
+            fullWidth
+            variant={(progress.availableChests ?? 0) > 0 ? "secondary" : "primary"}
+          >
             Continuer
           </Button>
         </Link>
@@ -204,6 +262,18 @@ export function ChapterSummary({
           </Link>
         )}
       </motion.div>
+
+      {/* Le moment coffre : plein écran, ouverture progressive */}
+      <AnimatePresence>
+        {chestOpen && (
+          <RewardRoom
+            chestType="daily"
+            avatar={progress.avatar}
+            onOpen={openChest}
+            onCollect={() => setChestOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
