@@ -70,20 +70,20 @@ export function AdventurePath({
                 d={d}
                 fill="none"
                 stroke="#3a2c14"
-                strokeWidth={10}
+                strokeWidth={8}
                 strokeLinecap="round"
-                strokeDasharray="14 18"
-                opacity={0.08}
-                transform="translate(0 2.5)"
+                strokeDasharray="12 17"
+                opacity={0.07}
+                transform="translate(0 2)"
               />
               <path
                 d={d}
                 fill="none"
-                stroke="#c9cdd8"
-                strokeWidth={9}
+                stroke="#c9ccd6"
+                strokeWidth={7}
                 strokeLinecap="round"
-                strokeDasharray="14 18"
-                opacity={0.95}
+                strokeDasharray="12 17"
+                opacity={0.85}
               />
             </g>
           );

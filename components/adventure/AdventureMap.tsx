@@ -40,6 +40,9 @@ export function AdventureMap({
   }, []);
 
   const byId = new Map(adventure.nodes.map((n) => [n.id, n]));
+  const current = adventure.currentNodeId
+    ? byId.get(adventure.currentNodeId)
+    : null;
   const px = (id: string) => {
     const n = byId.get(id);
     return n
@@ -97,6 +100,17 @@ export function AdventureMap({
       className="absolute inset-0 overflow-hidden"
     >
       <AdventureZoneBackdrop theme={adventure.zone.theme.id} />
+      {/* Voile de focalisation : le décor s'adoucit loin du chapitre
+          actif — l'œil est guidé vers le cœur de la progression. */}
+      {current && (
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at ${current.x}% ${current.y}%, transparent 16%, rgba(247,246,241,0.22) 55%, rgba(247,246,241,0.5) 100%)`,
+          }}
+        />
+      )}
       <AdventurePath width={size.w} height={size.h} segments={segments} />
       {/* Couches : socles (z-10) → compagnon (z-20) → bulles (z-30) */}
       {adventure.nodes.map((node) => (

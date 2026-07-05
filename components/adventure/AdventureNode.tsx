@@ -6,16 +6,14 @@ import type { AdventureNodeView } from "@/lib/adventure/types";
 import { cn } from "@/lib/utils";
 
 /**
- * Un node de la scène : socle lumineux posé sur le chemin (vert
- * terminé, balise violette en cours, coffre doré, défi flamme,
- * cadenas sombre) + bulle-label premium. Tout le node est tappable.
+ * Hiérarchie visuelle stricte :
+ * — niveau 1 : le chapitre actif (grande balise, grande bulle) ;
+ * — niveau 2 : terminés, coffre, défi (socles moyens, pills compactes) ;
+ * — niveau 3 : verrouillés (petits, gris, discrets).
+ * Les socles vivent dans la scène (z-10), les bulles dans une couche
+ * au-dessus de tout (z-30) — jamais un socle devant un texte.
  */
 
-/**
- * Marqueur seul (socle dans la scène). Les bulles sont rendues dans
- * une couche séparée au-dessus de tout (AdventureNodeLabel) pour que
- * jamais un socle ne passe devant le texte d'une autre bulle.
- */
 export function AdventureNode({
   node,
   selected,
@@ -44,7 +42,7 @@ export function AdventureNode({
   );
 }
 
-/** Bulle-label, couche haute : cliquable, pointe vers son node. */
+/** Bulle-label, couche haute : cliquable, ancrée sur son node. */
 export function AdventureNodeLabel({
   node,
   selected,
@@ -76,11 +74,11 @@ export function AdventureNodeLabel({
 
 /** Encombrement du marqueur : la bulle s'ancre sur la même boîte. */
 function markerBox(node: AdventureNodeView): { w: number; h: number } {
-  if (node.type === "chest") return { w: 76, h: 62 };
-  if (node.type === "challenge") return { w: 60, h: 54 };
-  if (node.state === "done") return { w: 64, h: 52 };
-  if (node.state === "current") return { w: 84, h: 66 };
-  return { w: 52, h: 46 };
+  if (node.type === "chest") return { w: 68, h: 56 };
+  if (node.type === "challenge") return { w: 52, h: 48 };
+  if (node.state === "done") return { w: 52, h: 42 };
+  if (node.state === "current") return { w: 96, h: 74 };
+  return { w: 42, h: 36 };
 }
 
 /* ---------- Marqueurs posés dans la scène ---------- */
@@ -99,52 +97,59 @@ function NodeMarker({
   return <LockedDisc selected={selected} />;
 }
 
-/** Socle vert lumineux : étape terminée. */
+/** Socle vert compact : étape terminée (niveau 2). */
 function DonePedestal({ selected }: { selected: boolean }) {
   return (
-    <span className="relative grid h-[52px] w-[64px] place-items-center">
-      <svg viewBox="0 0 64 52" className="absolute inset-0" aria-hidden>
-        <ellipse cx="32" cy="40" rx="30" ry="11" fill="#2cb783" opacity="0.28" />
-        <ellipse cx="32" cy="38" rx="24" ry="9" fill="#43cb95" opacity="0.55" />
-        <ellipse cx="32" cy="36" rx="18" ry="6.5" fill="#d2f1e3" />
-        <ellipse cx="32" cy="34.5" rx="18" ry="6.5" fill="#eafcf4" />
+    <span className="relative grid h-[42px] w-[52px] place-items-center">
+      <svg viewBox="0 0 52 42" className="absolute inset-0" aria-hidden>
+        <ellipse cx="26" cy="32" rx="23" ry="8.5" fill="#2cb783" opacity="0.22" />
+        <ellipse cx="26" cy="30.5" rx="18" ry="6.5" fill="#43cb95" opacity="0.5" />
+        <ellipse cx="26" cy="29" rx="13.5" ry="4.8" fill="#d2f1e3" />
+        <ellipse cx="26" cy="28" rx="13.5" ry="4.8" fill="#eafcf4" />
       </svg>
       <span
         className={cn(
-          "relative -top-2 grid size-8 place-items-center rounded-full bg-white text-mint-500 shadow-soft ring-[3px] ring-mint-400",
-          selected && "ring-4 ring-mint-500",
+          "relative -top-1.5 grid size-7 place-items-center rounded-full bg-white text-mint-500 shadow-soft ring-2 ring-mint-400",
+          selected && "ring-[3px] ring-mint-500",
         )}
       >
-        <Check className="size-4.5" strokeWidth={3.6} />
+        <Check className="size-3.5" strokeWidth={3.6} />
       </span>
     </span>
   );
 }
 
-/** Balise violette : chapitre en cours, le point le plus visible. */
+/** Balise violette : LE point focal de la map (niveau 1). */
 function CurrentBeacon({ selected }: { selected: boolean }) {
   return (
-    <span className="relative grid h-[66px] w-[84px] place-items-center">
+    <span className="relative grid h-[74px] w-[96px] place-items-center">
+      {/* Double halo pulsant, bien plus fort que tout le reste */}
       <motion.span
         aria-hidden
-        className="absolute left-1/2 top-1/2 size-[84px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-400/25"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0.4, 0.8] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute left-1/2 top-1/2 size-[104px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-400/20"
+        animate={{ scale: [1, 1.18, 1], opacity: [0.9, 0.45, 0.9] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
       />
-      <svg viewBox="0 0 84 66" className="absolute inset-0" aria-hidden>
-        <ellipse cx="42" cy="52" rx="38" ry="13" fill="#585ce2" opacity="0.3" />
-        <ellipse cx="42" cy="49" rx="30" ry="10.5" fill="#7679e9" opacity="0.7" />
-        <ellipse cx="42" cy="46" rx="23" ry="8" fill="#c3c4f6" />
-        <ellipse cx="42" cy="43.5" rx="23" ry="8" fill="#dfdffb" />
-        <ellipse cx="42" cy="42" rx="14" ry="5" fill="#f4f4ff" />
+      <motion.span
+        aria-hidden
+        className="absolute left-1/2 top-1/2 size-[76px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary-300/70"
+        animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0, 0.8] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+      />
+      <svg viewBox="0 0 96 74" className="absolute inset-0" aria-hidden>
+        <ellipse cx="48" cy="58" rx="44" ry="14.5" fill="#585ce2" opacity="0.32" />
+        <ellipse cx="48" cy="55" rx="35" ry="12" fill="#7679e9" opacity="0.75" />
+        <ellipse cx="48" cy="51.5" rx="27" ry="9.5" fill="#c3c4f6" />
+        <ellipse cx="48" cy="49" rx="27" ry="9.5" fill="#dfdffb" />
+        <ellipse cx="48" cy="47.5" rx="17" ry="6" fill="#f4f4ff" />
       </svg>
       <span
         className={cn(
-          "relative -top-2.5 grid size-9 place-items-center rounded-full gradient-primary shadow-glow",
+          "relative -top-3 grid size-10 place-items-center rounded-full gradient-primary shadow-glow",
           selected && "ring-4 ring-primary-200",
         )}
       >
-        <svg viewBox="0 0 20 20" className="size-4 text-white" aria-hidden>
+        <svg viewBox="0 0 20 20" className="size-[18px] text-white" aria-hidden>
           <path
             d="M10 1.5 L12.2 7 L18 7.6 L13.6 11.4 L15 17.4 L10 14.2 L5 17.4 L6.4 11.4 L2 7.6 L7.8 7 Z"
             fill="currentColor"
@@ -155,26 +160,26 @@ function CurrentBeacon({ selected }: { selected: boolean }) {
   );
 }
 
-/** Cadenas sombre : étape encore verrouillée. */
+/** Cadenas discret : étape verrouillée (niveau 3). */
 function LockedDisc({ selected }: { selected: boolean }) {
   return (
-    <span className="relative grid h-[46px] w-[52px] place-items-center">
-      <svg viewBox="0 0 52 46" className="absolute inset-0" aria-hidden>
-        <ellipse cx="26" cy="38" rx="20" ry="6.5" fill="#3a2c14" opacity="0.14" />
+    <span className="relative grid h-[36px] w-[42px] place-items-center">
+      <svg viewBox="0 0 42 36" className="absolute inset-0" aria-hidden>
+        <ellipse cx="21" cy="30" rx="14" ry="4.5" fill="#3a2c14" opacity="0.1" />
       </svg>
       <span
         className={cn(
-          "relative -top-1 grid size-9 place-items-center rounded-full bg-[#4a5065] text-white shadow-soft ring-[3px] ring-white/80",
-          selected && "ring-4 ring-primary-200",
+          "relative -top-0.5 grid size-7 place-items-center rounded-full bg-[#8b90a3]/90 text-white/90 shadow-soft ring-2 ring-white/70",
+          selected && "ring-[3px] ring-primary-200",
         )}
       >
-        <Lock className="size-4" strokeWidth={2.4} />
+        <Lock className="size-3" strokeWidth={2.4} />
       </span>
     </span>
   );
 }
 
-/** Coffre doré posé sur le chemin. */
+/** Coffre doré posé sur le chemin (niveau 2). */
 function ChestMarker({
   node,
   selected,
@@ -185,22 +190,26 @@ function ChestMarker({
   const open = node.state === "done";
   const locked = node.state === "locked";
   return (
-    <span className="relative grid h-[62px] w-[76px] place-items-center">
+    <span className="relative grid h-[56px] w-[68px] place-items-center">
       {node.state === "reward" && (
         <motion.span
           aria-hidden
-          className="absolute left-1/2 top-1/2 size-[80px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400/35"
-          animate={{ scale: [1, 1.18, 1], opacity: [0.8, 0.4, 0.8] }}
+          className="absolute left-1/2 top-1/2 size-[68px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400/30"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.75, 0.4, 0.75] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
         />
       )}
       <svg
         viewBox="0 0 76 62"
-        className={cn("relative", locked && "opacity-70 grayscale", selected && "drop-shadow-lg")}
+        className={cn(
+          "relative h-[56px] w-[68px]",
+          locked && "opacity-55 grayscale",
+          selected && "drop-shadow-lg",
+        )}
         aria-hidden
       >
-        <ellipse cx="38" cy="52" rx="26" ry="7.5" fill="#3a2c14" opacity="0.2" />
-        {!locked && <ellipse cx="38" cy="50" rx="30" ry="10" fill="#ffd76e" opacity="0.5" />}
+        <ellipse cx="38" cy="52" rx="24" ry="7" fill="#3a2c14" opacity="0.18" />
+        {!locked && <ellipse cx="38" cy="50" rx="28" ry="9" fill="#ffd76e" opacity="0.45" />}
         {/* Corps */}
         <rect x="18" y="26" width="40" height="24" rx="5" fill="#8a5a18" />
         <rect x="18" y="26" width="40" height="24" rx="5" fill="none" stroke="#6e4611" strokeWidth="2" />
@@ -229,28 +238,28 @@ function ChestMarker({
   );
 }
 
-/** Pastille défi : flamme sur fond corail, cerclée de blanc. */
+/** Pastille défi : flamme corail, compacte (niveau 2). */
 function ChallengeMarker({ selected }: { selected: boolean }) {
   return (
-    <span className="relative grid h-[54px] w-[60px] place-items-center">
-      <svg viewBox="0 0 60 54" className="absolute inset-0" aria-hidden>
-        <ellipse cx="30" cy="45" rx="20" ry="6.5" fill="#3a2c14" opacity="0.15" />
+    <span className="relative grid h-[48px] w-[52px] place-items-center">
+      <svg viewBox="0 0 52 48" className="absolute inset-0" aria-hidden>
+        <ellipse cx="26" cy="40" rx="16" ry="5" fill="#3a2c14" opacity="0.13" />
       </svg>
       <span
         className={cn(
-          "relative -top-1 grid size-11 place-items-center rounded-full bg-white shadow-lift",
-          selected && "ring-4 ring-coral-100",
+          "relative -top-1 grid size-10 place-items-center rounded-full bg-white shadow-lift",
+          selected && "ring-[3px] ring-coral-100",
         )}
       >
-        <span className="grid size-8.5 place-items-center rounded-full gradient-coral text-white">
-          <Flame className="size-4.5" fill="currentColor" />
+        <span className="grid size-[30px] place-items-center rounded-full gradient-coral text-white">
+          <Flame className="size-4" fill="currentColor" />
         </span>
       </span>
     </span>
   );
 }
 
-/* ---------- Bulle-label ---------- */
+/* ---------- Bulles-labels, par niveau de hiérarchie ---------- */
 
 const SIDE_CLASS: Record<string, string> = {
   right: "left-full top-1/2 ml-1.5 -translate-y-1/2",
@@ -273,71 +282,131 @@ function NodeLabel({
   node: AdventureNodeView;
   selected: boolean;
 }) {
-  const numberCls =
-    node.state === "done"
-      ? "bg-mint-500 text-white"
-      : node.state === "current"
-        ? "bg-primary-500 text-white"
-        : node.state === "reward"
-          ? "bg-gold-400 text-white"
-          : "bg-[#4a5065] text-white";
+  const side = cn("absolute z-10 block w-max text-left", SIDE_CLASS[node.labelSide]);
 
-  const stateLine =
-    node.type === "challenge" && node.meta.durationMin && node.meta.rewardFP ? (
-      <span className="flex items-center gap-1 text-[10px] font-bold text-coral-500">
-        <Clock3 className="size-3" /> {node.meta.durationMin} min · +{node.meta.rewardFP} FP
-      </span>
-    ) : node.state === "current" ? (
-      <span className="flex items-center gap-1 text-[10px] font-bold text-primary-600">
-        <Clock3 className="size-3" /> En cours
-      </span>
-    ) : node.state === "reward" ? (
-      <span className="text-[10px] font-bold text-gold-500">Récompense</span>
-    ) : node.state === "locked" ? (
-      <span className="flex items-center gap-1 text-[10px] font-bold text-ink-faint">
-        <Lock className="size-2.5" /> Verrouillé
-      </span>
-    ) : null;
-
-  return (
-    <span
-      className={cn("absolute z-10 block w-max text-left", SIDE_CLASS[node.labelSide])}
-    >
-      <span
-        className={cn(
-          "relative block rounded-2xl bg-white/95 px-2.5 py-1.5 shadow-lift backdrop-blur-sm",
-          selected && "ring-2 ring-primary-200",
-        )}
-      >
+  /* Niveau 1 — chapitre actif : la seule grande bulle de la map. */
+  if (node.state === "current") {
+    return (
+      <span className={side}>
         <span
-          aria-hidden
-          className={cn("absolute size-2 rotate-45 bg-white/95", TAIL_CLASS[node.labelSide])}
-        />
-        <span className="relative flex items-center gap-1.5">
-          {node.step !== null && (
-            <span
-              className={cn(
-                "grid size-[18px] shrink-0 place-items-center rounded-full text-[10px] font-bold",
-                numberCls,
-              )}
-            >
+          className={cn(
+            "relative block rounded-2xl border-2 border-primary-200 bg-white px-2.5 py-2 shadow-lift",
+            selected && "border-primary-300",
+          )}
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "absolute size-2.5 rotate-45 border-primary-200 bg-white",
+              TAIL_CLASS[node.labelSide],
+            )}
+          />
+          <span className="relative flex items-center gap-2">
+            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-primary-500 text-[11px] font-bold text-white">
               {node.step}
             </span>
+            <span className="max-w-[104px] text-[13px] font-bold leading-tight text-ink">
+              {node.title}
+            </span>
+          </span>
+          <span className="relative mt-1 flex items-center gap-1 pl-7 text-[10px] font-bold text-primary-600">
+            <Clock3 className="size-3" /> En cours
+          </span>
+        </span>
+      </span>
+    );
+  }
+
+  /* Niveau 2 — terminé : pill compacte, check + titre. */
+  if (node.state === "done") {
+    return (
+      <span className={side}>
+        <span
+          className={cn(
+            "relative flex items-center gap-1.5 rounded-full bg-white/95 py-1 pl-1 pr-2.5 shadow-soft backdrop-blur-sm",
+            selected && "ring-2 ring-mint-400",
           )}
-          <span className="max-w-[112px] text-[12px] font-bold leading-tight text-ink">
+        >
+          <span className="grid size-4 shrink-0 place-items-center rounded-full bg-mint-500 text-white">
+            <Check className="size-2.5" strokeWidth={4} />
+          </span>
+          <span className="max-w-[110px] truncate text-[10px] font-bold text-ink-soft">
             {node.title}
           </span>
-          {node.state === "done" && (
-            <span className="grid size-4 shrink-0 place-items-center rounded-full bg-mint-500 text-white">
-              <Check className="size-2.5" strokeWidth={4} />
+        </span>
+      </span>
+    );
+  }
+
+  /* Niveau 2 — coffre : pill concise, dorée quand disponible. */
+  if (node.type === "chest") {
+    const ready = node.state === "reward";
+    return (
+      <span className={side}>
+        <span
+          className={cn(
+            "relative flex items-center gap-1.5 rounded-full py-1 pl-2 pr-2.5 shadow-soft backdrop-blur-sm",
+            ready ? "bg-white/95" : "bg-white/80",
+            selected && "ring-2 ring-gold-400",
+          )}
+        >
+          <span
+            className={cn(
+              "size-2 shrink-0 rounded-full",
+              ready ? "bg-gold-400" : "bg-ink/20",
+            )}
+          />
+          <span
+            className={cn(
+              "text-[10px] font-bold",
+              ready ? "text-ink" : "text-ink-faint",
+            )}
+          >
+            {node.title}
+          </span>
+          {ready && (
+            <span className="text-[10px] font-bold text-gold-500">Récompense</span>
+          )}
+        </span>
+      </span>
+    );
+  }
+
+  /* Niveau 2 — défi express : pill corail, une ligne. */
+  if (node.type === "challenge") {
+    return (
+      <span className={side}>
+        <span
+          className={cn(
+            "relative flex items-center gap-1.5 rounded-full bg-white/95 py-1 pl-2 pr-2.5 shadow-soft backdrop-blur-sm",
+            selected && "ring-2 ring-coral-100",
+          )}
+        >
+          <Flame className="size-3 shrink-0 text-coral-500" fill="currentColor" />
+          <span className="text-[10px] font-bold text-ink">{node.title}</span>
+          {node.meta.durationMin && node.meta.rewardFP && (
+            <span className="text-[10px] font-bold text-coral-500">
+              {node.meta.durationMin} min · +{node.meta.rewardFP} FP
             </span>
           )}
         </span>
-        {stateLine && (
-          <span className={cn("relative mt-0.5 block", node.step !== null && "pl-6")}>
-            {stateLine}
-          </span>
+      </span>
+    );
+  }
+
+  /* Niveau 3 — verrouillé : pill discrète, grisée, minimale. */
+  return (
+    <span className={side}>
+      <span
+        className={cn(
+          "relative flex items-center gap-1 rounded-full bg-white/70 px-2 py-[3px] backdrop-blur-sm",
+          selected && "ring-2 ring-primary-200 bg-white/90",
         )}
+      >
+        <Lock className="size-2.5 shrink-0 text-ink-faint/80" />
+        <span className="max-w-[124px] truncate text-[10px] font-semibold text-ink-faint">
+          {node.title}
+        </span>
       </span>
     </span>
   );

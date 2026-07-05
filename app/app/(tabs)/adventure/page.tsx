@@ -66,8 +66,8 @@ export default function AdventurePage() {
         </div>
       </div>
 
-      {/* Fiche flottante au-dessus de la bottom nav */}
-      <div className="absolute inset-x-0 bottom-0 z-30 px-3 pb-3">
+      {/* Fiche flottante au-dessus de la bottom nav, bien détachée */}
+      <div className="absolute inset-x-0 bottom-0 z-30 px-4 pb-3.5">
         {selected && (
           <AdventureBottomSheet node={selected} onPrimary={onPrimary} />
         )}
