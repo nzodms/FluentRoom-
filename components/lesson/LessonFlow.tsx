@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Lesson } from "@/types/learning";
+import { resetQuizSession } from "@/lib/companion";
 import { useProgress } from "@/lib/useProgress";
 import { Chip } from "@/components/ui/Chip";
 import { SessionShell } from "@/components/session/SessionShell";
@@ -63,6 +64,7 @@ export function LessonFlow({ lesson }: { lesson: Lesson }) {
 
   useEffect(() => {
     beginLesson(lesson.id);
+    resetQuizSession();
   }, [beginLesson, lesson.id]);
 
   const labels = STEP_LABELS[lesson.template] ?? STEP_LABELS.pattern;

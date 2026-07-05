@@ -22,6 +22,7 @@ import { FluentCharacter } from "@/components/avatar/FluentCharacter";
 import { expressionForToday } from "@/lib/avatar-reactions";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { ShopTeaser } from "@/components/shop/ShopTeaser";
+import { CompanionCoachCard } from "@/components/companion/CompanionCoachCard";
 import { WelcomeOverlay } from "@/components/companion/WelcomeOverlay";
 import {
   GuidedTour,
@@ -175,6 +176,9 @@ export default function TodayPage() {
         </Link>
         <StreakPulse streak={progress.streak} activeToday={activeToday} />
       </div>
+
+      {/* Le compagnon : contexte, mission du jour, calibrage */}
+      <CompanionCoachCard progress={progress} quests={quests} />
 
       {/* Focus Energy */}
       <div className="flex items-center justify-between">

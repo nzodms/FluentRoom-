@@ -16,6 +16,7 @@ import {
   ReviewSessionResult,
   claimQuest,
   completeDailyStep,
+  completeCalibration,
   completeDrillSession,
   completeLesson,
   completeReviewSession,
@@ -122,6 +123,13 @@ export function useProgress() {
     setState({ ...getSnapshot(), companion: companionId });
   }, []);
 
+  /** Calibrage du plan : ajuste le niveau et récompense (+FP). */
+  const calibrate = useCallback((correctCount: number) => {
+    const outcome = completeCalibration(getSnapshot(), correctCount);
+    setState(outcome.progress);
+    return outcome;
+  }, []);
+
   /** Achat boutique : débite les FP et ajoute l'item à l'inventaire. */
   const buyItem = useCallback((itemId: string): PurchaseOutcome => {
     const outcome = purchaseItem(getSnapshot(), itemId);
@@ -167,6 +175,7 @@ export function useProgress() {
     openChest,
     setAvatar,
     setCompanion,
+    calibrate,
     buyItem,
     beginLesson,
     finishLesson,

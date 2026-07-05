@@ -23,6 +23,10 @@ export const avatarItems: AvatarItem[] = [
   { id: "hair-afro", type: "hair", name: "Afro noir", rarity: "rare", color: "#241C18", unlock: { kind: "rooms", value: 5, label: "5 rooms terminées" } },
   { id: "hair-wavy", type: "hair", name: "Ondulé blond foncé", rarity: "rare", color: "#B8925A", unlock: { kind: "streak", value: 7, label: "Série de 7 jours" } },
 
+  /* --- Accessoires du compagnon (portés dès l'achat) --- */
+  { id: "comp-scarf", type: "companion", name: "Écharpe du coach", rarity: "rare", color: "#F9714A", unlock: { kind: "shop", label: "Boutique" } },
+  { id: "comp-glasses", type: "companion", name: "Lunettes rondes", rarity: "rare", color: "#2B2E3A", unlock: { kind: "shop", label: "Boutique" } },
+
   /* --- Tenues --- */
   { id: "outfit-tee-blue", type: "outfit", name: "Tee essentiel", rarity: "common", color: "#585CE2", unlock: { kind: "default", label: "Inclus" } },
   { id: "outfit-hoodie-violet", type: "outfit", name: "Hoodie violet", rarity: "rare", color: "#6A5AE0", unlock: { kind: "rooms", value: 3, label: "3 rooms terminées" } },

@@ -14,6 +14,7 @@ import {
   type ExerciseTheme,
 } from "@/components/exercises/exercise-themes";
 import { LearningGlyph } from "@/components/icons/learning-icons";
+import { companionLine, companionLook, recordQuizAnswer } from "@/lib/companion";
 import { useProgress } from "@/lib/useProgress";
 import { LearningScreen } from "./LearningScreen";
 
@@ -59,6 +60,7 @@ export function QuizScreen({
   const { progress } = useProgress();
   const [phase, setPhase] = useState<QuizPhase>("idle");
   const [selected, setSelected] = useState<number | null>(null);
+  const [feedbackLine, setFeedbackLine] = useState<string | undefined>();
   const continued = useRef(false);
 
   const themeConfig = EXERCISE_THEMES[theme];
@@ -73,6 +75,9 @@ export function QuizScreen({
 
   const submit = () => {
     if (phase !== "selected" || selected === null) return;
+    // Le compagnon suit la session : sa phrase varie (série, blocage…).
+    const event = recordQuizAnswer(selected === correctIndex);
+    setFeedbackLine(companionLine(event, progress));
     setPhase("submitted");
   };
 
@@ -155,6 +160,8 @@ export function QuizScreen({
               correctAnswer={!isCorrect ? choices[correctIndex] : undefined}
               avatar={progress.avatar}
               companionId={progress.companion}
+              title={feedbackLine}
+              accessories={companionLook(progress).accessories}
             />
           )}
         </AnimatePresence>

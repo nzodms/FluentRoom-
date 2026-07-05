@@ -253,7 +253,8 @@ export type AvatarItemType =
   | "accessory"
   | "aura"
   | "background"
-  | "effect";
+  | "effect"
+  | "companion";
 
 export type RewardRarity = "common" | "rare" | "epic" | "special";
 
@@ -373,6 +374,8 @@ export interface UserProgress {
   streakShields: number;
   /** Compagnon choisi (id dans data/companions). */
   companion: string | null;
+  /** Calibrage du plan effectué (après la première leçon). */
+  calibratedAt: string | null;
   /** FP dépensés en boutique (availableFP = xp - spentFP). */
   spentFP: number;
   /** Items achetés en boutique. */

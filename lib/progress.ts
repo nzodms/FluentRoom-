@@ -54,6 +54,7 @@ export function defaultProgress(): UserProgress {
     rewardHistory: [],
     streakShields: 0,
     companion: null,
+    calibratedAt: null,
     spentFP: 0,
     purchasedItems: [],
     purchaseHistory: [],
@@ -521,4 +522,37 @@ export function getStats(progress: UserProgress) {
     totalRooms: rooms.length,
     fluency: fluencyScore(progress),
   };
+}
+
+/* ---------- Calibrage du plan (mini-tests après la première leçon) ---------- */
+
+export interface CalibrationOutcome {
+  progress: UserProgress;
+  xpEarned: number;
+}
+
+/** Ajuste le niveau estimé et récompense le calibrage (une seule fois). */
+export function completeCalibration(
+  progress: UserProgress,
+  correctCount: number,
+): CalibrationOutcome {
+  if (progress.calibratedAt) return { progress, xpEarned: 0 };
+  const level =
+    correctCount >= 3 ? "blocked" : correctCount >= 1 ? "some" : "beginner";
+  const xpEarned = 30;
+  const next = refreshBadges(
+    touchToday(
+      addXp(
+        {
+          ...progress,
+          calibratedAt: new Date().toISOString(),
+          onboarding: progress.onboarding
+            ? { ...progress.onboarding, level }
+            : progress.onboarding,
+        },
+        xpEarned,
+      ),
+    ),
+  );
+  return { progress: next, xpEarned };
 }

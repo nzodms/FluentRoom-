@@ -10,6 +10,7 @@ import { getAvatarItem } from "@/data/avatar-items";
 import { useProgress } from "@/lib/useProgress";
 import { availableFP, ownsItem } from "@/lib/shop";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { CountUp } from "@/components/ui/CountUp";
@@ -47,6 +48,7 @@ export default function ShopPage() {
   const selectedEquipped =
     selectedItem &&
     selectedItem.type !== "effect" &&
+    selectedItem.type !== "companion" &&
     progress.avatar[selectedItem.type as keyof AvatarConfig] === selectedItem.id;
   const canAfford = selected ? balance >= selected.price : false;
 
@@ -62,7 +64,9 @@ export default function ShopPage() {
   };
 
   const equipSelected = () => {
-    if (!selectedItem || selectedItem.type === "effect") return;
+    if (!selectedItem) return;
+    // Effets et accessoires du compagnon : pas d'emplacement d'avatar.
+    if (selectedItem.type === "effect" || selectedItem.type === "companion") return;
     setAvatar({ ...progress.avatar, [selectedItem.type]: selectedItem.id });
   };
 
@@ -199,6 +203,7 @@ export default function ShopPage() {
           const owned = ownsItem(progress, entry.itemId);
           const equipped =
             item.type !== "effect" &&
+            item.type !== "companion" &&
             progress.avatar[item.type as keyof AvatarConfig] === item.id;
           const affordable = balance >= entry.price;
           return (
@@ -305,7 +310,14 @@ export default function ShopPage() {
 
               {/* Preview : le personnage porte l'item si équipable */}
               <div className="mt-2 flex items-center justify-center">
-                {selectedItem.type !== "effect" ? (
+                {selectedItem.type === "companion" ? (
+                  <CompanionCharacter
+                    companionId={progress.companion}
+                    expression={justBought ? "celebrating" : "happy"}
+                    size={140}
+                    accessories={[selectedItem.id]}
+                  />
+                ) : selectedItem.type !== "effect" ? (
                   <FluentCharacter
                     config={{
                       ...progress.avatar,
@@ -344,7 +356,14 @@ export default function ShopPage() {
                       <Check className="mr-1 inline size-4" strokeWidth={3} />
                       Acheté ! Ajouté à ton inventaire.
                     </p>
-                    {selectedItem.type !== "effect" && !selectedEquipped ? (
+                    {selectedItem.type === "companion" ? (
+                      <p className="text-center text-sm font-semibold text-primary-600">
+                        Ton compagnon le porte dès maintenant.
+                      </p>
+                    ) : null}
+                    {selectedItem.type !== "effect" &&
+                    selectedItem.type !== "companion" &&
+                    !selectedEquipped ? (
                       <Button
                         size="lg"
                         fullWidth
@@ -366,7 +385,7 @@ export default function ShopPage() {
                     <p className="text-center text-sm text-ink-soft">
                       Déjà dans ton inventaire.
                     </p>
-                    {selectedItem.type !== "effect" && (
+                    {selectedItem.type !== "effect" && selectedItem.type !== "companion" && (
                       <Button
                         size="lg"
                         fullWidth
@@ -386,7 +405,9 @@ export default function ShopPage() {
                     <p className="text-center text-sm text-ink-soft">
                       {selectedItem.type === "effect"
                         ? "Un effet visuel premium pour tes moments de réussite."
-                        : "Ton personnage le porte en avant-première ci-dessus."}
+                        : selectedItem.type === "companion"
+                          ? "Ton compagnon le portera partout dans l'app."
+                          : "Ton personnage le porte en avant-première ci-dessus."}
                     </p>
                     <Button
                       size="lg"

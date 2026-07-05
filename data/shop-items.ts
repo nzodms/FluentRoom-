@@ -40,6 +40,10 @@ export const shopItems: ShopItem[] = [
   /* Effets */
   { itemId: "effect-unlock-shimmer", price: 200, category: "effect" },
   { itemId: "effect-completion-glow", price: 250, category: "effect" },
+
+  /* --- Compagnon : ses accessoires se portent dès l'achat --- */
+  { itemId: "comp-scarf", price: 150, category: "companion", recommended: true },
+  { itemId: "comp-glasses", price: 180, category: "companion" },
 ];
 
 export const shopCategories: Array<{ id: AvatarItemType; label: string }> = [
@@ -48,6 +52,7 @@ export const shopCategories: Array<{ id: AvatarItemType; label: string }> = [
   { id: "aura", label: "Auras" },
   { id: "background", label: "Fonds" },
   { id: "effect", label: "Effets" },
+  { id: "companion", label: "Compagnon" },
 ];
 
 export function getShopItem(itemId: string): ShopItem | undefined {

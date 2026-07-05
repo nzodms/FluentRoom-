@@ -17,6 +17,8 @@ export function QuizFeedbackPanel({
   correctAnswer,
   avatar,
   companionId,
+  title,
+  accessories,
 }: {
   correct: boolean;
   explanation: string;
@@ -25,6 +27,10 @@ export function QuizFeedbackPanel({
   avatar: AvatarConfig;
   /** Si présent, c'est le compagnon qui réagit. */
   companionId?: string | null;
+  /** Ligne contextuelle du compagnon (varie selon la session). */
+  title?: string;
+  /** Accessoires portés par le compagnon. */
+  accessories?: string[];
 }) {
   return (
     <motion.div
@@ -48,6 +54,7 @@ export function QuizFeedbackPanel({
               companionId={companionId}
               size={52}
               expression={correct ? "celebrating" : "encouraging"}
+              accessories={accessories}
             />
           ) : (
             <FluentCharacter
@@ -76,7 +83,7 @@ export function QuizFeedbackPanel({
               correct ? "text-mint-600" : "text-coral-600",
             )}
           >
-            {correct ? "Exact." : "Presque."}
+            {title ?? (correct ? "Exact." : "Presque.")}
           </p>
           <p
             className={cn(

@@ -16,6 +16,10 @@ interface CompanionCharacterProps {
   expression?: CharacterExpression;
   size?: number;
   animated?: boolean;
+  /** Accessoires portés (comp-scarf, comp-bandana, comp-glasses…). */
+  accessories?: string[];
+  /** Badge de série affiché à partir de 3 jours. */
+  streakBadge?: number | null;
   className?: string;
 }
 
@@ -24,6 +28,8 @@ export function CompanionCharacter({
   expression = "happy",
   size = 96,
   animated = true,
+  accessories = [],
+  streakBadge = null,
   className,
 }: CompanionCharacterProps) {
   const c = getCompanion(companionId);
@@ -201,6 +207,82 @@ export function CompanionCharacter({
         <g fill="rgba(249,113,74,0.3)">
           <ellipse cx="66" cy="94" rx="7" ry="4.5" />
           <ellipse cx="134" cy="94" rx="7" ry="4.5" />
+        </g>
+      )}
+
+      {/* Accessoires : évolution visible du compagnon */}
+      {accessories.includes("comp-scarf") && (
+        <g>
+          <path
+            d="M58 120 Q100 138 142 120 L140 132 Q100 148 60 132 Z"
+            fill="#F9714A"
+          />
+          <path d="M124 130 L132 158 L118 154 Z" fill="#F9714A" />
+          <path d="M124 130 L132 158 L118 154 Z" fill="rgba(0,0,0,0.08)" />
+          <path
+            d="M62 126 Q100 142 138 126"
+            fill="none"
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {accessories.includes("comp-bandana") && !accessories.includes("comp-scarf") && (
+        <g>
+          <path
+            d="M62 120 Q100 136 138 120 L128 134 Q100 144 72 134 Z"
+            fill="#2CB783"
+          />
+          <path d="M100 136 L108 156 L92 154 Z" fill="#2CB783" />
+        </g>
+      )}
+      {accessories.includes("comp-glasses") && !eyesClosed && (
+        <g stroke="#2B2E3A" strokeWidth="3" fill="rgba(255,255,255,0.1)">
+          <circle cx="80" cy={eyeY} r={eyeRx + 4.5} />
+          <circle cx="120" cy={eyeY} r={eyeRx + 4.5} />
+          <path d={`M${80 + eyeRx + 4.5} ${eyeY} L${120 - eyeRx - 4.5} ${eyeY}`} fill="none" />
+        </g>
+      )}
+
+      {/* Badge de série : gagné à partir de 3 jours */}
+      {streakBadge !== null && (
+        <g>
+          <circle cx="158" cy="152" r="17" fill="#E0A32E" />
+          <circle cx="158" cy="152" r="17" fill="none" stroke="#FFF7E2" strokeWidth="2.5" />
+          <path
+            d="M158 141 C154 147 152 150 152 154 C152 158 155 161 158 161 C161 161 164 158 164 154 C164 151 162 148 161 146 C161 149 159 150 158 149 C157 148 158 144 158 141 Z"
+            fill="#FFF7E2"
+          />
+          <text
+            x="158"
+            y="171"
+            textAnchor="middle"
+            fontSize="10"
+            fontWeight="800"
+            fill="#C4881F"
+          >
+            {streakBadge}
+          </text>
+        </g>
+      )}
+
+      {/* Étincelles de célébration */}
+      {celebrate && animated && (
+        <g fill="#E0A32E">
+          {[
+            { x: 48, y: 40, d: 0 },
+            { x: 152, y: 34, d: 0.4 },
+            { x: 164, y: 92, d: 0.8 },
+          ].map((s) => (
+            <motion.path
+              key={`${s.x}-${s.y}`}
+              d={`M${s.x} ${s.y - 6} L${s.x + 2} ${s.y - 1.5} L${s.x + 6} ${s.y} L${s.x + 2} ${s.y + 1.5} L${s.x} ${s.y + 6} L${s.x - 2} ${s.y + 1.5} L${s.x - 6} ${s.y} L${s.x - 2} ${s.y - 1.5} Z`}
+              animate={{ opacity: [0, 1, 0], scale: [0.6, 1.15, 0.6] }}
+              transition={{ duration: 1.4, repeat: Infinity, delay: s.d }}
+              style={{ transformBox: "fill-box", transformOrigin: "50% 50%" }}
+            />
+          ))}
         </g>
       )}
 
