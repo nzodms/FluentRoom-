@@ -11,6 +11,7 @@ import { companionLook } from "@/lib/companion";
 import { useProgress } from "@/lib/useProgress";
 import { getCompanion } from "@/data/companions";
 import { Button } from "@/components/ui/Button";
+import { CountUp } from "@/components/ui/CountUp";
 import { Chip } from "@/components/ui/Chip";
 import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { cn } from "@/lib/utils";
@@ -99,7 +100,8 @@ export function ChapterSummary({
         </p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           <Chip tone="primary">
-            <Zap className="size-3" fill="currentColor" /> +{outcome?.xpEarned ?? fp} FP
+            <Zap className="size-3" fill="currentColor" /> +
+            <CountUp value={outcome?.xpEarned ?? fp} /> FP
           </Chip>
           <Chip tone="coral">
             <Flame className="size-3" fill="currentColor" /> Série {progress.streak}
@@ -157,9 +159,14 @@ export function ChapterSummary({
               <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
                 {phrase.english}
               </p>
-              <Chip tone={meta.tone} className="shrink-0">
-                {meta.label}
-              </Chip>
+              <motion.span
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.45 + i * 0.06, type: "spring", stiffness: 380, damping: 18 }}
+                className="shrink-0"
+              >
+                <Chip tone={meta.tone}>{meta.label}</Chip>
+              </motion.span>
             </motion.div>
           );
         })}

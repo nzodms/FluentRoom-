@@ -118,6 +118,8 @@ export interface ChatTurn {
 
 export interface ChatExercise extends ExerciseBase {
   type: "chat";
+  /** Décor de la scène ("Gare de Londres", "Au travail"…). */
+  scene?: string;
   turns: ChatTurn[];
 }
 

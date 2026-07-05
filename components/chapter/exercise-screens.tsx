@@ -13,7 +13,7 @@ import { speakText } from "@/lib/speech";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { AnswerChoiceCard } from "@/components/exercises/AnswerChoiceCard";
-import { WordOrder } from "@/components/exercises/WordOrder";
+import { PhraseBuilder } from "./PhraseBuilder";
 import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { LearningGlyph, type LearningIconName } from "@/components/icons/learning-icons";
 import { cn } from "@/lib/utils";
@@ -328,8 +328,12 @@ export function BuildExerciseScreen({
       </h2>
       <p className="mt-1 text-sm text-ink-soft">{exercise.intent}</p>
 
+      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+        Objectif : construire une phrase naturelle, pas mot à mot.
+      </p>
+
       <div className="mt-4">
-        <WordOrder
+        <PhraseBuilder
           words={exercise.words}
           answer={exercise.answer}
           onResult={(correct) => {
@@ -368,10 +372,18 @@ export function ChatExerciseScreen({
   const [mistakes, setMistakes] = useState(0);
   const [finished, setFinished] = useState(false);
 
+  const [typing, setTyping] = useState(true);
+
   const turns = exercise.turns;
   const visible = turns.slice(0, turnIndex + 1);
   const current = turns[turnIndex];
   const isUserTurn = Boolean(current?.options);
+  const interlocutor =
+    turns.find((t) => t.speaker !== "Toi")?.speaker ?? "Interlocuteur";
+  const userTurns = turns.filter((t) => t.options).length;
+  const answeredTurns = turns
+    .slice(0, turnIndex)
+    .filter((t) => t.options).length;
 
   const advance = () => {
     setPicked(null);
@@ -382,15 +394,26 @@ export function ChatExerciseScreen({
     }
   };
 
-  // Les répliques de l'interlocuteur défilent seules.
+  // Effet « en train d'écrire » avant chaque réplique de l'interlocuteur.
   useEffect(() => {
-    if (finished || isUserTurn) return;
+    if (isUserTurn || finished) return;
+    const on = setTimeout(() => setTyping(true), 0);
+    const off = setTimeout(() => setTyping(false), 850);
+    return () => {
+      clearTimeout(on);
+      clearTimeout(off);
+    };
+  }, [turnIndex, isUserTurn, finished]);
+
+  // Les répliques de l'interlocuteur défilent seules après le typing.
+  useEffect(() => {
+    if (finished || isUserTurn || typing) return;
     const t = setTimeout(() => {
       if (turnIndex >= turns.length - 1) setFinished(true);
       else setTurnIndex((i) => i + 1);
-    }, 1500);
+    }, 1400);
     return () => clearTimeout(t);
-  }, [turnIndex, isUserTurn, finished, turns.length]);
+  }, [turnIndex, isUserTurn, finished, typing, turns.length]);
 
   return (
     <div>
@@ -404,38 +427,92 @@ export function ChatExerciseScreen({
         {exercise.prompt}
       </h2>
 
-      <div className="mt-4 flex flex-col gap-2.5 rounded-3xl bg-cream/70 p-3">
-        {visible.map((turn, i) => {
-          const me = turn.speaker === "Toi";
-          const answeredText =
-            turn.options && i < turnIndex
-              ? turn.options[turn.correctIndex ?? 0]
-              : turn.text;
-          if (turn.options && i === turnIndex && picked === null) return null;
-          const shown =
-            turn.options && i === turnIndex && picked !== null
-              ? turn.options[picked]
-              : answeredText;
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn("flex", me ? "justify-end" : "justify-start")}
-            >
+      {/* La scène : décor, interlocuteur, progression de la conversation */}
+      <div className="relative mt-4 flex min-h-[46vh] flex-col overflow-hidden rounded-3xl border border-ink/6 bg-gradient-to-b from-primary-50/60 via-cream/80 to-cream p-3">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-10 -top-12 size-44 rounded-full bg-primary-400/10 blur-3xl"
+        />
+        <div className="relative mb-2 flex items-center gap-2.5 border-b border-ink/5 px-1 pb-2.5">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full gradient-primary text-xs font-bold text-white">
+            {interlocutor.charAt(0)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-ink">{interlocutor}</p>
+            {exercise.scene && (
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-faint">
+                {exercise.scene}
+              </p>
+            )}
+          </div>
+          {/* Progression conversationnelle */}
+          <div className="flex shrink-0 gap-1">
+            {Array.from({ length: userTurns }, (_, i) => (
               <span
+                key={i}
                 className={cn(
-                  "max-w-[80%] rounded-3xl px-4 py-2.5 text-[15px] font-semibold",
-                  me
-                    ? "rounded-br-lg gradient-primary text-white"
-                    : "rounded-bl-lg bg-white text-ink shadow-soft",
+                  "size-1.5 rounded-full transition-colors",
+                  i < answeredTurns || finished ? "bg-mint-500" : "bg-ink/15",
                 )}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="relative flex flex-1 flex-col justify-end gap-2.5">
+          {visible.map((turn, i) => {
+            const me = turn.speaker === "Toi";
+            const answeredText =
+              turn.options && i < turnIndex
+                ? turn.options[turn.correctIndex ?? 0]
+                : turn.text;
+            if (turn.options && i === turnIndex && picked === null) return null;
+            if (!turn.options && i === turnIndex && typing && !finished) return null;
+            const shown =
+              turn.options && i === turnIndex && picked !== null
+                ? turn.options[picked]
+                : answeredText;
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 26 }}
+                className={cn("flex", me ? "justify-end" : "justify-start")}
               >
-                {shown}
+                <span
+                  className={cn(
+                    "max-w-[80%] rounded-3xl px-4 py-2.5 text-[15px] font-semibold",
+                    me
+                      ? "rounded-br-lg gradient-primary text-white shadow-glow"
+                      : "rounded-bl-lg bg-white text-ink shadow-soft",
+                  )}
+                >
+                  {shown}
+                </span>
+              </motion.div>
+            );
+          })}
+          {/* En train d'écrire… */}
+          {!isUserTurn && typing && !finished && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex justify-start"
+            >
+              <span className="flex gap-1 rounded-3xl rounded-bl-lg bg-white px-4 py-3.5 shadow-soft">
+                {[0, 1, 2].map((d) => (
+                  <motion.span
+                    key={d}
+                    className="size-1.5 rounded-full bg-ink/30"
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15 }}
+                  />
+                ))}
               </span>
             </motion.div>
-          );
-        })}
+          )}
+        </div>
       </div>
 
       {/* Choix de réponse */}

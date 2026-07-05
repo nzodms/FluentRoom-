@@ -254,6 +254,7 @@ export const chapters: Chapter[] = [
     finale: {
       id: "afh-finale",
       type: "chat",
+      scene: "Gare de Londres",
       skill: "phrases",
       prompt: "À toi : dans la gare, applique tout.",
       explanation:
@@ -504,6 +505,7 @@ export const chapters: Chapter[] = [
     finale: {
       id: "pr-finale",
       type: "chat",
+      scene: "Au travail",
       skill: "politeness",
       prompt: "Au travail : relance ton collègue, poliment.",
       explanation: "Relance douce + porte de sortie : le combo qui marche.",
@@ -727,6 +729,7 @@ export const chapters: Chapter[] = [
     finale: {
       id: "awt-finale",
       type: "chat",
+      scene: "Entre amis",
       skill: "reflexes",
       prompt: "Conversation éclair : réponds sans réfléchir.",
       explanation: "Trois réflexes enchaînés — sans passer par le français.",

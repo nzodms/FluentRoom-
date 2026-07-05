@@ -28,6 +28,7 @@ import {
   GapExerciseScreen,
 } from "./exercise-screens";
 import { ChapterSummary } from "./ChapterSummary";
+import { LessonBottomCoach } from "./LessonBottomCoach";
 import { cn } from "@/lib/utils";
 
 type Stage = "intro" | "phrases" | "exercises" | "summary";
@@ -138,15 +139,26 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
                 )}
               >
                 <Lightbulb className="size-4.5" strokeWidth={2.2} />
-                <span className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-white text-[9px] font-bold text-ink shadow-soft">
+                <motion.span
+                  key={hintsLeft}
+                  initial={{ scale: 1.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 16 }}
+                  className="absolute -right-0.5 -top-0.5 grid size-4 place-items-center rounded-full bg-white text-[9px] font-bold text-ink shadow-soft"
+                >
                   {hintsLeft}
-                </span>
+                </motion.span>
               </button>
             )}
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-lg px-4 pb-[calc(3rem+env(safe-area-inset-bottom))] pt-5">
+        <main className="relative mx-auto flex min-h-[calc(100dvh-3.4rem)] w-full max-w-lg flex-col px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-5">
+          {/* Lumière douce derrière la carte principale */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-24 -z-10 size-72 -translate-x-1/2 rounded-full bg-primary-400/8 blur-3xl"
+          />
           <AnimatePresence mode="wait">
             {/* A · Mise en situation */}
             {stage === "intro" && (
@@ -269,6 +281,7 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -22 }}
                 transition={{ duration: 0.25 }}
+                className="flex flex-1 flex-col"
               >
                 {/* Indices révélés */}
                 <AnimatePresence>
@@ -306,6 +319,16 @@ export function ChapterPlayer({ chapter }: { chapter: Chapter }) {
                     {remainingSteps - 1 > 1 ? "s" : ""} pour boucler le chapitre.
                   </p>
                 )}
+
+                {/* Zone basse intelligente : jamais de grand blanc */}
+                <div className="mt-auto">
+                  <LessonBottomCoach
+                    chapter={chapter}
+                    session={session}
+                    exercise={queued.exercise}
+                    companionId={progress.companion}
+                  />
+                </div>
               </motion.div>
             )}
 
