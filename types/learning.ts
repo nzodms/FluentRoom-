@@ -65,6 +65,8 @@ export interface SpeakBackPrompt {
 export interface Room {
   id: string;
   title: string;
+  /** Titre affiché dans l'interface (le titre EN reste le nom de la scène). */
+  titleFr: string;
   subtitle: string;
   emoji: string;
   level: CEFRLevel;

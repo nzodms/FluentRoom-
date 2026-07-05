@@ -16,10 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ProgressRing } from "@/components/ui/ProgressRing";
-import { StreakPulse } from "@/components/reward/StreakPulse";
 import { EnergyPill } from "@/components/energy/EnergyPill";
-import { FluentCharacter } from "@/components/avatar/FluentCharacter";
-import { expressionForToday } from "@/lib/avatar-reactions";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { ShopTeaser } from "@/components/shop/ShopTeaser";
 import { CompanionCoachCard } from "@/components/companion/CompanionCoachCard";
@@ -143,7 +140,6 @@ export default function TodayPage() {
       : todayRoom.phrases.slice(0, 3);
 
   const week = lastSevenDays();
-  const activeToday = progress.lastActiveDate === todayKey();
 
   // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
   // pour que les animations d'entrée jouent une seule fois, visibles.
@@ -151,46 +147,39 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-5">
-      {/* Salutation + avatar + streak vivant */}
-      <div className="flex items-center justify-between gap-3">
-        <Link href="/app/settings" className="flex min-w-0 items-center gap-3">
-          <FluentCharacter
-            config={progress.avatar}
-            size={56}
-            expression={expressionForToday(progress)}
-          />
-          <div className="min-w-0">
-            <h1 className="truncate text-xl font-bold tracking-tight text-ink">
-              {allDone
-                ? "Journée bouclée 🙌"
-                : completedIds.length > 0
-                  ? "Content de te revoir 👋"
-                  : "Bienvenue 👋"}
-            </h1>
-            <p className="truncate text-xs text-ink-soft">
-              {progress.onboarding
-                ? `${progress.onboarding.profileName} · ${level.name}`
-                : "Ta session du jour t'attend."}
-            </p>
-          </div>
-        </Link>
-        <StreakPulse streak={progress.streak} activeToday={activeToday} />
+      {/* Titre du jour, sobre */}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-ink">
+          {allDone
+            ? "Journée bouclée"
+            : completedIds.length > 0
+              ? "Ta session du jour"
+              : "Bienvenue"}
+        </h1>
+        <p className="text-xs text-ink-soft">
+          {level.name} · niveau {level.cefr}
+        </p>
       </div>
 
-      {/* Le compagnon : contexte, mission du jour, calibrage */}
+      {/* Le compagnon accueille : contexte, mission, calibrage */}
       <CompanionCoachCard progress={progress} quests={quests} />
 
-      {/* Focus Energy */}
+      {/* LA prochaine action — visible tôt, jamais sous la nav */}
+      <div data-tour="next-action">
+        <NextActionHero progress={progress} onChestClaim={() => setChestOpen(true)} />
+      </div>
+
+      {/* Énergie du jour : un rythme, pas une limite */}
       <div className="flex items-center justify-between">
         <span data-tour="energy" className="inline-block">
           <EnergyPill progress={progress} />
         </span>
         <p className="text-xs font-medium text-ink-faint">
-          Chaque session utilise de l&apos;énergie. Elle revient demain.
+          Ton énergie du jour · se recharge chaque matin.
         </p>
       </div>
 
-      {/* Daily Energy Ring + semaine */}
+      {/* Progression du jour + semaine */}
       <Card animate className="card-tint-primary flex items-center gap-5 p-4">
         <div className="relative">
           {energy >= 100 && (
@@ -228,11 +217,16 @@ export default function TodayPage() {
         <div className="min-w-0 flex-1">
           <p className="font-bold text-ink">
             {energy >= 100
-              ? "Objectif du jour atteint ⚡️"
+              ? "Objectif du jour atteint"
               : energy > 0
                 ? `Encore ${Math.max(goalMinutes - minutesDone, 1)} min pour sécuriser ta série.`
-                : "Ta session du jour t'attend. On s'y met ?"}
+                : `${goalMinutes} min pour parler plus naturellement aujourd'hui.`}
           </p>
+          {energy === 0 && (
+            <p className="mt-0.5 text-xs font-semibold text-primary-600">
+              +60 FP · +1 jour de série
+            </p>
+          )}
           <div className="mt-2.5 flex items-center justify-between">
             {week.map((day) => {
               const active = (progress.activity[day] ?? 0) > 0;
@@ -270,11 +264,6 @@ export default function TodayPage() {
           </div>
         </div>
       </Card>
-
-      {/* LA prochaine action — une mission, un bouton */}
-      <div data-tour="next-action">
-        <NextActionHero progress={progress} onChestClaim={() => setChestOpen(true)} />
-      </div>
 
       {/* Fluency Path */}
       <motion.div
@@ -441,7 +430,7 @@ export default function TodayPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate font-bold text-ink">
-                          {room.title}
+                          {room.titleFr}
                         </p>
                         {!room.free && (
                           <Chip tone="gold" className="shrink-0">

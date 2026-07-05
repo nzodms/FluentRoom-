@@ -28,7 +28,7 @@ export function nextBestAction(progress: UserProgress): Action | null {
 
   if (!steps.includes("room")) {
     return {
-      label: "Lance ta room du jour",
+      label: "Lance ta session du jour",
       detail: `${room.emoji} ${room.title} · ${room.duration} min · +${room.phrases.length} phrases réelles`,
       href: `/app/room/${room.id}`,
       emoji: "🎧",

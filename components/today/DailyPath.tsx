@@ -87,7 +87,7 @@ export function DailyPath({
     },
     {
       id: "room" as const,
-      title: `Room · ${room.title}`,
+      title: `Session · ${room.titleFr}`,
       minutes: room.duration,
       detail: "Listen · Decode · Speak — la scène du jour",
       icon: <Headphones className="size-4" strokeWidth={2.2} />,
@@ -107,7 +107,7 @@ export function DailyPath({
       minutes: 1,
       detail: reviewAvailable
         ? "5 phrases à ancrer pour de bon"
-        : "Débloque d'abord des phrases dans la room",
+        : "Débloque d'abord des phrases dans la session",
       icon: <RotateCcw className="size-4" strokeWidth={2.2} />,
       href: reviewAvailable ? "/app/phrases?review=1" : undefined,
     },
@@ -130,7 +130,7 @@ export function DailyPath({
   return (
     <div className="card-soft relative overflow-hidden p-0">
       <div className="flex items-center justify-between px-5 pt-4">
-        <p className="font-bold text-ink">Today&apos;s Fluency Path</p>
+        <p className="font-bold text-ink">Ton chemin du jour</p>
         <span className="text-xs font-semibold text-ink-faint">
           {doneSteps.length} / 4
         </span>

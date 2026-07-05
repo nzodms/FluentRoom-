@@ -9,6 +9,7 @@ export const rooms: Room[] = [
   {
     id: "running-late",
     title: "Running Late",
+    titleFr: "En retard",
     subtitle: "Comprendre quelqu'un qui prévient qu'il est en retard",
     emoji: "⏰",
     level: "A2",
@@ -190,6 +191,7 @@ export const rooms: Room[] = [
   {
     id: "ordering-coffee",
     title: "Ordering Coffee",
+    titleFr: "Commander un café",
     subtitle: "Commander un café sans stresser au comptoir",
     emoji: "☕️",
     level: "A2",
@@ -397,6 +399,7 @@ export const rooms: Room[] = [
   {
     id: "meeting-someone",
     title: "Meeting Someone",
+    titleFr: "Faire connaissance",
     subtitle: "Se présenter naturellement, sans réciter un CV",
     emoji: "👋",
     level: "A2",
@@ -586,6 +589,7 @@ export const rooms: Room[] = [
   {
     id: "asking-for-help",
     title: "Asking for Help",
+    titleFr: "Demander de l'aide",
     subtitle: "Demander de l'aide sans chercher tes mots pendant 10 secondes",
     emoji: "🙋",
     level: "A2",
@@ -779,6 +783,7 @@ export const rooms: Room[] = [
   {
     id: "small-talk",
     title: "Small Talk",
+    titleFr: "Conversation légère",
     subtitle: "Tenir une conversation légère sans donner ta vie entière",
     emoji: "💬",
     level: "A2",
@@ -974,6 +979,7 @@ export const rooms: Room[] = [
   {
     id: "travel-problem",
     title: "Travel Problem",
+    titleFr: "Problème en voyage",
     subtitle: "Expliquer un problème en voyage sans paniquer",
     emoji: "🧳",
     level: "B1",
@@ -1180,6 +1186,7 @@ export const rooms: Room[] = [
   {
     id: "making-plans",
     title: "Making Plans",
+    titleFr: "Organiser un plan",
     subtitle: "Proposer un plan et caler une heure sans dix messages",
     emoji: "📅",
     level: "B1",
@@ -1371,6 +1378,7 @@ export const rooms: Room[] = [
   {
     id: "giving-an-opinion",
     title: "Giving an Opinion",
+    titleFr: "Donner son avis",
     subtitle: "Donner ton avis simplement, sans phrases de dissertation",
     emoji: "💡",
     level: "B1",
@@ -1572,6 +1580,7 @@ export const rooms: Room[] = [
   {
     id: "fast-english",
     title: "Understanding Fast English",
+    titleFr: "Comprendre l'anglais rapide",
     subtitle: "Décoder gonna, wanna, gotta — l'anglais tel qu'il se prononce vraiment",
     emoji: "⚡️",
     level: "B1",
@@ -1790,6 +1799,7 @@ export const rooms: Room[] = [
   {
     id: "telling-your-day",
     title: "Telling Your Day",
+    titleFr: "Raconter ta journée",
     subtitle: "Raconter ta journée sans chercher tes mots à chaque phrase",
     emoji: "🌇",
     level: "A2",
@@ -1989,6 +1999,7 @@ export const rooms: Room[] = [
   {
     id: "quick-reactions",
     title: "Quick Reactions",
+    titleFr: "Réactions rapides",
     subtitle: "Réagir en une seconde : surprise, accord, compassion",
     emoji: "🎯",
     level: "A2",

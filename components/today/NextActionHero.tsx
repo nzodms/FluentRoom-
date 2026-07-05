@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Moon, Play } from "lucide-react";
+import { ArrowRight, Flame, Moon, Play, Zap } from "lucide-react";
 import type { UserProgress } from "@/types/learning";
 import { getDailySteps } from "@/lib/progress";
 import { getTodayRoom } from "@/data/rooms";
 import { getTodayLesson } from "@/data/lessons";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { type LearningIconName } from "@/components/icons/learning-icons";
+import {
+  LearningGlyph,
+  type LearningIconName,
+} from "@/components/icons/learning-icons";
 
 interface HeroAction {
   kind: "room" | "lesson" | "review" | "chest" | "done";
@@ -19,7 +22,6 @@ interface HeroAction {
   detail: string;
   cta: string;
   href?: string;
-  emoji?: string;
 }
 
 /** LA prochaine action — une seule, calculée depuis l'état du jour. */
@@ -38,12 +40,11 @@ function computeHero(progress: UserProgress): HeroAction {
     return {
       kind: "room",
       icon: "listen",
-      kicker: "Today's Fluency Mission",
-      title: room.title,
-      detail: `${room.subtitle} · ${room.duration} min · +${room.phrases.length} phrases réelles`,
-      cta: "Commencer la room",
+      kicker: "Session d'aisance du jour",
+      title: room.titleFr,
+      detail: `${room.duration} min pour parler plus naturellement · +${room.phrases.length} phrases réelles`,
+      cta: "Lancer ma session du jour",
       href: `/app/room/${room.id}`,
-      emoji: room.emoji,
     };
   }
   if (!steps.includes("lesson")) {
@@ -55,7 +56,6 @@ function computeHero(progress: UserProgress): HeroAction {
       detail: `${lesson.title} — 3 min pour un réflexe de plus`,
       cta: "Apprendre le bloc",
       href: `/app/lesson/${lesson.id}`,
-      emoji: lesson.emoji,
     };
   }
   if (!steps.includes("review") && hasPhrases) {
@@ -67,7 +67,6 @@ function computeHero(progress: UserProgress): HeroAction {
       detail: "5 phrases à swiper en 1 minute — c'est là que ça s'ancre",
       cta: "Réviser 5 phrases",
       href: "/app/phrases?review=1",
-      emoji: "🔁",
     };
   }
   if (chestAvailable) {
@@ -78,7 +77,6 @@ function computeHero(progress: UserProgress): HeroAction {
       title: "Ton coffre est prêt",
       detail: "FP, énergie, item avatar ou bouclier — ouvre pour découvrir",
       cta: "Ouvrir mon coffre",
-      emoji: "🎁",
     };
   }
   const tomorrow = getTodayRoom([...completedIds], 1);
@@ -87,7 +85,7 @@ function computeHero(progress: UserProgress): HeroAction {
     icon: "fluency",
     kicker: "À demain",
     title: "Tout est fait pour aujourd'hui",
-    detail: `Ton cerveau consolide cette nuit. Demain : ${tomorrow.emoji} ${tomorrow.title}.`,
+    detail: `Ton cerveau consolide cette nuit. Demain : ${tomorrow.titleFr}.`,
     cta: "Réviser encore quelques phrases",
     href: "/app/phrases",
   };
@@ -125,9 +123,9 @@ export function NextActionHero({
             initial={{ scale: 0, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 16, delay: 0.15 }}
-            className="grid size-14 shrink-0 place-items-center rounded-3xl bg-white/15 text-3xl backdrop-blur-sm"
+            className="grid size-14 shrink-0 place-items-center rounded-3xl bg-white/15 backdrop-blur-sm"
           >
-            {action.emoji ?? "⚡️"}
+            <LearningGlyph name={action.icon} className="size-6 text-white" />
           </motion.span>
           <div className="min-w-0">
             <h2 className="text-2xl font-bold tracking-tight">
@@ -158,6 +156,17 @@ export function NextActionHero({
             {action.cta}
           </Button>
         </div>
+        {(action.kind === "room" || action.kind === "lesson") && (
+          <div className="mt-3 flex justify-center gap-2">
+            <Chip className="bg-white/15 text-white">
+              <Zap className="size-3" fill="currentColor" /> +
+              {action.kind === "room" ? 60 : 40} FP
+            </Chip>
+            <Chip className="bg-white/15 text-white">
+              <Flame className="size-3" fill="currentColor" /> Série +1
+            </Chip>
+          </div>
+        )}
         {isDone && (
           <div className="mt-3 flex justify-center">
             <Chip className="bg-white/15 text-white">

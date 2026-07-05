@@ -15,11 +15,11 @@ import {
 } from "@/components/icons/learning-icons";
 
 const PROFILES: Record<OnboardingBlocker, string> = {
-  "fast-speech": "Fast Listener Starter",
-  "blocked-reply": "Natural Responder Starter",
-  translating: "No-Translate Builder",
-  vocab: "Real Phrases Builder",
-  shy: "Speak Confidence Starter",
+  "fast-speech": "Écoute rapide",
+  "blocked-reply": "Réponse naturelle",
+  translating: "Zéro traduction",
+  vocab: "Phrases réelles",
+  shy: "Confiance orale",
 };
 
 const ANALYSIS_LABELS = [
