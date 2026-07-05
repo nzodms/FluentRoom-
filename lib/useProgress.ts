@@ -117,6 +117,11 @@ export function useProgress() {
     setState({ ...getSnapshot(), avatar: config });
   }, []);
 
+  /** Choisit le compagnon de l'utilisateur. */
+  const setCompanion = useCallback((companionId: string) => {
+    setState({ ...getSnapshot(), companion: companionId });
+  }, []);
+
   /** Achat boutique : débite les FP et ajoute l'item à l'inventaire. */
   const buyItem = useCallback((itemId: string): PurchaseOutcome => {
     const outcome = purchaseItem(getSnapshot(), itemId);
@@ -161,6 +166,7 @@ export function useProgress() {
     doDailyStep,
     openChest,
     setAvatar,
+    setCompanion,
     buyItem,
     beginLesson,
     finishLesson,

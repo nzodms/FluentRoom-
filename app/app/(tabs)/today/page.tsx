@@ -22,6 +22,7 @@ import { FluentCharacter } from "@/components/avatar/FluentCharacter";
 import { expressionForToday } from "@/lib/avatar-reactions";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { ShopTeaser } from "@/components/shop/ShopTeaser";
+import { WelcomeOverlay } from "@/components/companion/WelcomeOverlay";
 import {
   GuidedTour,
   useGuidedTour,
@@ -33,12 +34,12 @@ import { QuestList } from "@/components/today/QuestList";
 
 const DAY_INITIALS = ["L", "M", "M", "J", "V", "S", "D"];
 
-/** Mini tour guidé à la première arrivée sur Today. */
+/** Visite guidée par le compagnon à la première arrivée sur Today. */
 const TODAY_TOUR: TourStep[] = [
   {
     id: "next-action",
     target: "next-action",
-    title: "Ta prochaine action est toujours ici",
+    title: "Ici, c'est ton objectif du jour",
     message:
       "Une seule mission à la fois : tu écoutes, tu comprends, tu réponds — puis tu gagnes ta récompense.",
     expression: "focused",
@@ -64,13 +65,31 @@ const TODAY_TOUR: TourStep[] = [
     shape: "pill",
   },
   {
+    id: "level",
+    target: "level",
+    title: "Là, tu vois ton niveau",
+    message:
+      "Chaque session le fait grimper. Tes FP s'accumulent ici aussi — ils ne redescendent jamais.",
+    expression: "proud",
+    accent: "primary",
+  },
+  {
     id: "fp-shop",
     target: "fp-shop",
-    title: "Tes efforts ont une valeur",
+    title: "Ici, tu gagnes des crédits",
     message:
-      "Tu gagnes des FP en apprenant vraiment. Dépense-les pour personnaliser ton personnage.",
+      "Dans la boutique, tu pourras acheter des habits, accessoires, fonds et effets pour ton personnage.",
     expression: "excited",
     accent: "gold",
+  },
+  {
+    id: "first-lesson",
+    target: "next-action",
+    title: "Quand tu es prêt…",
+    message:
+      "…tu peux lancer ta première leçon ici. Prends ton temps, je reste avec toi.",
+    expression: "encouraging",
+    accent: "mint",
   },
 ];
 
@@ -89,6 +108,8 @@ export default function TodayPage() {
     useProgress();
   const [chestOpen, setChestOpen] = useState(false);
   const tour = useGuidedTour("today", ready && progress.onboarding !== null);
+  // Accueil du compagnon avant la visite : « Bienvenue dans ton espace ».
+  const [welcomeDone, setWelcomeDone] = useState(false);
 
   const completedIds = Object.keys(progress.completedRooms);
   const todayRoom = getTodayRoom(completedIds);
@@ -123,8 +144,12 @@ export default function TodayPage() {
   const week = lastSevenDays();
   const activeToday = progress.lastActiveDate === todayKey();
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-5">
       {/* Salutation + avatar + streak vivant */}
       <div className="flex items-center justify-between gap-3">
         <Link href="/app/settings" className="flex min-w-0 items-center gap-3">
@@ -292,7 +317,7 @@ export default function TodayPage() {
       </motion.div>
 
       {/* Niveau compact */}
-      <Card animate delay={0.25} className="p-4">
+      <Card animate delay={0.25} className="p-4" data-tour="level">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-ink-faint">
@@ -441,9 +466,22 @@ export default function TodayPage() {
           })}
         </div>
       </div>
-      {/* Visite guidée : première arrivée sur Today */}
+      {/* Première arrivée : accueil du compagnon, puis visite guidée */}
       <AnimatePresence>
-        {tour.open && <GuidedTour steps={TODAY_TOUR} onClose={tour.close} />}
+        {tour.open && !welcomeDone && (
+          <WelcomeOverlay
+            companionId={progress.companion}
+            onDiscover={() => setWelcomeDone(true)}
+            onLater={() => tour.close(true)}
+          />
+        )}
+        {tour.open && welcomeDone && (
+          <GuidedTour
+            steps={TODAY_TOUR}
+            companionId={progress.companion}
+            onClose={tour.close}
+          />
+        )}
       </AnimatePresence>
 
       {/* Reward Room plein écran */}

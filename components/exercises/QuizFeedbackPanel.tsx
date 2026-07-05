@@ -4,10 +4,11 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import type { AvatarConfig } from "@/types/learning";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { cn } from "@/lib/utils";
 
 /**
- * Panneau de feedback après validation : le personnage réagit,
+ * Panneau de feedback après validation : le compagnon réagit,
  * l'explication est pédagogique, l'erreur montre la bonne réponse.
  */
 export function QuizFeedbackPanel({
@@ -15,12 +16,15 @@ export function QuizFeedbackPanel({
   explanation,
   correctAnswer,
   avatar,
+  companionId,
 }: {
   correct: boolean;
   explanation: string;
   /** Affiché quand l'utilisateur s'est trompé. */
   correctAnswer?: string;
   avatar: AvatarConfig;
+  /** Si présent, c'est le compagnon qui réagit. */
+  companionId?: string | null;
 }) {
   return (
     <motion.div
@@ -39,12 +43,20 @@ export function QuizFeedbackPanel({
           transition={{ type: "spring", stiffness: 320, damping: 18, delay: 0.08 }}
           className="relative shrink-0"
         >
-          <FluentCharacter
-            config={avatar}
-            size={52}
-            expression={correct ? "celebrating" : "encouraging"}
-            showBackground={false}
-          />
+          {companionId ? (
+            <CompanionCharacter
+              companionId={companionId}
+              size={52}
+              expression={correct ? "celebrating" : "encouraging"}
+            />
+          ) : (
+            <FluentCharacter
+              config={avatar}
+              size={52}
+              expression={correct ? "celebrating" : "encouraging"}
+              showBackground={false}
+            />
+          )}
           {correct && (
             <motion.span
               initial={{ opacity: 0, scale: 0, y: 4 }}

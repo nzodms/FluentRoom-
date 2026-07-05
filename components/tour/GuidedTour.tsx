@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import type { CharacterExpression } from "@/components/avatar/FluentCharacter";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { DEFAULT_AVATAR } from "@/data/avatar-items";
 import { Button } from "@/components/ui/Button";
 import { loadJSON, saveJSON } from "@/lib/storage";
@@ -83,9 +84,12 @@ interface Rect {
 
 export function GuidedTour({
   steps,
+  companionId,
   onClose,
 }: {
   steps: TourStep[];
+  /** Compagnon qui guide (sinon le personnage par défaut). */
+  companionId?: string | null;
   /** skipped = l'utilisateur a passé avant la fin. */
   onClose: (skipped: boolean) => void;
 }) {
@@ -221,12 +225,20 @@ export function GuidedTour({
                     className="flex items-start gap-3"
                   >
                     <div className="shrink-0">
-                      <FluentCharacter
-                        config={DEFAULT_AVATAR}
-                        size={56}
-                        expression={step.expression ?? "happy"}
-                        showBackground={false}
-                      />
+                      {companionId ? (
+                        <CompanionCharacter
+                          companionId={companionId}
+                          size={56}
+                          expression={step.expression ?? "happy"}
+                        />
+                      ) : (
+                        <FluentCharacter
+                          config={DEFAULT_AVATAR}
+                          size={56}
+                          expression={step.expression ?? "happy"}
+                          showBackground={false}
+                        />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-ink">{step.title}</p>

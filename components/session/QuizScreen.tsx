@@ -154,6 +154,7 @@ export function QuizScreen({
               explanation={explanation}
               correctAnswer={!isCorrect ? choices[correctIndex] : undefined}
               avatar={progress.avatar}
+              companionId={progress.companion}
             />
           )}
         </AnimatePresence>

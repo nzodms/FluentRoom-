@@ -10,6 +10,8 @@ import { useProgress } from "@/lib/useProgress";
 import { availableFP } from "@/lib/shop";
 import { MAX_SHIELDS } from "@/lib/chests";
 import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
+import { companions, getCompanion } from "@/data/companions";
 import { LearningGlyph } from "@/components/icons/learning-icons";
 import { resetTour } from "@/components/tour/GuidedTour";
 import { AvatarCustomizer } from "@/components/avatar/AvatarCustomizer";
@@ -29,12 +31,16 @@ const goalLabels: Record<string, string> = {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { progress, ready, reset, setAvatar } = useProgress();
+  const { progress, ready, reset, setAvatar, setCompanion } = useProgress();
   const [confirmReset, setConfirmReset] = useState(false);
   const level = getLevelForXp(progress.xp);
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">Profil</h1>
         <p className="text-sm text-ink-soft">Ton compte et tes préférences.</p>
@@ -52,6 +58,43 @@ export default function SettingsPage() {
           </p>
         </div>
         <Chip tone="primary">{availableFP(progress)} FP</Chip>
+      </Card>
+
+      {/* Compagnon */}
+      <Card animate delay={0.03} className="p-4">
+        <div className="flex items-center gap-3">
+          <CompanionCharacter
+            companionId={progress.companion}
+            size={52}
+            expression="happy"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-ink">
+              {getCompanion(progress.companion).name} ·{" "}
+              {getCompanion(progress.companion).personality}
+            </p>
+            <p className="text-xs text-ink-soft">
+              Ton compagnon t&apos;accompagne dans toute l&apos;app.
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex gap-2">
+          {companions.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setCompanion(c.id)}
+              aria-label={`Choisir ${c.name}`}
+              className={cn(
+                "grid flex-1 cursor-pointer place-items-center rounded-2xl border-2 py-1.5 transition-all",
+                (progress.companion ?? "nox") === c.id
+                  ? "border-primary-500 bg-primary-50"
+                  : "border-ink/8 bg-white hover:border-primary-200",
+              )}
+            >
+              <CompanionCharacter companionId={c.id} size={40} animated={false} />
+            </button>
+          ))}
+        </div>
       </Card>
 
       {/* Boutique */}

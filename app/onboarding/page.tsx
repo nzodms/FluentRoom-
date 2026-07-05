@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
-import type {
-  OnboardingBlocker,
-  OnboardingGoal,
-  OnboardingLevel,
-} from "@/types/learning";
-import { getTodayRoom } from "@/data/rooms";
+import type { OnboardingBlocker, OnboardingGoal, OnboardingLevel } from "@/types/learning";
 import { DEFAULT_AVATAR } from "@/data/avatar-items";
+import { companions } from "@/data/companions";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { useProgress } from "@/lib/useProgress";
 import { AmbientBackground } from "@/components/ui/AmbientBackground";
 import { Button } from "@/components/ui/Button";
@@ -18,12 +15,7 @@ import { Logo } from "@/components/layout/Logo";
 import { Chip } from "@/components/ui/Chip";
 import { OnboardingChoiceCard } from "@/components/onboarding/OnboardingChoiceCard";
 import { OnboardingFeedbackCard } from "@/components/onboarding/OnboardingFeedbackCard";
-import { OnboardingMiniTest } from "@/components/onboarding/OnboardingMiniTest";
-import { OnboardingAudioCard } from "@/components/onboarding/OnboardingAudioCard";
-import {
-  OnboardingDiagnosticScreen,
-  type MiniTestResults,
-} from "@/components/onboarding/OnboardingDiagnosticScreen";
+import { OnboardingDiagnosticScreen } from "@/components/onboarding/OnboardingDiagnosticScreen";
 import {
   LearningGlyph,
   type LearningIconName,
@@ -81,7 +73,7 @@ const goals: Array<{ id: OnboardingGoal; label: string; icon: LearningIconName }
   { id: "natives", label: "Comprendre l'anglais rapide", icon: "fast" },
 ];
 
-/* ---------- Étape 6 · Routine ---------- */
+/* ---------- Étape 3 · Routine ---------- */
 
 const routines: Array<{ minutes: 5 | 10 | 15 | 20; hint: string }> = [
   { minutes: 5, hint: "Garder le rythme" },
@@ -90,55 +82,44 @@ const routines: Array<{ minutes: 5 | 10 | 15 | 20; hint: string }> = [
   { minutes: 20, hint: "Mode intensif" },
 ];
 
-const STEP_TITLES: Array<{
-  title: string;
-  subtitle: string;
-  label: string;
-  /** Mise en contexte affichée avant un mini-test. */
-  softIntro?: string;
-}> = [
+/** Niveau estimé à partir du blocage (le calibrage fin viendra dans l'app). */
+const LEVEL_BY_BLOCKER: Record<OnboardingBlocker, OnboardingLevel> = {
+  "fast-speech": "some",
+  "blocked-reply": "blocked",
+  translating: "blocked",
+  vocab: "some",
+  shy: "blocked",
+};
+
+const STEP_TITLES: Array<{ title: string; subtitle: string; label: string; icon: LearningIconName }> = [
   {
     label: "Ton blocage",
+    icon: "warmup",
     title: "Qu'est-ce qui te bloque vraiment en anglais ?",
     subtitle: "Choisis le vrai blocage. Ton parcours va se construire autour de ça.",
   },
   {
     label: "Ton objectif",
+    icon: "quest",
     title: "Dans 30 jours, tu veux surtout être capable de…",
     subtitle: "On va construire ton parcours autour de situations réelles.",
   },
   {
-    label: "Calibrage · écoute",
-    title: "Écoute. Quelle idée tu as entendue ?",
-    subtitle: "Ce n'est pas une note — c'est juste pour adapter ton plan.",
-    softIntro:
-      "Tu vas entendre une phrase très courante. Essaie d'attraper l'idée, pas chaque mot.",
-  },
-  {
-    label: "Calibrage · réflexe",
-    title: "On te dit « Thank you so much! »",
-    subtitle: "Réponds comme tu peux — il n'y a pas de piège.",
-    softIntro:
-      "Maintenant, on regarde tes réflexes de réponse. Quelle réponse est la plus naturelle ?",
-  },
-  {
-    label: "Calibrage · bloc",
-    title: "Comment dirais-tu : « J'essaie de comprendre » ?",
-    subtitle: "Répondre naturellement > parler parfaitement.",
-    softIntro:
-      "Dernier mini-test : est-ce que tu reconnais un bloc naturel ?",
-  },
-  {
     label: "Ta routine",
+    icon: "streak",
     title: "Combien de temps par jour ?",
     subtitle: "10 minutes par jour battent 2 heures le dimanche.",
   },
   {
-    label: "Diagnostic",
-    title: "",
-    subtitle: "",
+    label: "Ton compagnon",
+    icon: "native",
+    title: "Choisis ton compagnon d'apprentissage",
+    subtitle: "Il t'accompagnera partout : conseils, encouragements, récompenses.",
   },
+  { label: "Diagnostic", icon: "fluency", title: "", subtitle: "" },
 ];
+
+const TOTAL_STEPS = STEP_TITLES.length;
 
 /* ---------- Phase d'intro : expliquer avant de questionner ---------- */
 
@@ -160,9 +141,9 @@ const INTRO_SCREENS = [
   {
     id: "loop",
     title: "Pas besoin d'être parfait",
-    text: "Tu dois devenir plus automatique. En apprenant, tu gagnes des FP — et tu personnalises ton personnage.",
+    text: "Tu dois devenir plus automatique. En apprenant, tu gagnes des FP — et tu personnalises ton univers.",
     expression: "relaxed" as const,
-    cta: "Créer mon plan",
+    cta: "C'est parti",
   },
 ];
 
@@ -172,39 +153,26 @@ const INTRO_PILLARS: Array<{ icon: LearningIconName; label: string }> = [
   { icon: "phrase", label: "Tes phrases" },
 ];
 
-const TOTAL_STEPS = STEP_TITLES.length;
-
 const stepVariants = {
   enter: { opacity: 0, x: 40 },
   center: { opacity: 1, x: 0 },
   exit: { opacity: 0, x: -40 },
 };
 
-/** Niveau estimé à partir des mini-tests (plus crédible qu'une auto-évaluation). */
-function levelFromScore(score: number): OnboardingLevel {
-  if (score >= 3) return "blocked";
-  if (score >= 1) return "some";
-  return "beginner";
-}
-
 export default function OnboardingPage() {
   const router = useRouter();
-  const { completeOnboarding } = useProgress();
+  const { completeOnboarding, setCompanion } = useProgress();
   const [phase, setPhase] = useState<"intro" | "questions">("intro");
   const [introIndex, setIntroIndex] = useState(0);
   const [step, setStep] = useState(0);
   const [blocker, setBlocker] = useState<OnboardingBlocker | null>(null);
   const [goal, setGoal] = useState<OnboardingGoal | null>(null);
   const [minutes, setMinutes] = useState<5 | 10 | 15 | 20 | null>(null);
-  const [results, setResults] = useState<MiniTestResults>({
-    listen: false,
-    reflex: false,
-    phrase: false,
-  });
+  const [companionId, setCompanionId] = useState<string | null>(null);
 
   const next = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
 
-  // Étapes 1-2 : feedback court après sélection, puis auto-avance.
+  // Feedback court après sélection, puis auto-avance.
   const pickBlocker = (id: OnboardingBlocker) => {
     if (blocker) return;
     setBlocker(id);
@@ -213,33 +181,38 @@ export default function OnboardingPage() {
   const pickGoal = (id: OnboardingGoal) => {
     if (goal) return;
     setGoal(id);
-    setTimeout(next, 1700);
+    setTimeout(next, 1600);
   };
   const pickMinutes = (m: 5 | 10 | 15 | 20) => {
     if (minutes) return;
     setMinutes(m);
     setTimeout(next, 700);
   };
+  const pickCompanion = (id: string) => {
+    if (companionId) return;
+    setCompanionId(id);
+    setCompanion(id);
+    setTimeout(next, 2000);
+  };
 
   const start = () => {
-    const score =
-      Number(results.listen) + Number(results.reflex) + Number(results.phrase);
     if (blocker && goal && minutes) {
       completeOnboarding({
         blocker,
         goal,
-        level: levelFromScore(score),
+        level: LEVEL_BY_BLOCKER[blocker],
         dailyMinutes: minutes,
         profileName: "Explorer",
         completedAt: new Date().toISOString(),
       });
     }
-    const room = getTodayRoom([]);
-    router.push(`/app/room/${room.id}`);
+    // Pas de leçon forcée : on arrive dans son espace, guidé par le compagnon.
+    router.push("/app/today");
   };
 
   const meta = STEP_TITLES[step];
   const pickedBlocker = blockers.find((b) => b.id === blocker);
+  const pickedCompanion = companions.find((c) => c.id === companionId);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -254,7 +227,6 @@ export default function OnboardingPage() {
           )}
         </header>
 
-        {/* Progress segmentée (questions uniquement) */}
         {phase === "questions" && (
           <div className="mx-auto mt-4 flex w-full max-w-lg gap-1.5 px-4">
             {STEP_TITLES.map((s, i) => (
@@ -275,7 +247,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Phase 1 : intro guidée — expliquer avant de questionner */}
+        {/* Phase 1 : intro guidée */}
         {phase === "intro" && (
           <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-8 pt-6">
             <AnimatePresence mode="wait">
@@ -311,7 +283,6 @@ export default function OnboardingPage() {
                   {INTRO_SCREENS[introIndex].text}
                 </p>
 
-                {/* Écran 2 : les trois piliers */}
                 {introIndex === 1 && (
                   <div className="mt-6 flex gap-2.5">
                     {INTRO_PILLARS.map((pillar, i) => (
@@ -331,7 +302,6 @@ export default function OnboardingPage() {
                   </div>
                 )}
 
-                {/* Écran 3 : la boucle apprendre → FP → personnaliser */}
                 {introIndex === 2 && (
                   <div className="mt-6 flex items-center gap-2">
                     {["Apprendre", "+FP", "Ton style"].map((label, i) => (
@@ -391,216 +361,205 @@ export default function OnboardingPage() {
               </Button>
               <p className="mt-2.5 text-center text-xs text-ink-faint">
                 {introIndex === INTRO_SCREENS.length - 1
-                  ? "Pas de stress. On commence doucement."
+                  ? "4 questions rapides, puis ton espace t'attend."
                   : "Une étape à la fois."}
               </p>
             </div>
           </main>
         )}
 
+        {/* Phase 2 : 3 questions + choix du compagnon */}
         {phase === "questions" && (
-        <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-8 pt-6">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              variants={stepVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.3 }}
-              className="flex flex-1 flex-col"
-            >
-              {step < TOTAL_STEPS - 1 && (
-                <>
-                  <Chip tone="primary" className="self-start">
-                    <LearningGlyph
-                      name={step === 2 ? "listen" : step === 3 ? "reflex" : step === 4 ? "lesson" : step === 5 ? "streak" : "warmup"}
-                      className="size-3"
-                    />{" "}
-                    {meta.label}
-                  </Chip>
-                  <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-ink">
-                    {meta.title}
-                  </h1>
-                  <p className="mt-1.5 text-sm text-ink-soft">{meta.subtitle}</p>
-                  {meta.softIntro && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.12 }}
-                      className="mt-3 rounded-2xl bg-primary-50 px-3.5 py-2.5 text-sm font-semibold text-primary-700"
-                    >
-                      {meta.softIntro}
-                    </motion.div>
-                  )}
-                </>
-              )}
+          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-8 pt-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="flex flex-1 flex-col"
+              >
+                {step < TOTAL_STEPS - 1 && (
+                  <>
+                    <Chip tone="primary" className="self-start">
+                      <LearningGlyph name={meta.icon} className="size-3" /> {meta.label}
+                    </Chip>
+                    <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-ink">
+                      {meta.title}
+                    </h1>
+                    <p className="mt-1.5 text-sm text-ink-soft">{meta.subtitle}</p>
+                  </>
+                )}
 
-              {/* 1 · Blocage */}
-              {step === 0 && (
-                <div className="mt-5 space-y-2.5">
-                  {blockers.map((option, i) => (
-                    <OnboardingChoiceCard
-                      key={option.id}
-                      icon={option.icon}
-                      label={option.label}
-                      selected={blocker === option.id}
-                      locked={blocker !== null}
-                      onSelect={() => pickBlocker(option.id)}
-                      index={i}
-                    />
-                  ))}
-                  <AnimatePresence>
-                    {pickedBlocker && (
-                      <OnboardingFeedbackCard
-                        message={pickedBlocker.feedback}
-                        expression="encouraging"
+                {/* 1 · Blocage */}
+                {step === 0 && (
+                  <div className="mt-5 space-y-2.5">
+                    {blockers.map((option, i) => (
+                      <OnboardingChoiceCard
+                        key={option.id}
+                        icon={option.icon}
+                        label={option.label}
+                        selected={blocker === option.id}
+                        locked={blocker !== null}
+                        onSelect={() => pickBlocker(option.id)}
+                        index={i}
                       />
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* 2 · Objectif */}
-              {step === 1 && (
-                <div className="mt-5 space-y-2.5">
-                  {goals.map((option, i) => (
-                    <OnboardingChoiceCard
-                      key={option.id}
-                      icon={option.icon}
-                      label={option.label}
-                      selected={goal === option.id}
-                      locked={goal !== null}
-                      onSelect={() => pickGoal(option.id)}
-                      index={i}
-                    />
-                  ))}
-                  <AnimatePresence>
-                    {goal && (
-                      <OnboardingFeedbackCard
-                        message="Parfait. On va construire ton parcours autour de situations réelles."
-                        expression="happy"
-                        tone="mint"
-                      />
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* 3 · Mini-test écoute */}
-              {step === 2 && (
-                <div className="mt-5">
-                  <OnboardingMiniTest
-                    media={<OnboardingAudioCard text="I'm running a bit late." />}
-                    options={[
-                      "Il est un peu en retard",
-                      "Il annule",
-                      "Il demande de l'aide",
-                    ]}
-                    correctIndex={0}
-                    correctFeedback="Exact. Tu as attrapé l'idée principale — c'est tout ce qui compte."
-                    wrongFeedback="Pas grave. Le bloc important est « running late » = être en retard."
-                    continueLabel="Test suivant"
-                    onDone={(correct) => {
-                      setResults((r) => ({ ...r, listen: correct }));
-                      next();
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* 4 · Mini-test réflexe */}
-              {step === 3 && (
-                <div className="mt-5">
-                  <OnboardingMiniTest
-                    options={["No worries!", "I am happy.", "Nothing problem."]}
-                    correctIndex={0}
-                    correctFeedback="Oui. « No worries » est une réponse naturelle que les natifs utilisent tout le temps."
-                    wrongFeedback="Un natif dirait « No worries » — simple, naturel, sans réfléchir."
-                    continueLabel="Dernier test"
-                    onDone={(correct) => {
-                      setResults((r) => ({ ...r, reflex: correct }));
-                      next();
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* 5 · Mini-test phrase naturelle */}
-              {step === 4 && (
-                <div className="mt-5">
-                  <OnboardingMiniTest
-                    options={[
-                      "I try understand.",
-                      "I'm trying to understand.",
-                      "I'm trying understand.",
-                    ]}
-                    correctIndex={1}
-                    correctFeedback="Oui. Ton cerveau va apprendre ce genre de bloc prêt à l'emploi."
-                    wrongFeedback="Le bloc naturel : « I'm trying to… ». Tu vas l'ancrer très vite."
-                    continueLabel="Voir ma routine"
-                    onDone={(correct) => {
-                      setResults((r) => ({ ...r, phrase: correct }));
-                      next();
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* 6 · Routine */}
-              {step === 5 && (
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {routines.map((option, i) => (
-                    <motion.button
-                      key={option.minutes}
-                      type="button"
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 + i * 0.06 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => pickMinutes(option.minutes)}
-                      className={cn(
-                        "flex cursor-pointer flex-col items-center gap-1 rounded-3xl border-2 bg-white py-6 shadow-soft transition-all",
-                        minutes === option.minutes
-                          ? "border-primary-500 bg-primary-50 shadow-[0_0_20px_-6px_rgba(88,92,226,0.5)]"
-                          : "border-ink/8 hover:border-primary-300",
+                    ))}
+                    <AnimatePresence>
+                      {pickedBlocker && (
+                        <OnboardingFeedbackCard
+                          message={pickedBlocker.feedback}
+                          expression="encouraging"
+                        />
                       )}
-                    >
-                      <span className="text-3xl font-bold text-ink">
-                        {option.minutes}
-                        <span className="text-sm font-semibold text-ink-faint">
-                          {" "}
-                          min
-                        </span>
-                      </span>
-                      <span
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* 2 · Objectif */}
+                {step === 1 && (
+                  <div className="mt-5 space-y-2.5">
+                    {goals.map((option, i) => (
+                      <OnboardingChoiceCard
+                        key={option.id}
+                        icon={option.icon}
+                        label={option.label}
+                        selected={goal === option.id}
+                        locked={goal !== null}
+                        onSelect={() => pickGoal(option.id)}
+                        index={i}
+                      />
+                    ))}
+                    <AnimatePresence>
+                      {goal && (
+                        <OnboardingFeedbackCard
+                          message="Parfait. On va construire ton parcours autour de situations réelles."
+                          expression="happy"
+                          tone="mint"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* 3 · Routine */}
+                {step === 2 && (
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    {routines.map((option, i) => (
+                      <motion.button
+                        key={option.minutes}
+                        type="button"
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.08 + i * 0.06 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => pickMinutes(option.minutes)}
                         className={cn(
-                          "text-xs font-bold",
+                          "flex cursor-pointer flex-col items-center gap-1 rounded-3xl border-2 bg-white py-6 shadow-soft transition-all",
                           minutes === option.minutes
-                            ? "text-primary-600"
-                            : "text-ink-faint",
+                            ? "border-primary-500 bg-primary-50 shadow-[0_0_20px_-6px_rgba(88,92,226,0.5)]"
+                            : "border-ink/8 hover:border-primary-300",
                         )}
                       >
-                        {option.hint}
-                      </span>
-                    </motion.button>
-                  ))}
-                </div>
-              )}
+                        <span className="text-3xl font-bold text-ink">
+                          {option.minutes}
+                          <span className="text-sm font-semibold text-ink-faint"> min</span>
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs font-bold",
+                            minutes === option.minutes ? "text-primary-600" : "text-ink-faint",
+                          )}
+                        >
+                          {option.hint}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
 
-              {/* 7 · Diagnostic final */}
-              {step === 6 && blocker && goal && minutes && (
-                <OnboardingDiagnosticScreen
-                  blocker={blocker}
-                  goal={goal}
-                  minutes={minutes}
-                  results={results}
-                  onStart={start}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </main>
+                {/* 4 · Compagnon */}
+                {step === 3 && (
+                  <div className="mt-5">
+                    <div className="grid grid-cols-2 gap-3">
+                      {companions.map((c, i) => {
+                        const selected = companionId === c.id;
+                        return (
+                          <motion.button
+                            key={c.id}
+                            type="button"
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.08 + i * 0.08, type: "spring", stiffness: 300, damping: 24 }}
+                            whileTap={!companionId ? { scale: 0.95 } : undefined}
+                            onClick={() => pickCompanion(c.id)}
+                            className={cn(
+                              "flex cursor-pointer flex-col items-center rounded-3xl border-2 p-4 text-center shadow-soft transition-all",
+                              selected
+                                ? "border-primary-500 bg-primary-50 shadow-[0_0_24px_-6px_rgba(88,92,226,0.5)]"
+                                : companionId
+                                  ? "border-ink/5 bg-white opacity-45"
+                                  : "border-ink/8 bg-white hover:border-primary-300",
+                            )}
+                            style={
+                              !selected && !companionId
+                                ? { background: `linear-gradient(180deg, ${c.belly}55 0%, #FFFFFF 70%)` }
+                                : undefined
+                            }
+                          >
+                            <CompanionCharacter
+                              companionId={c.id}
+                              size={84}
+                              expression={selected ? "celebrating" : "happy"}
+                            />
+                            <p className="mt-2 text-base font-bold text-ink">{c.name}</p>
+                            <p className="text-[11px] font-semibold text-ink-faint">
+                              {c.personality}
+                            </p>
+                            <p className="mt-1.5 text-xs font-medium text-ink-soft">
+                              “{c.tagline}”
+                            </p>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                    <AnimatePresence>
+                      {pickedCompanion && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 14 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 flex items-center gap-3 rounded-3xl bg-primary-50 p-3.5"
+                        >
+                          <CompanionCharacter
+                            companionId={pickedCompanion.id}
+                            size={44}
+                            expression="excited"
+                          />
+                          <p className="min-w-0 flex-1 text-sm font-semibold text-primary-700">
+                            {pickedCompanion.name} rejoint l&apos;aventure ! Il te
+                            guidera dès ton arrivée.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+
+                {/* 5 · Diagnostic final */}
+                {step === 4 && blocker && goal && minutes && (
+                  <OnboardingDiagnosticScreen
+                    blocker={blocker}
+                    goal={goal}
+                    minutes={minutes}
+                    companionId={companionId}
+                    onStart={start}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </main>
         )}
       </div>
     </MotionConfig>

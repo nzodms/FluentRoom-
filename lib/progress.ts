@@ -53,6 +53,7 @@ export function defaultProgress(): UserProgress {
     openedChests: 0,
     rewardHistory: [],
     streakShields: 0,
+    companion: null,
     spentFP: 0,
     purchasedItems: [],
     purchaseHistory: [],

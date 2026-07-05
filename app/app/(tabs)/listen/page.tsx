@@ -25,7 +25,6 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { DrillSession } from "@/components/exercises/DrillSession";
-import { cn } from "@/lib/utils";
 
 const fastEnglishRoom = getRoomById("fast-english");
 
@@ -68,8 +67,12 @@ export default function ListenPage() {
     .sort((a, b) => a.comprehension - b.comprehension)[0];
   const weakestRoom = weakest ? getRoomById(weakest.roomId) : undefined;
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-6 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-ink">

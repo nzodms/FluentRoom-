@@ -116,8 +116,12 @@ export default function PhrasesPage() {
     return entries;
   }, [progress.phrases]);
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">
           Ta collection

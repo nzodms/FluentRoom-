@@ -6,18 +6,13 @@ import { ArrowRight, Check, Sparkles, Target } from "lucide-react";
 import type { OnboardingBlocker, OnboardingGoal } from "@/types/learning";
 import { DEFAULT_AVATAR } from "@/data/avatar-items";
 import { FluentCharacter } from "@/components/avatar/FluentCharacter";
+import { CompanionCharacter } from "@/components/companion/CompanionCharacter";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import {
   LearningGlyph,
   type LearningIconName,
 } from "@/components/icons/learning-icons";
-
-export interface MiniTestResults {
-  listen: boolean;
-  reflex: boolean;
-  phrase: boolean;
-}
 
 const PROFILES: Record<OnboardingBlocker, string> = {
   "fast-speech": "Fast Listener Starter",
@@ -79,28 +74,46 @@ interface SkillCard {
  * Diagnostic final animé : le personnage analyse, les compétences
  * s'affichent en cascade, le ring se remplit, puis le plan est révélé.
  */
+/** Compétence affaiblie par le blocage : rend le diagnostic crédible. */
+const SKILL_DIP: Record<OnboardingBlocker, number> = {
+  "fast-speech": 0,
+  "blocked-reply": 1,
+  shy: 1,
+  translating: 2,
+  vocab: 3,
+};
+
+const STRENGTHS: Record<OnboardingBlocker, string> = {
+  "fast-speech": "Tu as déjà une base — c'est ton oreille qu'on va muscler.",
+  "blocked-reply": "Tu comprends déjà bien. Les mots sont là — on débloque la sortie.",
+  translating: "Ton vocabulaire est bon. On va penser en blocs, pas en traductions.",
+  vocab: "Tes réflexes sont là. Il te manque juste les bonnes phrases.",
+  shy: "Tu as tout ce qu'il faut. Ici, tu t'entraînes sans jugement.",
+};
+
 export function OnboardingDiagnosticScreen({
   blocker,
   goal,
   minutes,
-  results,
+  companionId,
   onStart,
 }: {
   blocker: OnboardingBlocker;
   goal: OnboardingGoal;
   minutes: number;
-  results: MiniTestResults;
+  companionId: string | null;
   onStart: () => void;
 }) {
   const [phase, setPhase] = useState<"analyzing" | "result">("analyzing");
   const [labelIndex, setLabelIndex] = useState(0);
-  const score = Number(results.listen) + Number(results.reflex) + Number(results.phrase);
 
+  const base = [48, 36, 44, 42];
+  const dip = SKILL_DIP[blocker];
   const skills: SkillCard[] = [
-    { icon: "listen", label: "Oreille", value: results.listen ? 62 : 38 },
-    { icon: "speak", label: "Oral", value: 28 + score * 6 },
-    { icon: "reflex", label: "Réflexes", value: results.reflex ? 58 : 34 },
-    { icon: "phrase", label: "Vocabulaire naturel", value: results.phrase ? 55 : 32 },
+    { icon: "listen", label: "Oreille", value: dip === 0 ? 26 : base[0] },
+    { icon: "speak", label: "Oral", value: dip === 1 ? 26 : base[1] },
+    { icon: "reflex", label: "Réflexes", value: dip === 2 ? 28 : base[2] },
+    { icon: "phrase", label: "Vocabulaire naturel", value: dip === 3 ? 28 : base[3] },
   ];
 
   useEffect(() => {
@@ -120,12 +133,20 @@ export function OnboardingDiagnosticScreen({
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="relative">
           <ProgressRingPulse />
-          <FluentCharacter
-            config={DEFAULT_AVATAR}
-            size={110}
-            expression="focused"
-            showBackground={false}
-          />
+          {companionId ? (
+            <CompanionCharacter
+              companionId={companionId}
+              size={110}
+              expression="focused"
+            />
+          ) : (
+            <FluentCharacter
+              config={DEFAULT_AVATAR}
+              size={110}
+              expression="focused"
+              showBackground={false}
+            />
+          )}
         </div>
         <p className="mt-4 text-lg font-bold text-ink">Création de ton plan</p>
         <span className="relative mt-1 block h-5 w-56 text-center">
@@ -199,12 +220,20 @@ export function OnboardingDiagnosticScreen({
             aria-hidden
             className="absolute inset-0 -z-10 rounded-full bg-primary-400/20 blur-2xl"
           />
-          <FluentCharacter
-            config={DEFAULT_AVATAR}
-            size={96}
-            expression="proud"
-            showBackground={false}
-          />
+          {companionId ? (
+            <CompanionCharacter
+              companionId={companionId}
+              size={96}
+              expression="proud"
+            />
+          ) : (
+            <FluentCharacter
+              config={DEFAULT_AVATAR}
+              size={96}
+              expression="proud"
+              showBackground={false}
+            />
+          )}
         </motion.div>
         <Chip tone="primary" className="mt-2">
           <Sparkles className="size-3" /> Ton plan est prêt
@@ -242,11 +271,7 @@ export function OnboardingDiagnosticScreen({
             <p className="text-[10px] font-bold uppercase tracking-wide text-mint-600">
               Ton point fort
             </p>
-            <p className="mt-0.5 text-sm text-ink-soft">
-              {score >= 1
-                ? "Tu reconnais déjà des phrases naturelles — une vraie base."
-                : "Tu démarres motivé, et c'est le facteur n°1 de progression."}
-            </p>
+            <p className="mt-0.5 text-sm text-ink-soft">{STRENGTHS[blocker]}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
@@ -334,11 +359,11 @@ export function OnboardingDiagnosticScreen({
             transition={{ duration: 2.2, repeat: Infinity }}
           />
           <Button size="lg" fullWidth onClick={onStart} className="relative">
-            Commencer ma première mission <ArrowRight className="size-4" />
+            Découvrir mon espace <ArrowRight className="size-4" />
           </Button>
         </div>
         <p className="mt-2.5 text-center text-xs text-ink-faint">
-          Ton anglais va devenir plus automatique, session après session.
+          Ton compagnon te fait visiter — la première leçon vient après.
         </p>
       </motion.div>
     </motion.div>

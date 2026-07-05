@@ -72,8 +72,12 @@ export default function SpeakPage() {
 
   const attempts = [...progress.practiceLog].reverse().slice(0, 5);
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-6 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-ink">Speak</h1>

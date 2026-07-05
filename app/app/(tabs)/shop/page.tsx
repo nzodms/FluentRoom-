@@ -71,8 +71,12 @@ export default function ShopPage() {
     setJustBought(false);
   };
 
+  // Anti-flicker : on ne monte le contenu qu'une fois hydraté,
+  // pour que les animations d'entrée jouent une seule fois, visibles.
+  if (!ready) return <div aria-hidden className="min-h-[60vh]" />;
+
   return (
-    <div className={cn("space-y-5 transition-opacity", !ready && "opacity-0")}>
+    <div className="space-y-5">
       {/* Header boutique */}
       <div className="flex items-center gap-3">
         <Link

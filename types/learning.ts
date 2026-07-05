@@ -371,6 +371,8 @@ export interface UserProgress {
   rewardHistory: RewardHistoryEntry[];
   /** Boucliers de série (max 2) : protègent un jour manqué. */
   streakShields: number;
+  /** Compagnon choisi (id dans data/companions). */
+  companion: string | null;
   /** FP dépensés en boutique (availableFP = xp - spentFP). */
   spentFP: number;
   /** Items achetés en boutique. */
