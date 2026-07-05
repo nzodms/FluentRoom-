@@ -763,6 +763,535 @@ export const chapters: Chapter[] = [
     },
     rewardFP: 70,
   },
+
+  /* ================================================================
+     4 · Acheter un billet
+     ================================================================ */
+  {
+    id: "buy-a-ticket",
+    title: "Acheter un billet",
+    theme: "Situations réelles",
+    objective: "Acheter ton billet au guichet, prix et paiement compris.",
+    mainSkill: "phrases",
+    secondarySkills: ["politeness", "reflexes"],
+    difficulty: 1,
+    duration: 7,
+    prerequisites: ["ask-for-help"],
+    situation:
+      "Le guichet de la gare. L'agent te regarde, la file s'allonge derrière toi. Tu as trente secondes pour demander ton billet, le prix, et payer — sans bafouiller.",
+    keyPhrases: [
+      {
+        id: "kp-return-ticket",
+        english: "A return ticket to Oxford, please.",
+        french: "Un aller-retour pour Oxford, s'il vous plaît.",
+        context: "Au guichet : « return » = aller-retour, « single » = aller simple.",
+        variant: {
+          english: "A single to Oxford, please.",
+          note: "L'aller simple — les natifs laissent souvent tomber « ticket ».",
+        },
+      },
+      {
+        id: "kp-how-much",
+        english: "How much is it?",
+        french: "Combien ça coûte ?",
+        context: "LE bloc prix — jamais « How much it costs ».",
+      },
+      {
+        id: "kp-pay-by-card",
+        english: "Can I pay by card?",
+        french: "Je peux payer par carte ?",
+        context: "« By card », « in cash » — les prépositions font la phrase.",
+      },
+      {
+        id: "kp-next-train",
+        english: "What time does the next train leave?",
+        french: "À quelle heure part le prochain train ?",
+        context: "Question au présent : « does » + verbe nu, toujours.",
+        variant: {
+          english: "When's the next train to Oxford?",
+          note: "Version rapide, très courante à l'oral.",
+        },
+      },
+      {
+        id: "kp-anything-cheaper",
+        english: "Is there anything cheaper?",
+        french: "Il y a quelque chose de moins cher ?",
+        context: "Négocier sans négocier — la question douce qui sauve le budget.",
+      },
+    ],
+    commonMistakes: [
+      {
+        wrong: "I want a ticket for go to Oxford.",
+        right: "A ticket to Oxford, please.",
+        note: "« To + ville » suffit. Pas de « for go » — ça n'existe pas.",
+      },
+      {
+        wrong: "How much it costs?",
+        right: "How much is it?",
+        note: "La question anglaise inverse : « how much IS it ».",
+      },
+      {
+        wrong: "Can I pay with card?",
+        right: "Can I pay by card?",
+        note: "On paie « by card » et « in cash ». Les blocs, pas la logique.",
+      },
+    ],
+    dialogue: [
+      { speaker: "Agent", text: "Good morning! Where are you off to?" },
+      { speaker: "Toi", text: "A return ticket to Oxford, please." },
+      { speaker: "Agent", text: "That's twenty-eight fifty." },
+      { speaker: "Toi", text: "Can I pay by card?" },
+      { speaker: "Agent", text: "Of course. Platform 6, in ten minutes." },
+    ],
+    exercises: [
+      {
+        id: "bt-1",
+        type: "choice",
+        variant: "meaning",
+        skill: "comprehension",
+        phraseId: "kp-return-ticket",
+        prompt: "« A return ticket, please. » — tu viens d'acheter quoi ?",
+        options: [
+          "Un aller-retour",
+          "Un aller simple",
+          "Un billet remboursable",
+        ],
+        correctIndex: 0,
+        explanation:
+          "« Return » = tu reviens. L'aller simple, c'est « a single ». Deux mots, deux billets.",
+        hints: [
+          "« Return » contient l'idée de revenir.",
+          "L'aller simple se dit « a single ».",
+        ],
+      },
+      {
+        id: "bt-2",
+        type: "gap",
+        skill: "phrases",
+        phraseId: "kp-how-much",
+        prompt: "Demande le prix :",
+        sentence: "How much ___ it?",
+        options: ["is", "costs", "does"],
+        correctIndex: 0,
+        explanation:
+          "« How much is it? » — le bloc complet. « How much it costs » est LE calque français à éviter.",
+        hints: [
+          "La question anglaise inverse sujet et verbe.",
+          "Le verbe le plus simple de la langue suffit ici.",
+        ],
+      },
+      {
+        id: "bt-3",
+        type: "build",
+        skill: "phrases",
+        phraseId: "kp-pay-by-card",
+        prompt: "Reconstruis la phrase",
+        intent: "Demande si tu peux payer par carte.",
+        words: ["Can", "I", "pay", "by", "card"],
+        answer: "Can I pay by card",
+        explanation:
+          "« Pay by card », « pay in cash » : la préposition fait partie du bloc.",
+        hints: [
+          "Commence par la permission : « Can I… ».",
+          "Ce n'est pas « with » — c'est plus court.",
+        ],
+      },
+      {
+        id: "bt-4",
+        type: "choice",
+        variant: "error-spot",
+        skill: "phrases",
+        phraseId: "kp-next-train",
+        prompt: "« What time leaves the next train? » — qu'est-ce qui cloche ?",
+        options: [
+          "Il faut « does » : What time does the next train leave?",
+          "Il manque « will » avant leaves",
+          "Rien, la phrase est correcte",
+        ],
+        correctIndex: 0,
+        explanation:
+          "Question au présent = « does » + verbe nu. Le verbe ne passe jamais devant le sujet.",
+        hints: [
+          "Les questions anglaises ont presque toujours un auxiliaire.",
+          "Cherche le petit mot en « d » qui manque.",
+        ],
+        difficulty: 2,
+      },
+      {
+        id: "bt-5",
+        type: "choice",
+        variant: "listening",
+        skill: "listening",
+        phraseId: "kp-anything-cheaper",
+        prompt: "Écoute. Que veut la personne ?",
+        audio: "That's a bit expensive. Is there anything cheaper?",
+        options: [
+          "Un billet moins cher",
+          "Un remboursement",
+          "Un billet première classe",
+        ],
+        correctIndex: 0,
+        explanation:
+          "« Anything cheaper » = quelque chose de moins cher. La question douce pour le budget.",
+        hints: [
+          "« Cheap » = bon marché.",
+          "La personne trouve le prix élevé.",
+        ],
+      },
+      {
+        id: "bt-6",
+        type: "choice",
+        variant: "nuance",
+        skill: "politeness",
+        phraseId: "kp-return-ticket",
+        prompt: "Au guichet, le plus naturel pour commander ?",
+        options: [
+          "A return to Oxford, please.",
+          "Give me a ticket to Oxford.",
+          "I want to buy one ticket for going to Oxford and coming back.",
+        ],
+        correctIndex: 0,
+        optionNotes: [
+          "Court, poli, exactement ce que dit un natif.",
+          "Compréhensible mais sec — il manque le « please ».",
+          "Trop long : le guichet n'a pas besoin du roman.",
+        ],
+        explanation:
+          "L'anglais du quotidien est court : l'objet + « please ». Le contexte fait le reste.",
+        hints: [
+          "Le plus court est souvent le plus naturel.",
+          "Un mot magique termine la bonne réponse.",
+        ],
+      },
+      {
+        id: "bt-7",
+        type: "choice",
+        variant: "reflex",
+        skill: "reflexes",
+        phraseId: "kp-how-much",
+        prompt: "Vite : l'agent te tend le billet. Le prix ?",
+        options: [
+          "How much is it?",
+          "How much it costs?",
+          "What is the price of this?",
+        ],
+        correctIndex: 0,
+        timerSec: 8,
+        explanation:
+          "Le réflexe : « How much is it? » — trois mots et demi, sans traduire.",
+        hints: [
+          "Le bloc le plus court, avec l'inversion.",
+        ],
+      },
+    ],
+    finale: {
+      id: "bt-finale",
+      type: "chat",
+      scene: "Gare de Londres — guichet",
+      skill: "phrases",
+      prompt: "À toi : achète ton billet du début à la fin.",
+      explanation:
+        "Billet, prix, paiement : la transaction complète, sans traduire.",
+      hints: [
+        "Commande, demande le prix, paie — dans cet ordre.",
+      ],
+      turns: [
+        { speaker: "Agent", text: "Good morning! What can I do for you?" },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "A return ticket to Oxford, please.",
+            "I want a ticket for go to Oxford.",
+            "Oxford. Two directions.",
+          ],
+          correctIndex: 0,
+          note: "« A return ticket to… please » — le bloc du chapitre.",
+        },
+        { speaker: "Agent", text: "Sure. That's twenty-eight fifty." },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "Can I pay by card?",
+            "Can I pay with card?",
+            "I pay card.",
+          ],
+          correctIndex: 0,
+          note: "« By card » — la préposition fait le natif.",
+        },
+        { speaker: "Agent", text: "Of course. Here's your ticket — platform 6." },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "Perfect — what time does the next train leave?",
+            "Perfect — what time leaves the next train?",
+            "Perfect — when train?",
+          ],
+          correctIndex: 0,
+          note: "« Does » + verbe nu : la question propre.",
+        },
+      ],
+    },
+    rewardFP: 60,
+  },
+
+  /* ================================================================
+     5 · Annonces et quais
+     ================================================================ */
+  {
+    id: "announcements-and-platforms",
+    title: "Annonces et quais",
+    theme: "Situations réelles",
+    objective: "Comprendre les annonces de gare sans paniquer, même vite dites.",
+    mainSkill: "listening",
+    secondarySkills: ["comprehension", "reflexes"],
+    difficulty: 2,
+    duration: 7,
+    prerequisites: ["polite-requests"],
+    situation:
+      "Le haut-parleur grésille : « The 10:42 to Brighton… ». Tout le monde bouge, sauf toi. Ce chapitre t'apprend à attraper les mots qui comptent : destination, quai, retard.",
+    keyPhrases: [
+      {
+        id: "kp-departs-from",
+        english: "The train to Brighton departs from platform 2.",
+        french: "Le train pour Brighton part du quai 2.",
+        context: "Le squelette de toutes les annonces : destination + quai.",
+      },
+      {
+        id: "kp-delayed",
+        english: "The 10:42 service is delayed by 15 minutes.",
+        french: "Le train de 10 h 42 a 15 minutes de retard.",
+        context: "« Delayed » = retardé. « Cancelled » = annulé. Deux mots à capter.",
+        variant: {
+          english: "The service has been cancelled.",
+          note: "Le pire scénario — au moins tu le comprends tout de suite.",
+        },
+      },
+      {
+        id: "kp-calling-at",
+        english: "This train is calling at Reading and Oxford.",
+        french: "Ce train dessert Reading et Oxford.",
+        context: "« Calling at » = les arrêts. Rien à voir avec téléphoner.",
+      },
+      {
+        id: "kp-which-platform",
+        english: "Which platform is it for Brighton?",
+        french: "C'est quel quai pour Brighton ?",
+        context: "Quand l'annonce est passée trop vite — demande à un humain.",
+      },
+      {
+        id: "kp-on-time",
+        english: "Is the train on time?",
+        french: "Le train est à l'heure ?",
+        context: "« On time » = à l'heure. Le contraire de ta ligne de RER.",
+      },
+    ],
+    commonMistakes: [
+      {
+        wrong: "The train is late of 15 minutes.",
+        right: "The train is 15 minutes late.",
+        note: "Le retard se met AVANT « late » — et sans « of ».",
+      },
+      {
+        wrong: "Which platform for go to Brighton?",
+        right: "Which platform is it for Brighton?",
+        note: "Pas de « for go ». « For + destination » suffit.",
+      },
+    ],
+    dialogue: [
+      { speaker: "Annonce", text: "The 10:42 to Brighton departs from platform 2." },
+      { speaker: "Toi", text: "Sorry — which platform is it for Brighton?" },
+      { speaker: "Voyageur", text: "Platform 2, just over there." },
+      { speaker: "Toi", text: "Is it on time?" },
+      { speaker: "Voyageur", text: "Delayed by five minutes, apparently." },
+    ],
+    exercises: [
+      {
+        id: "ap-1",
+        type: "choice",
+        variant: "listening",
+        skill: "listening",
+        phraseId: "kp-departs-from",
+        prompt: "Écoute l'annonce. Le train pour Brighton part d'où ?",
+        audio: "The train to Brighton departs from platform 2.",
+        options: ["Du quai 2", "Du quai 10", "Du terminal B"],
+        correctIndex: 0,
+        explanation:
+          "« Departs from platform 2 » — dans une annonce, attrape la destination puis le chiffre.",
+        hints: [
+          "Le chiffre arrive juste après « platform ».",
+          "Deux, en anglais…",
+        ],
+      },
+      {
+        id: "ap-2",
+        type: "choice",
+        variant: "meaning",
+        skill: "comprehension",
+        phraseId: "kp-delayed",
+        prompt: "« The service is delayed. » — concrètement ?",
+        options: [
+          "Le train a du retard",
+          "Le train est annulé",
+          "Le train est déjà parti",
+        ],
+        correctIndex: 0,
+        explanation:
+          "« Delayed » = retardé, « cancelled » = annulé. Les deux mots qui changent ta journée.",
+        hints: [
+          "Ce n'est pas le pire scénario.",
+          "« Cancelled » serait l'annulation.",
+        ],
+      },
+      {
+        id: "ap-3",
+        type: "choice",
+        variant: "listening",
+        skill: "listening",
+        phraseId: "kp-calling-at",
+        prompt: "Écoute. Ce train s'arrête où ?",
+        audio: "This train is calling at Reading and Oxford.",
+        options: [
+          "À Reading et Oxford",
+          "Uniquement à Oxford",
+          "Il appelle un passager",
+        ],
+        correctIndex: 0,
+        explanation:
+          "« Calling at » = desservir. Aucun téléphone dans cette histoire.",
+        hints: [
+          "« Calling at » annonce la liste des arrêts.",
+          "Deux villes sont citées.",
+        ],
+        difficulty: 2,
+      },
+      {
+        id: "ap-4",
+        type: "gap",
+        skill: "phrases",
+        phraseId: "kp-which-platform",
+        prompt: "L'annonce est passée trop vite. Demande :",
+        sentence: "___ platform is it for Brighton?",
+        options: ["Which", "What place", "Where"],
+        correctIndex: 0,
+        explanation:
+          "« Which platform » — on choisit parmi des quais numérotés, donc « which ».",
+        hints: [
+          "Tu choisis parmi une liste de quais.",
+          "Le mot commence par « Wh » et finit par « ich ».",
+        ],
+      },
+      {
+        id: "ap-5",
+        type: "choice",
+        variant: "error-spot",
+        skill: "comprehension",
+        phraseId: "kp-delayed",
+        prompt: "« The train is late of 15 minutes. » — qu'est-ce qui cloche ?",
+        options: [
+          "On dit « 15 minutes late », sans « of »",
+          "Il faut dire « late from 15 minutes »",
+          "Rien, la phrase est correcte",
+        ],
+        correctIndex: 0,
+        explanation:
+          "La durée se place avant « late » : « 15 minutes late ». Le « of » est un pur calque du français.",
+        hints: [
+          "L'ordre des mots est inversé par rapport au français.",
+          "La durée passe devant l'adjectif.",
+        ],
+        difficulty: 2,
+      },
+      {
+        id: "ap-6",
+        type: "build",
+        skill: "phrases",
+        phraseId: "kp-on-time",
+        prompt: "Reconstruis la question",
+        intent: "Demande si le train est à l'heure.",
+        words: ["Is", "the", "train", "on", "time"],
+        answer: "Is the train on time",
+        explanation:
+          "« On time » = à l'heure — le bloc se déplace en entier, préposition comprise.",
+        hints: [
+          "Commence par le verbe : c'est une question.",
+          "« À l'heure » tient en deux petits mots.",
+        ],
+      },
+      {
+        id: "ap-7",
+        type: "choice",
+        variant: "reflex",
+        skill: "reflexes",
+        phraseId: "kp-departs-from",
+        prompt: "Vite : l'annonce dit « platform 4 changed to platform 9 ». Tu vas où ?",
+        options: ["Quai 9", "Quai 4", "Je reste où je suis"],
+        correctIndex: 0,
+        timerSec: 8,
+        explanation:
+          "« Changed to » : la nouvelle info remplace l'ancienne. Direction quai 9.",
+        hints: [
+          "Le dernier chiffre annoncé est le bon.",
+        ],
+      },
+    ],
+    finale: {
+      id: "ap-finale",
+      type: "chat",
+      scene: "Gare de Londres — quais",
+      skill: "listening",
+      prompt: "À toi : l'annonce vient de tomber, réagis.",
+      explanation:
+        "Tu viens de gérer une annonce, un changement de quai et un retard — en anglais.",
+      hints: [
+        "Attrape la destination, le quai, le retard. Le reste est du bruit.",
+      ],
+      turns: [
+        {
+          speaker: "Annonce",
+          text: "The 10:42 to Brighton now departs from platform 9, delayed by ten minutes.",
+        },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "Sorry — which platform is it for Brighton?",
+            "Sorry — which platform for go to Brighton?",
+            "Sorry — where is the train?",
+          ],
+          correctIndex: 0,
+          note: "Vérifier auprès d'un humain : « Which platform is it for… »",
+        },
+        { speaker: "Voyageur", text: "Platform 9 now — they just changed it." },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "Thanks! Is it on time?",
+            "Thanks! Is it in the hour?",
+            "Thanks! The train is late of how much?",
+          ],
+          correctIndex: 0,
+          note: "« On time » — le bloc, en entier.",
+        },
+        { speaker: "Voyageur", text: "Ten minutes late, so you've got time for a coffee." },
+        {
+          speaker: "Toi",
+          text: "",
+          options: [
+            "Perfect, thanks a lot!",
+            "It is a good news.",
+            "I go to drink one coffee so.",
+          ],
+          correctIndex: 0,
+          note: "Fin propre — et va le prendre, ce café.",
+        },
+      ],
+    },
+    rewardFP: 70,
+  },
 ];
 
 export function getChapterById(id: string): Chapter | undefined {

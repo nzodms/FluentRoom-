@@ -65,6 +65,7 @@ export function defaultProgress(): UserProgress {
     spentFP: 0,
     purchasedItems: [],
     purchaseHistory: [],
+    adventureChests: [],
   };
 }
 

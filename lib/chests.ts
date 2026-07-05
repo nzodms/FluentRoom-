@@ -121,10 +121,24 @@ export function openRewardChest(progress: UserProgress): OpenChestOutcome {
   if ((progress.availableChests ?? 0) < 1) return { progress, reward: null };
 
   const reward = rollReward(progress);
+  const next = applyReward(
+    {
+      ...progress,
+      availableChests: progress.availableChests - 1,
+      openedChests: (progress.openedChests ?? 0) + 1,
+    },
+    reward,
+  );
+  return { progress: next, reward };
+}
+
+/** Applique une récompense tirée (FP, énergie, bouclier, item) + journal. */
+export function applyReward(
+  progress: UserProgress,
+  reward: Reward,
+): UserProgress {
   let next: UserProgress = {
     ...progress,
-    availableChests: progress.availableChests - 1,
-    openedChests: (progress.openedChests ?? 0) + 1,
     rewardHistory: [
       ...(progress.rewardHistory ?? []).slice(-19),
       { at: new Date().toISOString(), label: reward.label, rarity: reward.rarity },
@@ -154,5 +168,5 @@ export function openRewardChest(progress: UserProgress): OpenChestOutcome {
       break;
   }
 
-  return { progress: next, reward };
+  return next;
 }

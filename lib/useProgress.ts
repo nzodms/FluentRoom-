@@ -8,6 +8,7 @@ import type {
 } from "@/types/learning";
 import type { AvatarConfig, DailyStepId, Reward } from "@/types/learning";
 import { openRewardChest } from "./chests";
+import { openAdventureChest } from "./adventure/progression";
 import {
   EnergyPurchaseOutcome,
   PurchaseOutcome,
@@ -124,6 +125,13 @@ export function useProgress() {
     return outcome.reward;
   }, []);
 
+  /** Ouvre le coffre bonus d'un node de la map Aventure. */
+  const openBonusChest = useCallback((nodeId: string): Reward | null => {
+    const outcome = openAdventureChest(getSnapshot(), nodeId);
+    if (outcome.reward) setState(outcome.progress);
+    return outcome.reward;
+  }, []);
+
   const setAvatar = useCallback((config: AvatarConfig) => {
     setState({ ...getSnapshot(), avatar: config });
   }, []);
@@ -210,6 +218,7 @@ export function useProgress() {
     reset,
     doDailyStep,
     openChest,
+    openBonusChest,
     setAvatar,
     setCompanion,
     calibrate,

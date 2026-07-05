@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { MotionConfig } from "framer-motion";
 import { Flame, Settings, Zap } from "lucide-react";
 import { useProgress } from "@/lib/useProgress";
@@ -18,13 +19,21 @@ import { todayKey } from "@/lib/utils";
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { progress, ready } = useProgress();
+  const pathname = usePathname();
   const activeToday = progress.lastActiveDate === todayKey();
+  // L'Aventure est une scène immersive plein écran : pas de chrome au-dessus.
+  const immersive = pathname?.startsWith("/app/adventure");
 
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-dvh">
         <AmbientBackground />
-        <header className="sticky top-0 z-40 glass border-b border-ink/5">
+        <header
+          className={cn(
+            "sticky top-0 z-40 glass border-b border-ink/5",
+            immersive && "hidden md:block",
+          )}
+        >
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 md:h-16 md:px-6">
             <Logo href="/app/today" />
             <DesktopNav />
@@ -72,7 +81,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* pb : hauteur de la nav + safe-area — aucun CTA ne passe dessous. */}
-        <main className="mx-auto w-full max-w-xl px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5 md:max-w-2xl md:px-6 md:pb-16">
+        <main
+          className={cn(
+            "mx-auto w-full max-w-xl px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5 md:max-w-2xl md:px-6 md:pb-16",
+            immersive && "max-w-none px-0 pb-0 pt-0 md:max-w-2xl md:px-6 md:pb-16 md:pt-5",
+          )}
+        >
           {children}
         </main>
 

@@ -400,4 +400,6 @@ export interface UserProgress {
   /** Items achetés en boutique. */
   purchasedItems: string[];
   purchaseHistory: Purchase[];
+  /** Coffres bonus de la map Aventure déjà ouverts (ids de nodes). */
+  adventureChests: string[];
 }

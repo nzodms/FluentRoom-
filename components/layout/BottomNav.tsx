@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   Sparkles,
   Headphones,
-  Mic,
+  Map as MapIcon,
   BookMarked,
   TrendingUp,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { href: "/app/today", label: "Aujourd'hui", icon: Sparkles },
   { href: "/app/listen", label: "Écoute", icon: Headphones },
-  { href: "/app/speak", label: "Oral", icon: Mic },
+  { href: "/app/adventure", label: "Aventure", icon: MapIcon },
   { href: "/app/phrases", label: "Phrases", icon: BookMarked },
   { href: "/app/progress", label: "Progrès", icon: TrendingUp },
 ];

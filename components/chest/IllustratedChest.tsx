@@ -72,7 +72,8 @@ export function IllustratedChest({
         rx="62"
         ry="10"
         fill="rgba(23,26,38,0.18)"
-        animate={open ? { rx: 70, opacity: 0.25 } : {}}
+        style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        animate={open ? { scaleX: 1.13, opacity: 0.25 } : { scaleX: 1, opacity: 1 }}
       />
 
       {/* Faisceau de lumière (ouverture) */}
