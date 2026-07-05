@@ -19,6 +19,7 @@ import { ProgressRing } from "@/components/ui/ProgressRing";
 import { EnergyPill } from "@/components/energy/EnergyPill";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { ShopTeaser } from "@/components/shop/ShopTeaser";
+import { ChapterList } from "@/components/chapter/ChapterList";
 import { CompanionCoachCard } from "@/components/companion/CompanionCoachCard";
 import { WelcomeOverlay } from "@/components/companion/WelcomeOverlay";
 import {
@@ -340,11 +341,14 @@ export default function TodayPage() {
         )}
       </Card>
 
+      {/* Chapitres : les vraies leçons */}
+      <ChapterList progress={progress} />
+
       {/* Leçons — structures de l'oral */}
       <div>
         <div className="mb-1 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-lg font-bold tracking-tight text-ink">
-            <BookOpen className="size-5 text-primary-500" /> Learn
+            <BookOpen className="size-5 text-primary-500" /> Blocs express
           </h3>
           <span className="text-sm font-medium text-ink-faint">
             {stats.lessonsMastered} / {lessons.length} blocs

@@ -378,6 +378,15 @@ export interface UserProgress {
   companion: string | null;
   /** Calibrage du plan effectué (après la première leçon). */
   calibratedAt: string | null;
+  /** Maîtrise par chapitre (score, date, phrases fragiles). */
+  chapters: Record<
+    string,
+    { score: number; completedAt: string; fragilePhraseIds: string[] }
+  >;
+  /** Jour de la dernière aide utilisée (reset quotidien). */
+  hintDay: string | null;
+  /** Aides (indices) consommées aujourd'hui — 3 gratuites par jour. */
+  hintsUsedToday: number;
   /** FP dépensés en boutique (availableFP = xp - spentFP). */
   spentFP: number;
   /** Items achetés en boutique. */

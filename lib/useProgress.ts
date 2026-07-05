@@ -9,14 +9,18 @@ import type {
 import type { AvatarConfig, DailyStepId, Reward } from "@/types/learning";
 import { openRewardChest } from "./chests";
 import { PurchaseOutcome, purchaseItem } from "./shop";
+import { spendHintCharge } from "./lessons/hints";
 import {
+  CompleteChapterInput,
+  CompleteChapterOutcome,
+  completeCalibration,
+  completeChapter,
   CompleteLessonOutcome,
   CompleteRoomInput,
   CompleteRoomOutcome,
   ReviewSessionResult,
   claimQuest,
   completeDailyStep,
-  completeCalibration,
   completeDrillSession,
   completeLesson,
   completeReviewSession,
@@ -130,6 +134,21 @@ export function useProgress() {
     return outcome;
   }, []);
 
+  /** Termine un chapitre du moteur de leçons. */
+  const finishChapter = useCallback(
+    (input: CompleteChapterInput): CompleteChapterOutcome => {
+      const outcome = completeChapter(getSnapshot(), input);
+      setState(outcome.progress);
+      return outcome;
+    },
+    [],
+  );
+
+  /** Consomme une aide (indice) du jour. */
+  const spendHint = useCallback(() => {
+    setState(spendHintCharge(getSnapshot()));
+  }, []);
+
   /** Achat boutique : débite les FP et ajoute l'item à l'inventaire. */
   const buyItem = useCallback((itemId: string): PurchaseOutcome => {
     const outcome = purchaseItem(getSnapshot(), itemId);
@@ -176,6 +195,8 @@ export function useProgress() {
     setAvatar,
     setCompanion,
     calibrate,
+    finishChapter,
+    spendHint,
     buyItem,
     beginLesson,
     finishLesson,

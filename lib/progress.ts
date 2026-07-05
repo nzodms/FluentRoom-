@@ -55,6 +55,9 @@ export function defaultProgress(): UserProgress {
     streakShields: 0,
     companion: null,
     calibratedAt: null,
+    chapters: {},
+    hintDay: null,
+    hintsUsedToday: 0,
     spentFP: 0,
     purchasedItems: [],
     purchaseHistory: [],
@@ -555,4 +558,64 @@ export function completeCalibration(
     ),
   );
   return { progress: next, xpEarned };
+}
+
+/* ---------- Chapitres (moteur de leçons) ---------- */
+
+export interface CompleteChapterInput {
+  chapterId: string;
+  masteryScore: number;
+  fragilePhraseIds: string[];
+  noHints: boolean;
+  /** FP calculés par le moteur (base + bonus - malus doux). */
+  fpEarned: number;
+  /** Phrases clés à verser dans la banque de phrases. */
+  unlockedPhrases: { id: string; mastered: boolean }[];
+}
+
+export interface CompleteChapterOutcome {
+  progress: UserProgress;
+  xpEarned: number;
+  newBadges: string[];
+}
+
+/** Termine un chapitre : FP, phrases, coffre, streak, badges, énergie. */
+export function completeChapter(
+  progress: UserProgress,
+  input: CompleteChapterInput,
+): CompleteChapterOutcome {
+  const already = Boolean(progress.chapters?.[input.chapterId]);
+  const practiceMode = currentEnergy(progress) === 0;
+  const xpEarned = Math.round(
+    (already ? input.fpEarned * 0.4 : input.fpEarned) * (practiceMode ? 0.5 : 1),
+  );
+
+  let next: UserProgress = {
+    ...progress,
+    chapters: {
+      ...(progress.chapters ?? {}),
+      [input.chapterId]: {
+        score: input.masteryScore,
+        completedAt: new Date().toISOString(),
+        fragilePhraseIds: input.fragilePhraseIds,
+      },
+    },
+  };
+
+  // Phrases clés : versées dans la banque ; les maîtrisées montent d'un cran.
+  next = unlockPhrases(next, input.unlockedPhrases.map((p) => p.id));
+  for (const phrase of input.unlockedPhrases) {
+    if (phrase.mastered) next = reviewPhrase(next, phrase.id);
+  }
+
+  next = addXp(next, xpEarned);
+  next = spendEnergy(next);
+  next = addChestProgress(next, CHEST_FILL.lesson);
+  next = completeDailyStep(next, "lesson");
+  next = touchToday(next);
+
+  const before = new Set(progress.earnedBadges);
+  next = refreshBadges(next);
+  const newBadges = next.earnedBadges.filter((id) => !before.has(id));
+  return { progress: next, xpEarned, newBadges };
 }
