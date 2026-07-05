@@ -22,11 +22,57 @@ import { FluentCharacter } from "@/components/avatar/FluentCharacter";
 import { expressionForToday } from "@/lib/avatar-reactions";
 import { RewardRoom } from "@/components/rewards/RewardRoom";
 import { ShopTeaser } from "@/components/shop/ShopTeaser";
+import {
+  GuidedTour,
+  useGuidedTour,
+  type TourStep,
+} from "@/components/tour/GuidedTour";
 import { DailyPath } from "@/components/today/DailyPath";
 import { NextActionHero } from "@/components/today/NextActionHero";
 import { QuestList } from "@/components/today/QuestList";
 
 const DAY_INITIALS = ["L", "M", "M", "J", "V", "S", "D"];
+
+/** Mini tour guidé à la première arrivée sur Today. */
+const TODAY_TOUR: TourStep[] = [
+  {
+    id: "next-action",
+    target: "next-action",
+    title: "Ta prochaine action est toujours ici",
+    message:
+      "Une seule mission à la fois : tu écoutes, tu comprends, tu réponds — puis tu gagnes ta récompense.",
+    expression: "focused",
+    accent: "primary",
+  },
+  {
+    id: "daily-path",
+    target: "daily-path",
+    title: "Ton chemin quotidien",
+    message:
+      "Tu avances étape par étape : écoute, bloc utile, oral, révision. Pas besoin d'aller vite.",
+    expression: "relaxed",
+    accent: "primary",
+  },
+  {
+    id: "energy",
+    target: "energy",
+    title: "Ton énergie structure ton rythme",
+    message:
+      "Chaque vraie session en utilise un peu. Elle revient chaque jour — c'est un rythme, pas une limite.",
+    expression: "focused",
+    accent: "mint",
+    shape: "pill",
+  },
+  {
+    id: "fp-shop",
+    target: "fp-shop",
+    title: "Tes efforts ont une valeur",
+    message:
+      "Tu gagnes des FP en apprenant vraiment. Dépense-les pour personnaliser ton personnage.",
+    expression: "excited",
+    accent: "gold",
+  },
+];
 
 function lastSevenDays(): string[] {
   const days: string[] = [];
@@ -42,6 +88,7 @@ export default function TodayPage() {
   const { progress, ready, stats, doDailyStep, openChest, takeQuestReward } =
     useProgress();
   const [chestOpen, setChestOpen] = useState(false);
+  const tour = useGuidedTour("today", ready && progress.onboarding !== null);
 
   const completedIds = Object.keys(progress.completedRooms);
   const todayRoom = getTodayRoom(completedIds);
@@ -106,7 +153,9 @@ export default function TodayPage() {
 
       {/* Focus Energy */}
       <div className="flex items-center justify-between">
-        <EnergyPill progress={progress} />
+        <span data-tour="energy" className="inline-block">
+          <EnergyPill progress={progress} />
+        </span>
         <p className="text-xs font-medium text-ink-faint">
           Chaque session utilise de l&apos;énergie. Elle revient demain.
         </p>
@@ -194,13 +243,16 @@ export default function TodayPage() {
       </Card>
 
       {/* LA prochaine action — une mission, un bouton */}
-      <NextActionHero progress={progress} onChestClaim={() => setChestOpen(true)} />
+      <div data-tour="next-action">
+        <NextActionHero progress={progress} onChestClaim={() => setChestOpen(true)} />
+      </div>
 
       {/* Fluency Path */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.14 }}
+        data-tour="daily-path"
       >
         <DailyPath
           room={todayRoom}
@@ -234,6 +286,7 @@ export default function TodayPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.22 }}
+        data-tour="fp-shop"
       >
         <ShopTeaser progress={progress} />
       </motion.div>
@@ -388,6 +441,11 @@ export default function TodayPage() {
           })}
         </div>
       </div>
+      {/* Visite guidée : première arrivée sur Today */}
+      <AnimatePresence>
+        {tour.open && <GuidedTour steps={TODAY_TOUR} onClose={tour.close} />}
+      </AnimatePresence>
+
       {/* Reward Room plein écran */}
       <AnimatePresence>
         {chestOpen && (

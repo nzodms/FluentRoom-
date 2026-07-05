@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, ChevronRight, Crown, RotateCcw, Shield, ShoppingBag } from "lucide-react";
 import { getLevelForXp } from "@/data/levels";
@@ -10,6 +11,7 @@ import { availableFP } from "@/lib/shop";
 import { MAX_SHIELDS } from "@/lib/chests";
 import { AvatarCharacter } from "@/components/avatar/AvatarCharacter";
 import { LearningGlyph } from "@/components/icons/learning-icons";
+import { resetTour } from "@/components/tour/GuidedTour";
 import { AvatarCustomizer } from "@/components/avatar/AvatarCustomizer";
 import { BRAND } from "@/lib/brand";
 import { Card } from "@/components/ui/Card";
@@ -26,6 +28,7 @@ const goalLabels: Record<string, string> = {
 };
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { progress, ready, reset, setAvatar } = useProgress();
   const [confirmReset, setConfirmReset] = useState(false);
   const level = getLevelForXp(progress.xp);
@@ -127,6 +130,29 @@ export default function SettingsPage() {
           </div>
         </Card>
       )}
+
+      {/* Revoir l'introduction */}
+      <Card animate delay={0.06} className="flex items-center gap-3.5 p-4">
+        <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-mint-50 text-mint-600">
+          <RotateCcw className="size-4.5" strokeWidth={2.2} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-ink">Revoir l&apos;introduction</p>
+          <p className="text-xs text-ink-soft">
+            Relance la visite guidée de ton écran du jour.
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            resetTour("today");
+            router.push("/app/today");
+          }}
+        >
+          Revoir
+        </Button>
+      </Card>
 
       {/* Préférences */}
       <Card animate delay={0.08} className="divide-y divide-ink/5 p-0">

@@ -482,7 +482,7 @@ export default function ProgressPage() {
                 key={badge.id}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.45 + i * 0.04 }}
+                transition={{ delay: 0.3 + Math.min(i, 6) * 0.04 }}
                 whileTap={{ scale: 0.94 }}
                 onClick={() => setOpenBadge(badge)}
                 className={cn(

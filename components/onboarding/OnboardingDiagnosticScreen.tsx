@@ -22,10 +22,27 @@ export interface MiniTestResults {
 const PROFILES: Record<OnboardingBlocker, string> = {
   "fast-speech": "Fast Listener Starter",
   "blocked-reply": "Natural Responder Starter",
-  translating: "Block Thinker Starter",
-  vocab: "Phrase Collector Starter",
-  shy: "Confident Speaker Starter",
+  translating: "No-Translate Builder",
+  vocab: "Real Phrases Builder",
+  shy: "Speak Confidence Starter",
 };
+
+const ANALYSIS_LABELS = [
+  "Analyse de ton oreille…",
+  "Analyse de tes réflexes…",
+  "Analyse de tes phrases naturelles…",
+  "Plan prêt ✓",
+];
+
+const WEEK_PLAN = [
+  "Comprendre une phrase rapide",
+  "Répondre sans traduire",
+  "Apprendre 5 phrases naturelles",
+  "Corriger un piège francophone",
+  "Parler à voix haute",
+  "Réviser tes blocs",
+  "Mini-simulation réelle",
+];
 
 const BLOCKER_LINES: Record<OnboardingBlocker, string> = {
   "fast-speech": "Tu comprends des mots, mais tu bloques sur le rythme réel.",
@@ -76,6 +93,7 @@ export function OnboardingDiagnosticScreen({
   onStart: () => void;
 }) {
   const [phase, setPhase] = useState<"analyzing" | "result">("analyzing");
+  const [labelIndex, setLabelIndex] = useState(0);
   const score = Number(results.listen) + Number(results.reflex) + Number(results.phrase);
 
   const skills: SkillCard[] = [
@@ -86,8 +104,15 @@ export function OnboardingDiagnosticScreen({
   ];
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase("result"), 3400);
-    return () => clearTimeout(t);
+    const label = setInterval(
+      () => setLabelIndex((i) => Math.min(i + 1, ANALYSIS_LABELS.length - 1)),
+      850,
+    );
+    const t = setTimeout(() => setPhase("result"), 3600);
+    return () => {
+      clearInterval(label);
+      clearTimeout(t);
+    };
   }, []);
 
   if (phase === "analyzing") {
@@ -102,13 +127,22 @@ export function OnboardingDiagnosticScreen({
             showBackground={false}
           />
         </div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-4 text-lg font-bold text-ink"
-        >
-          Analyse de ton profil…
-        </motion.p>
+        <p className="mt-4 text-lg font-bold text-ink">Création de ton plan</p>
+        <span className="relative mt-1 block h-5 w-56 text-center">
+          <motion.span
+            key={labelIndex}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className={
+              labelIndex === ANALYSIS_LABELS.length - 1
+                ? "absolute inset-0 text-sm font-semibold text-mint-600"
+                : "absolute inset-0 text-sm font-medium text-ink-soft"
+            }
+          >
+            {ANALYSIS_LABELS[labelIndex]}
+          </motion.span>
+        </span>
         <div className="mt-1.5 h-1.5 w-44 overflow-hidden rounded-full bg-ink/8">
           <motion.div
             className="h-full rounded-full gradient-primary"
@@ -263,10 +297,27 @@ export function OnboardingDiagnosticScreen({
         transition={{ delay: 0.85 }}
         className="mt-3 rounded-2xl bg-gold-50 p-3.5 text-sm"
       >
-        <p className="font-bold text-gold-500">Objectif 7 jours</p>
+        <p className="font-bold text-gold-500">Ta première semaine</p>
         <p className="mt-0.5 text-ink-soft">
-          Comprendre et utiliser <span className="font-bold text-ink">25 phrases réelles</span>.
+          Objectif : comprendre et utiliser{" "}
+          <span className="font-bold text-ink">25 phrases réelles</span>.
         </p>
+        <div className="mt-2.5 space-y-1.5">
+          {WEEK_PLAN.map((day, i) => (
+            <motion.div
+              key={day}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.95 + i * 0.07 }}
+              className="flex items-center gap-2.5"
+            >
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-gold-400/20 text-[10px] font-bold text-gold-500">
+                J{i + 1}
+              </span>
+              <p className="text-xs font-semibold text-ink-soft">{day}</p>
+            </motion.div>
+          ))}
+        </div>
       </motion.div>
 
       <motion.div

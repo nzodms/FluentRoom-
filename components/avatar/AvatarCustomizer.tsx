@@ -91,20 +91,16 @@ export function AvatarCustomizer({
           aria-hidden
           className="absolute bottom-5 h-6 w-44 rounded-[50%] bg-ink/8"
         />
-        <motion.div
-          key={JSON.stringify(config)}
-          initial={{ scale: 0.92 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 18 }}
-          className="relative"
-        >
+        {/* Pas de remount à l'équipement : le personnage reste monté,
+            seule l'expression réagit — aucun flash. */}
+        <div className="relative">
           <FluentCharacter
             config={config}
             expression={expression}
             size={160}
             showBackground={false}
           />
-        </motion.div>
+        </div>
       </div>
 
       {/* Onglets */}
