@@ -80,7 +80,7 @@ export function DailyPath({
   const steps = [
     {
       id: "warmup" as const,
-      title: "Warm-up",
+      title: "Échauffement",
       minutes: 1,
       detail: "Réveille ton oreille avec 3 phrases",
       icon: <Flame className="size-4" strokeWidth={2.2} />,

@@ -15,11 +15,11 @@ import { getDailySteps } from "@/lib/progress";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/app/today", label: "Today", icon: Sparkles },
-  { href: "/app/listen", label: "Listen", icon: Headphones },
-  { href: "/app/speak", label: "Speak", icon: Mic },
+  { href: "/app/today", label: "Aujourd'hui", icon: Sparkles },
+  { href: "/app/listen", label: "Écoute", icon: Headphones },
+  { href: "/app/speak", label: "Oral", icon: Mic },
   { href: "/app/phrases", label: "Phrases", icon: BookMarked },
-  { href: "/app/progress", label: "Progress", icon: TrendingUp },
+  { href: "/app/progress", label: "Progrès", icon: TrendingUp },
 ];
 
 /** Badge discret : action encore disponible sur cet onglet aujourd'hui. */

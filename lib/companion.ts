@@ -29,6 +29,9 @@ export type CompanionEvent =
   | "error-streak"
   | "mission"
   | "calibrate-invite"
+  | "listen-hint"
+  | "speak-hint"
+  | "phrases-hint"
   | "memory";
 
 /**
@@ -101,6 +104,19 @@ const VARIANTS: Record<CompanionEvent, string[]> = {
   "calibrate-invite": [
     "Maintenant que tu as découvert l'app, je peux affiner ton plan en 2 minutes.",
     "Deux minutes de calibrage, et ton plan devient vraiment le tien.",
+  ],
+  "listen-hint": [
+    "Tu n'as pas besoin de tout comprendre — attrape l'idée, le reste suit.",
+    "Deux minutes d'oreille aujourd'hui, et l'anglais rapide fait moins peur.",
+  ],
+  "speak-hint": [
+    "Pas besoin d'être parfait. On cherche le réflexe.",
+    "Personne n'écoute à part moi — et je ne juge pas. Vas-y.",
+    "Objectif : 30 secondes de fluidité, pas un discours.",
+  ],
+  "phrases-hint": [
+    "{missing} phrases à revoir — une minute suffit à les ancrer.",
+    "Chaque session ajoute des phrases réelles à ta collection.",
   ],
   memory: [],
 };
@@ -185,6 +201,24 @@ export function todayEvent(progress: UserProgress): CompanionEvent {
   if (hint && hint.missing === 0 && availableFP(progress) >= 90)
     return "shop-affordable";
   return "memory";
+}
+
+/** Conseil sur l'onglet Phrases : dépend des révisions en attente. */
+export function phrasesHint(progress: UserProgress, toReview: number): string {
+  if (toReview > 0)
+    return `${toReview} phrase${toReview > 1 ? "s" : ""} à revoir — une minute suffit à les ancrer.`;
+  return "Chaque session ajoute des phrases réelles à ta collection.";
+}
+
+/** Commentaire de progrès : uniquement des données réelles. */
+export function progressComment(progress: UserProgress): string {
+  if (progress.listeningScore >= progress.speakingScore + 10)
+    return "Ta compréhension monte vite. Cette semaine, on renforce surtout l'oral.";
+  if (progress.speakingScore >= progress.listeningScore + 10)
+    return "Ton oral progresse bien. On continue de muscler l'oreille.";
+  if (progress.streak >= 3)
+    return `${progress.streak} jours d'affilée — ta régularité fait le travail.`;
+  return "Chaque session rend ton anglais plus automatique. Continue.";
 }
 
 /* ---------- Calibrage : proposé après la première leçon ---------- */

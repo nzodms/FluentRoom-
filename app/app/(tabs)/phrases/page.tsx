@@ -8,6 +8,8 @@ import { speakText } from "@/lib/speech";
 import type { Phrase, PhraseStatus } from "@/types/learning";
 import { allPhrases, getDailyPhrase, phraseCategories } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
+import { phrasesHint } from "@/lib/companion";
+import { CompanionHint } from "@/components/companion/CompanionHint";
 import { PhraseCard } from "@/components/phrase/PhraseCard";
 import { PhrasePackCard } from "@/components/phrase/PhrasePackCard";
 import { ReviewSession } from "@/components/phrase/ReviewSession";
@@ -23,7 +25,7 @@ const statusFilters: Array<{ id: PhraseStatus | "all"; label: string }> = [
 ];
 
 export default function PhrasesPage() {
-  const { progress, ready, practice, finishReviewSession } = useProgress();
+  const { progress, ready, practice, finishReviewSession, stats } = useProgress();
   const [statusFilter, setStatusFilter] = useState<PhraseStatus | "all">("all");
   const [category, setCategory] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -131,6 +133,13 @@ export default function PhrasesPage() {
         </p>
       </div>
 
+      {/* Suggestion du compagnon */}
+      <CompanionHint
+        progress={progress}
+        line={phrasesHint(progress, stats.phrasesToReview)}
+        expression="happy"
+      />
+
       {/* Complétion de la collection */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -139,7 +148,7 @@ export default function PhrasesPage() {
       >
         <div className="flex items-center justify-between">
           <p className="text-sm font-bold text-ink">
-            💎 Collection : {unlockedIds.size} / {allPhrases.length}
+            Collection : {unlockedIds.size} / {allPhrases.length}
           </p>
           <span className="text-xs font-bold text-primary-600">
             {Math.round((unlockedIds.size / allPhrases.length) * 100)} %
@@ -174,7 +183,7 @@ export default function PhrasesPage() {
           </button>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gold-500">
-              ✨ Phrase du jour
+              Phrase du jour
             </p>
             <p className="truncate font-bold text-ink">
               {todaysPhrase.english}
@@ -346,7 +355,7 @@ export default function PhrasesPage() {
       {lockedCount > 0 && unlockedIds.size > 0 && (
         <div>
           <p className="mb-2.5 text-sm font-bold text-ink">
-            🔒 Prochaines pièces de ta collection
+            Prochaines pièces de ta collection
           </p>
           <div className="space-y-2.5">
             {lockedPreview.map((phrase) => (

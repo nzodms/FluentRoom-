@@ -11,6 +11,8 @@ import { getLevelForXp, getNextLevel, levels } from "@/data/levels";
 import { getRoomById } from "@/data/rooms";
 import { useProgress } from "@/lib/useProgress";
 import { computeQuests } from "@/lib/quests";
+import { progressComment } from "@/lib/companion";
+import { CompanionHint } from "@/components/companion/CompanionHint";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressRing } from "@/components/ui/ProgressRing";
@@ -19,6 +21,7 @@ import { NextBestAction } from "@/components/today/NextBestAction";
 import { QuestList } from "@/components/today/QuestList";
 import { cn, formatDuration, isWithinHours, todayKey } from "@/lib/utils";
 import {
+  LearningGlyph,
   LearningIcon,
   type LearningIconName,
 } from "@/components/icons/learning-icons";
@@ -45,7 +48,7 @@ function lastSevenDays(): string[] {
 /** État lisible du niveau d'anglais aujourd'hui. */
 function englishToday(fluency: number, roomsCompleted: number): string {
   if (roomsCompleted === 0)
-    return "Ton profil démarre. Première room = premières fondations.";
+    return "Ton profil démarre. Première session = premières fondations.";
   if (fluency < 25)
     return "Tes fondations se posent. Chaque session rend ton anglais plus automatique.";
   if (fluency < 50)
@@ -83,35 +86,31 @@ export default function ProgressPage() {
   const skills = [
     {
       id: "listening",
-      emoji: "🎧",
-      label: "Listening",
+      label: "Écoute",
       value: progress.listeningScore,
       color: "var(--color-primary-500)",
       hint: "Ton oreille à vitesse réelle",
     },
     {
       id: "speaking",
-      emoji: "🎙️",
-      label: "Speaking",
+      label: "Oral",
       value: progress.speakingScore,
       color: "var(--color-mint-500)",
       hint: "Ta confiance à l'oral",
     },
     {
       id: "phrases",
-      emoji: "💎",
-      label: "Real phrases",
+      label: "Phrases réelles",
       value: phrasesSkill,
       color: "var(--color-gold-400)",
       hint: `${stats.phrasesUnlocked} phrases · ${stats.phrasesMastered} maîtrisées`,
     },
     {
       id: "reflexes",
-      emoji: "⚡️",
-      label: "Reflexes",
+      label: "Réflexes",
       value: reflexes,
       color: "var(--color-coral-500)",
-      hint: "Révisions et ear training",
+      hint: "Révisions et entraînement d'oreille",
     },
   ];
   const strongest = skills.reduce((a, b) => (b.value > a.value ? b : a));
@@ -121,15 +120,15 @@ export default function ProgressPage() {
   const timeline = [
     ...Object.values(progress.completedRooms).map((r) => ({
       at: r.completedAt,
-      emoji: getRoomById(r.roomId)?.emoji ?? "🚪",
-      text: `Room ${getRoomById(r.roomId)?.title ?? r.roomId} · ${r.comprehension}%`,
+      icon: "listen" as LearningIconName,
+      text: `Session ${getRoomById(r.roomId)?.titleFr ?? r.roomId} · ${r.comprehension}%`,
       xp: r.xpEarned,
     })),
     ...Object.entries(progress.lessons ?? {})
       .filter(([, s]) => s.completedAt)
       .map(([id, s]) => ({
         at: s.completedAt as string,
-        emoji: "🧱",
+        icon: "lesson" as LearningIconName,
         text: `Bloc appris : ${id.replace(/-/g, " ")}`,
         xp: 30,
       })),
@@ -146,14 +145,21 @@ export default function ProgressPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-ink">
-          Fluency Profile
+          Profil d&apos;aisance
         </h1>
         <p className="text-sm text-ink-soft">
           Chaque session rend ton anglais plus automatique.
         </p>
       </div>
 
-      {/* Fluency Aura */}
+      {/* Commentaire du compagnon : données réelles uniquement */}
+      <CompanionHint
+        progress={progress}
+        line={progressComment(progress)}
+        expression="proud"
+      />
+
+      {/* Aura d'aisance */}
       <Card animate className="card-tint-primary flex items-center gap-5 p-5">
         <div className="relative">
           <motion.span
@@ -172,7 +178,7 @@ export default function ProgressPage() {
                   <CountUp value={stats.fluency} />
                 </span>
                 <span className="block text-[9px] font-bold uppercase tracking-wide text-ink-faint">
-                  Fluency
+                  Aisance
                 </span>
               </span>
             }
@@ -186,9 +192,9 @@ export default function ProgressPage() {
             {englishToday(stats.fluency, stats.roomsCompleted)}
           </p>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
-            <Chip tone="mint">💪 {strongest.label}</Chip>
+            <Chip tone="mint">Point fort · {strongest.label}</Chip>
             {strongest.id !== weakest.id && (
-              <Chip tone="coral">🎯 {weakest.label}</Chip>
+              <Chip tone="coral">À muscler · {weakest.label}</Chip>
             )}
           </div>
         </div>
@@ -253,21 +259,21 @@ export default function ProgressPage() {
             <p className="truncate text-sm text-ink-soft">
               {weakest.id === "speaking"
                 ? "3 minutes sur Speak et ta confiance monte."
-                : "Un ear training et ton score décolle."}
+                : "Un entraînement d'oreille et ton score décolle."}
             </p>
           </div>
           <ChevronRight className="size-4 shrink-0 text-ink-faint" />
         </motion.div>
       </Link>
 
-      {/* Next evolution */}
+      {/* Prochaine évolution */}
       <Card animate delay={0.22} className="overflow-hidden p-0">
         <div className="relative gradient-primary p-5 text-white">
           <span className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-white/10" />
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest opacity-80">
-                Next evolution
+                Prochaine évolution
               </p>
               <p className="mt-1 text-2xl font-bold tracking-tight">
                 {level.name}
@@ -332,7 +338,7 @@ export default function ProgressPage() {
         <QuestList
           quests={quests}
           scope="weekly"
-          title="🏹 Quêtes de la semaine"
+          title="Quêtes de la semaine"
           onClaim={(quest) => takeQuestReward(quest.key, quest.xp)}
         />
       </motion.div>
@@ -396,17 +402,17 @@ export default function ProgressPage() {
       <div className="grid grid-cols-3 gap-2.5">
         {[
           {
-            emoji: "🚪",
+            icon: "warmup" as LearningIconName,
             value: `${stats.roomsCompleted}`,
-            label: "rooms",
+            label: "sessions",
           },
           {
-            emoji: "🧱",
+            icon: "lesson" as LearningIconName,
             value: `${stats.lessonsMastered}`,
             label: "blocs appris",
           },
           {
-            emoji: "🎧",
+            icon: "listen" as LearningIconName,
             value:
               stats.listeningTimeSec > 0
                 ? formatDuration(stats.listeningTimeSec)
@@ -421,7 +427,9 @@ export default function ProgressPage() {
             transition={{ delay: 0.35 + i * 0.05 }}
             className="card-soft p-3 text-center"
           >
-            <span className="text-lg">{stat.emoji}</span>
+            <span className="mx-auto grid size-8 place-items-center rounded-xl bg-primary-50 text-primary-600">
+              <LearningGlyph name={stat.icon} className="size-4" />
+            </span>
             <p className="text-lg font-bold text-ink">{stat.value}</p>
             <p className="text-[10px] font-semibold text-ink-faint">
               {stat.label}
@@ -433,7 +441,7 @@ export default function ProgressPage() {
       {/* Recent wins */}
       {timeline.length > 0 && (
         <Card animate delay={0.4} className="p-5">
-          <p className="font-bold text-ink">🏅 Dernières victoires</p>
+          <p className="font-bold text-ink">Dernières victoires</p>
           <div className="mt-3 space-y-3">
             {timeline.map((item, i) => (
               <motion.div
@@ -443,8 +451,8 @@ export default function ProgressPage() {
                 transition={{ delay: 0.45 + i * 0.06 }}
                 className="flex items-center gap-3"
               >
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-50 text-lg">
-                  {item.emoji}
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary-600">
+                  <LearningGlyph name={item.icon} className="size-4" />
                 </span>
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
                   {item.text}

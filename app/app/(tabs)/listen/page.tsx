@@ -25,6 +25,9 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { ProgressRing } from "@/components/ui/ProgressRing";
 import { DrillSession } from "@/components/exercises/DrillSession";
+import { CompanionHint } from "@/components/companion/CompanionHint";
+import { LearningGlyph } from "@/components/icons/learning-icons";
+import { companionLine } from "@/lib/companion";
 
 const fastEnglishRoom = getRoomById("fast-english");
 
@@ -32,19 +35,19 @@ const accents = [
   {
     id: "US",
     label: "Accent américain",
-    emoji: "🇺🇸",
+    tag: "US",
     text: "Rythme rapide, voyelles étirées, contractions partout.",
   },
   {
     id: "UK",
     label: "Accent britannique",
-    emoji: "🇬🇧",
+    tag: "UK",
     text: "Plus articulé, mais des mots avalés différemment.",
   },
   {
     id: "Mixed",
     label: "Accents mélangés",
-    emoji: "🌍",
+    tag: "MIX",
     text: "Le vrai monde : un mélange d'accents dans chaque scène.",
   },
 ] as const;
@@ -76,7 +79,7 @@ export default function ListenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-ink">
-            Listen
+            Écoute
           </h1>
           <p className="text-sm text-ink-soft">
             Entraîne ton oreille à l&apos;anglais qui va vite.
@@ -94,10 +97,17 @@ export default function ListenPage() {
             }
           />
           <span className="mt-0.5 text-[10px] font-semibold text-ink-faint">
-            Listening
+            Écoute
           </span>
         </div>
       </div>
+
+      {/* Conseil du compagnon */}
+      <CompanionHint
+        progress={progress}
+        line={companionLine("listen-hint", progress)}
+        expression="focused"
+      />
 
       {/* Challenge d'écoute du jour */}
       <motion.button
@@ -109,9 +119,9 @@ export default function ListenPage() {
       >
         <div className="flex items-center justify-between">
           <Chip className="bg-white/15 text-white">
-            <Ear className="size-3" /> Today&apos;s listening challenge
+            <Ear className="size-3" /> Défi d&apos;écoute du jour
           </Chip>
-          <span className="text-xs font-semibold opacity-85">2 min</span>
+          <span className="text-xs font-semibold opacity-85">2 min · +15 FP</span>
         </div>
         <p className="mt-3 text-xl font-bold">
           5 exercices pour ton oreille
@@ -135,7 +145,7 @@ export default function ListenPage() {
             <div className="min-w-0 flex-1">
               <p className="font-bold text-ink">Ton point faible du moment</p>
               <p className="truncate text-sm text-ink-soft">
-                {weakestRoom.emoji} {weakestRoom.title} — compris à{" "}
+                {weakestRoom.titleFr} — compris à{" "}
                 {weakest.comprehension} %. Une réécoute et ça monte.
               </p>
             </div>
@@ -172,10 +182,10 @@ export default function ListenPage() {
         </div>
         <Link href="/app/room/fast-english" className="mt-3 block">
           <div className="card-soft flex items-center gap-3 p-4 transition-all hover:shadow-lift">
-            <span className="text-2xl">⚡️</span>
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-600"><LearningGlyph name="fast" className="size-5" /></span>
             <div className="flex-1">
               <p className="font-bold text-ink">
-                Room complète : Understanding Fast English
+                Session complète : Comprendre l&apos;anglais rapide
               </p>
               <p className="text-sm text-ink-soft">
                 gonna, wanna, gotta… décodés une bonne fois pour toutes
@@ -202,7 +212,7 @@ export default function ListenPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-ink">Native Speed Challenge</p>
                 <p className="truncate text-sm text-ink-soft">
-                  {nativeSpeedRoom.emoji} {nativeSpeedRoom.title} — à vitesse
+                  {nativeSpeedRoom.titleFr} — à vitesse
                   réelle, sans ralenti
                 </p>
               </div>
@@ -245,7 +255,7 @@ export default function ListenPage() {
             >
               <Link href={`/app/room/${room.id}`}>
                 <div className="card-soft p-4 transition-all hover:shadow-lift">
-                  <span className="text-3xl">{room.emoji}</span>
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-600"><LearningGlyph name="listen" className="size-5" /></span>
                   <p className="mt-2 font-bold leading-tight text-ink">
                     {room.title}
                   </p>
@@ -277,7 +287,7 @@ export default function ListenPage() {
                 className="block"
               >
                 <Card className="flex items-center gap-4 p-4 transition-all hover:shadow-lift">
-                  <span className="text-3xl">{accent.emoji}</span>
+                  <span className="grid h-9 w-12 shrink-0 place-items-center rounded-xl bg-primary-50 text-xs font-bold tracking-wide text-primary-600">{accent.tag}</span>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-ink">{accent.label}</p>
                     <p className="truncate text-sm text-ink-soft">

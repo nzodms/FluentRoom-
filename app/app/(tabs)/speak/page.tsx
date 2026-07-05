@@ -18,6 +18,8 @@ import type { Phrase } from "@/types/learning";
 import { rooms } from "@/data/rooms";
 import { getPhraseById } from "@/data/phrases";
 import { useProgress } from "@/lib/useProgress";
+import { companionLine } from "@/lib/companion";
+import { CompanionHint } from "@/components/companion/CompanionHint";
 import { useRecognition } from "@/lib/useRecognition";
 import { speakText } from "@/lib/speech";
 import { Card } from "@/components/ui/Card";
@@ -80,9 +82,9 @@ export default function SpeakPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink">Speak</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink">Oral</h1>
           <p className="text-sm text-ink-soft">
-            Fais sortir les mots. Natural, not perfect.
+            Entraîne-toi à répondre naturellement, sans chercher tes mots.
           </p>
         </div>
         <div className="flex flex-col items-center">
@@ -102,6 +104,13 @@ export default function SpeakPage() {
           </span>
         </div>
       </div>
+
+      {/* Le compagnon dédramatise */}
+      <CompanionHint
+        progress={progress}
+        line={companionLine("speak-hint", progress)}
+        expression="encouraging"
+      />
 
       {/* 30-second challenge */}
       <ThirtySecondChallenge />
@@ -532,7 +541,7 @@ function ConfidenceBuilder({
           animate={{ opacity: 1, y: 0 }}
           className="mt-3 rounded-2xl bg-mint-50 p-3 text-sm font-semibold text-mint-600"
         >
-          🎙️ Trois phrases dites. C&apos;est exactement comme ça qu&apos;on
+          Trois phrases dites. C&apos;est exactement comme ça qu&apos;on
           arrête de bloquer.
         </motion.p>
       )}

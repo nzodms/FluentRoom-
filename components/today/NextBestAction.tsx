@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import {
+  LearningGlyph,
+  type LearningIconName,
+} from "@/components/icons/learning-icons";
 import { ArrowRight, Sparkles } from "lucide-react";
 import type { UserProgress } from "@/types/learning";
 import { getDailySteps } from "@/lib/progress";
@@ -12,7 +16,7 @@ interface Action {
   label: string;
   detail: string;
   href: string;
-  emoji: string;
+  icon: LearningIconName;
 }
 
 /** Décide la meilleure action suivante selon l'état du jour. */
@@ -29,9 +33,9 @@ export function nextBestAction(progress: UserProgress): Action | null {
   if (!steps.includes("room")) {
     return {
       label: "Lance ta session du jour",
-      detail: `${room.emoji} ${room.title} · ${room.duration} min · +${room.phrases.length} phrases réelles`,
+      detail: `${room.titleFr} · ${room.duration} min · +${room.phrases.length} phrases réelles`,
       href: `/app/room/${room.id}`,
-      emoji: "🎧",
+      icon: "listen" as LearningIconName,
     };
   }
   if (!steps.includes("lesson")) {
@@ -39,7 +43,7 @@ export function nextBestAction(progress: UserProgress): Action | null {
       label: "Apprends le bloc du jour",
       detail: `${lesson.structure} — 3 min pour un réflexe de plus`,
       href: `/app/lesson/${lesson.id}`,
-      emoji: "🧱",
+      icon: "lesson" as LearningIconName,
     };
   }
   if (!steps.includes("review") && hasPhrases) {
@@ -47,7 +51,7 @@ export function nextBestAction(progress: UserProgress): Action | null {
       label: "Révision express",
       detail: "5 phrases en 1 minute, pour ne pas les perdre",
       href: "/app/phrases?review=1",
-      emoji: "🔁",
+      icon: "review" as LearningIconName,
     };
   }
   if (steps.length < 4) {
@@ -55,7 +59,7 @@ export function nextBestAction(progress: UserProgress): Action | null {
       label: "Encore une étape",
       detail: "Termine ton path pour sécuriser ta journée",
       href: "/app/today",
-      emoji: "⚡️",
+      icon: "warmup" as LearningIconName,
     };
   }
   return null;
@@ -79,7 +83,7 @@ export function NextBestAction({ progress }: { progress: UserProgress }) {
             transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.5 }}
             className="grid size-11 shrink-0 place-items-center rounded-2xl gradient-primary text-xl text-white glow-primary"
           >
-            {action.emoji}
+            <LearningGlyph name={action.icon} className="size-5" />
           </motion.span>
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary-600">
