@@ -39,10 +39,13 @@ export function AdventurePath({
   width,
   height,
   segments,
+  imageScene = false,
 }: {
   width: number;
   height: number;
   segments: PathSegment[];
+  /** Scène illustrée : pointillés clairs assortis à la peinture. */
+  imageScene?: boolean;
 }) {
   if (width === 0 || height === 0) return null;
 
@@ -79,11 +82,11 @@ export function AdventurePath({
               <path
                 d={d}
                 fill="none"
-                stroke="#c9ccd6"
-                strokeWidth={7}
+                stroke={imageScene ? "#f4f0e6" : "#c9ccd6"}
+                strokeWidth={imageScene ? 7 : 7}
                 strokeLinecap="round"
-                strokeDasharray="12 17"
-                opacity={0.85}
+                strokeDasharray={imageScene ? "10 16" : "12 17"}
+                opacity={imageScene ? 0.85 : 0.85}
               />
             </g>
           );

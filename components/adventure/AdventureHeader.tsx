@@ -24,12 +24,12 @@ export function AdventureHeader({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-[1.7rem] font-bold tracking-tight text-ink">
+        <h1 className="text-[1.45rem] font-bold tracking-tight text-ink">
           Aventure
         </h1>
         <span
           data-testid="fp-wallet"
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50/90 px-3 py-1.5 text-sm font-bold text-primary-600 shadow-soft backdrop-blur-sm"
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50/90 px-2.5 py-1 text-sm font-bold text-primary-600 shadow-soft backdrop-blur-sm"
           aria-label={`${availableFP(progress)} FP`}
         >
           <Zap className="size-4" fill="currentColor" />
@@ -39,7 +39,7 @@ export function AdventureHeader({
 
       <div
         data-testid="adventure-zone-pill"
-        className="mt-2.5 flex items-center gap-3 rounded-full border border-ink/5 bg-white/95 py-2 pl-4 pr-2.5 shadow-soft backdrop-blur-sm"
+        className="mt-2 flex items-center gap-3 rounded-full border border-ink/5 bg-white/95 py-1.5 pl-4 pr-2.5 shadow-soft backdrop-blur-sm"
       >
         <span className="shrink-0 text-[13px] font-bold text-ink">
           Chapitre {adventure.currentStep}{" "}

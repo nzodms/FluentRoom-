@@ -69,7 +69,11 @@ export default function AdventurePage() {
       {/* Fiche flottante au-dessus de la bottom nav, bien détachée */}
       <div className="absolute inset-x-0 bottom-0 z-30 px-4 pb-3.5">
         {selected && (
-          <AdventureBottomSheet node={selected} onPrimary={onPrimary} />
+          <AdventureBottomSheet
+            node={selected}
+            onPrimary={onPrimary}
+            vignetteSrc={adventure.zone.theme.image?.src}
+          />
         )}
       </div>
 

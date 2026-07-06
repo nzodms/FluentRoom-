@@ -21,6 +21,13 @@ export interface AdventureTheme {
   id: AdventureThemeId;
   /** Ambiance courte, affichée dans la fiche ("Gare de Londres"). */
   nameFr: string;
+  /**
+   * Illustration de fond premium (dans /public). Quand elle est
+   * présente, la scène est l'image ; les nodes, labels, chemin et
+   * compagnon restent des composants React positionnés en % de
+   * l'image. Sans image, le décor SVG de secours est utilisé.
+   */
+  image?: { src: string; width: number; height: number };
 }
 
 export interface AdventureChapterLink {
@@ -65,6 +72,11 @@ export interface AdventureZone {
   path: string[];
   /** Embranchements courts [depuis → vers] (coffre, défi). */
   spurs: Array<[string, string]>;
+  /**
+   * Segments déjà peints dans l'illustration (chemin doré intégré à
+   * l'image) : l'overlay SVG ne les redessine pas.
+   */
+  bakedPath?: Array<[string, string]>;
   nodes: AdventureNodeDef[];
 }
 

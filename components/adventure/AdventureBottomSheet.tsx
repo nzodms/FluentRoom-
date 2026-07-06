@@ -34,9 +34,12 @@ function ctaFor(node: AdventureNodeView): { label: string; disabled: boolean } {
 export function AdventureBottomSheet({
   node,
   onPrimary,
+  vignetteSrc,
 }: {
   node: AdventureNodeView;
   onPrimary: (node: AdventureNodeView) => void;
+  /** Illustration de la zone : la vignette en montre un extrait. */
+  vignetteSrc?: string;
 }) {
   const cta = ctaFor(node);
   const chip = STATE_CHIP[node.state];
@@ -64,7 +67,7 @@ export function AdventureBottomSheet({
           transition={{ duration: 0.22, ease: "easeOut" }}
         >
           <div className="flex items-start gap-3">
-            <SheetVignette node={node} />
+            <SheetVignette node={node} vignetteSrc={vignetteSrc} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-semibold text-ink-soft">{overline}</p>
@@ -139,7 +142,28 @@ export function AdventureBottomSheet({
 }
 
 /** Vignette illustrée du lieu — mini-scène chaude, pas une icône. */
-function SheetVignette({ node }: { node: AdventureNodeView }) {
+function SheetVignette({
+  node,
+  vignetteSrc,
+}: {
+  node: AdventureNodeView;
+  vignetteSrc?: string;
+}) {
+  // Zone illustrée : la vignette est un vrai extrait de la scène.
+  if (vignetteSrc && node.type === "chapter") {
+    return (
+      <span className="block size-[62px] shrink-0 overflow-hidden rounded-2xl shadow-soft">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={vignetteSrc}
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="h-full w-full scale-[2.6] object-cover object-[12%_10%]"
+        />
+      </span>
+    );
+  }
   if (node.type === "chest") {
     return (
       <span className="grid size-[62px] shrink-0 place-items-center overflow-hidden rounded-2xl shadow-soft">

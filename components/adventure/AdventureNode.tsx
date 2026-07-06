@@ -18,10 +18,13 @@ export function AdventureNode({
   node,
   selected,
   onSelect,
+  flat = false,
 }: {
   node: AdventureNodeView;
   selected: boolean;
   onSelect: (id: string) => void;
+  /** Scène illustrée : les socles sont peints, on n'affiche que les états. */
+  flat?: boolean;
 }) {
   return (
     <div
@@ -36,7 +39,7 @@ export function AdventureNode({
         whileTap={{ scale: 0.9 }}
         className="relative block -translate-x-1/2 -translate-y-1/2 outline-none"
       >
-        <NodeMarker node={node} selected={selected} />
+        <NodeMarker node={node} selected={selected} flat={flat} />
       </motion.button>
     </div>
   );
@@ -86,27 +89,31 @@ function markerBox(node: AdventureNodeView): { w: number; h: number } {
 function NodeMarker({
   node,
   selected,
+  flat,
 }: {
   node: AdventureNodeView;
   selected: boolean;
+  flat: boolean;
 }) {
-  if (node.type === "chest") return <ChestMarker node={node} selected={selected} />;
-  if (node.type === "challenge") return <ChallengeMarker selected={selected} />;
-  if (node.state === "done") return <DonePedestal selected={selected} />;
-  if (node.state === "current") return <CurrentBeacon selected={selected} />;
+  if (node.type === "chest") return <ChestMarker node={node} selected={selected} flat={flat} />;
+  if (node.type === "challenge") return <ChallengeMarker selected={selected} flat={flat} />;
+  if (node.state === "done") return <DonePedestal selected={selected} flat={flat} />;
+  if (node.state === "current") return <CurrentBeacon selected={selected} flat={flat} />;
   return <LockedDisc selected={selected} />;
 }
 
 /** Socle vert compact : étape terminée (niveau 2). */
-function DonePedestal({ selected }: { selected: boolean }) {
+function DonePedestal({ selected, flat }: { selected: boolean; flat: boolean }) {
   return (
     <span className="relative grid h-[42px] w-[52px] place-items-center">
+      {!flat && (
       <svg viewBox="0 0 52 42" className="absolute inset-0" aria-hidden>
         <ellipse cx="26" cy="32" rx="23" ry="8.5" fill="#2cb783" opacity="0.22" />
         <ellipse cx="26" cy="30.5" rx="18" ry="6.5" fill="#43cb95" opacity="0.5" />
         <ellipse cx="26" cy="29" rx="13.5" ry="4.8" fill="#d2f1e3" />
         <ellipse cx="26" cy="28" rx="13.5" ry="4.8" fill="#eafcf4" />
       </svg>
+      )}
       <span
         className={cn(
           "relative -top-1.5 grid size-7 place-items-center rounded-full bg-white text-mint-500 shadow-soft ring-2 ring-mint-400",
@@ -120,7 +127,7 @@ function DonePedestal({ selected }: { selected: boolean }) {
 }
 
 /** Balise violette : LE point focal de la map (niveau 1). */
-function CurrentBeacon({ selected }: { selected: boolean }) {
+function CurrentBeacon({ selected, flat }: { selected: boolean; flat: boolean }) {
   return (
     <span className="relative grid h-[74px] w-[96px] place-items-center">
       {/* Double halo pulsant, bien plus fort que tout le reste */}
@@ -136,6 +143,7 @@ function CurrentBeacon({ selected }: { selected: boolean }) {
         animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0, 0.8] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
       />
+      {!flat && (
       <svg viewBox="0 0 96 74" className="absolute inset-0" aria-hidden>
         <ellipse cx="48" cy="58" rx="44" ry="14.5" fill="#585ce2" opacity="0.32" />
         <ellipse cx="48" cy="55" rx="35" ry="12" fill="#7679e9" opacity="0.75" />
@@ -143,6 +151,8 @@ function CurrentBeacon({ selected }: { selected: boolean }) {
         <ellipse cx="48" cy="49" rx="27" ry="9.5" fill="#dfdffb" />
         <ellipse cx="48" cy="47.5" rx="17" ry="6" fill="#f4f4ff" />
       </svg>
+      )}
+      {!flat && (
       <span
         className={cn(
           "relative -top-3 grid size-10 place-items-center rounded-full gradient-primary shadow-glow",
@@ -156,6 +166,7 @@ function CurrentBeacon({ selected }: { selected: boolean }) {
           />
         </svg>
       </span>
+      )}
     </span>
   );
 }
@@ -183,12 +194,41 @@ function LockedDisc({ selected }: { selected: boolean }) {
 function ChestMarker({
   node,
   selected,
+  flat,
 }: {
   node: AdventureNodeView;
   selected: boolean;
+  flat: boolean;
 }) {
   const open = node.state === "done";
   const locked = node.state === "locked";
+  if (flat) {
+    return (
+      <span className="relative grid h-[56px] w-[68px] place-items-center">
+        {node.state === "reward" && (
+          <motion.span
+            aria-hidden
+            className="absolute left-1/2 top-1/2 size-[72px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-400/35"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.75, 0.4, 0.75] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
+        {locked && (
+          <span className="relative grid size-7 place-items-center rounded-full bg-[#8b90a3]/90 text-white/90 shadow-soft ring-2 ring-white/70">
+            <Lock className="size-3" strokeWidth={2.4} />
+          </span>
+        )}
+        {open && (
+          <span className="relative grid size-7 place-items-center rounded-full bg-white text-mint-500 shadow-soft ring-2 ring-mint-400">
+            <Check className="size-3.5" strokeWidth={3.6} />
+          </span>
+        )}
+        {selected && (
+          <span aria-hidden className="absolute inset-1 rounded-3xl ring-2 ring-gold-400/80" />
+        )}
+      </span>
+    );
+  }
   return (
     <span className="relative grid h-[56px] w-[68px] place-items-center">
       {node.state === "reward" && (
@@ -239,7 +279,16 @@ function ChestMarker({
 }
 
 /** Pastille défi : flamme corail, compacte (niveau 2). */
-function ChallengeMarker({ selected }: { selected: boolean }) {
+function ChallengeMarker({ selected, flat }: { selected: boolean; flat: boolean }) {
+  if (flat) {
+    return (
+      <span className="relative grid h-[48px] w-[52px] place-items-center">
+        {selected && (
+          <span aria-hidden className="absolute inset-0 rounded-full ring-[3px] ring-coral-100" />
+        )}
+      </span>
+    );
+  }
   return (
     <span className="relative grid h-[48px] w-[52px] place-items-center">
       <svg viewBox="0 0 52 48" className="absolute inset-0" aria-hidden>
@@ -302,14 +351,14 @@ function NodeLabel({
             )}
           />
           <span className="relative flex items-center gap-2">
-            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-primary-500 text-[11px] font-bold text-white">
+            <span className="grid size-[18px] shrink-0 place-items-center rounded-full bg-primary-500 text-[10px] font-bold text-white">
               {node.step}
             </span>
-            <span className="max-w-[104px] text-[13px] font-bold leading-tight text-ink">
+            <span className="max-w-[96px] text-[12px] font-bold leading-tight text-ink">
               {node.title}
             </span>
           </span>
-          <span className="relative mt-1 flex items-center gap-1 pl-7 text-[10px] font-bold text-primary-600">
+          <span className="relative mt-0.5 flex items-center gap-1 pl-[26px] text-[10px] font-bold text-primary-600">
             <Clock3 className="size-3" /> En cours
           </span>
         </span>
